@@ -102,6 +102,7 @@ jobs:
         run: pip list
 
       - name: Run unit tests
+        shell: bash
         run: |
           pytest tests/unit/ -v \
             --cov=app \
@@ -111,6 +112,7 @@ jobs:
             -m "unit and not windows"
 
       - name: Run integration tests
+        shell: bash
         run: |
           pytest tests/integration/ -v \
             --cov=app --cov-append \
@@ -161,6 +163,7 @@ jobs:
           cat /tmp/qml_dirs.txt
 
       - name: Run qmllint
+        shell: bash
         run: |
           set +e
           errors=0
