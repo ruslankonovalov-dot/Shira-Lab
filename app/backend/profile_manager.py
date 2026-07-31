@@ -67,7 +67,7 @@ class ProfileManager:
 
             logger.info("Profile saved: %s", name)
             return {"ok": True, "name": name, "path": str(profile_path)}
-        except Exception as e:
+        except (OSError, json.JSONDecodeError, ValueError) as e:
             logger.error("Failed to save profile %s: %s", name, e)
             return {"ok": False, "error": str(e)}
 
@@ -134,13 +134,12 @@ class ProfileManager:
 
             # Apply state
             s = data.get("state", {})
-            if s and self._bridge:
-                if s.get("terminal_palette"):
-                    self._bridge.setTerminalPalette(s["terminal_palette"])
+            if s and self._bridge and s.get("terminal_palette"):
+                self._bridge.setTerminalPalette(s["terminal_palette"])
 
             logger.info("Profile loaded: %s", name)
             return {"ok": True, "name": name}
-        except Exception as e:
+        except (OSError, json.JSONDecodeError, ValueError) as e:
             logger.error("Failed to load profile %s: %s", name, e)
             return {"ok": False, "error": str(e)}
 
@@ -156,10 +155,10 @@ class ProfileManager:
                         "name": data.get("name", f.stem),
                         "filename": f.name,
                     })
-                except Exception:
+                except (OSError, json.JSONDecodeError, ValueError):
                     profiles.append({"name": f.stem, "filename": f.name})
             return {"ok": True, "profiles": profiles}
-        except Exception as e:
+        except OSError as e:
             return {"ok": False, "error": str(e), "profiles": []}
 
     def delete_profile(self, name: str) -> dict[str, Any]:
@@ -174,5 +173,5 @@ class ProfileManager:
             profile_path.unlink()
             logger.info("Profile deleted: %s", name)
             return {"ok": True, "name": name}
-        except Exception as e:
+        except OSError as e:
             return {"ok": False, "error": str(e)}

@@ -69,7 +69,7 @@ def export_profile(bridge: Any, path: str | Path) -> dict[str, Any]:
 
         logger.info("Profile exported to %s", path)
         return {"ok": True, "path": str(path), "size_bytes": path.stat().st_size}
-    except Exception as e:
+    except (OSError, json.JSONDecodeError, ValueError) as e:
         logger.exception("Failed to export profile")
         return {"ok": False, "error": str(e)}
 
@@ -120,7 +120,7 @@ def import_profile(bridge: Any, path: str | Path) -> dict[str, Any]:
             bridge.state.hotkeys = data["hotkeys"]
             try:
                 bridge.hotkeys.set_bindings(data["hotkeys"])
-            except Exception:
+            except (OSError, ImportError, RuntimeError, ValueError, AttributeError):
                 logger.exception("Failed to apply hotkeys from imported profile")
 
         # Apply clicker config
@@ -134,7 +134,7 @@ def import_profile(bridge: Any, path: str | Path) -> dict[str, Any]:
                     clicker.get("limit", 0),
                     clicker.get("background_method", "sendinput"),
                 )
-            except Exception:
+            except (OSError, ImportError, RuntimeError, ValueError, AttributeError):
                 logger.exception("Failed to apply clicker config")
 
         # Apply target
@@ -153,7 +153,7 @@ def import_profile(bridge: Any, path: str | Path) -> dict[str, Any]:
 
         logger.info("Profile imported from %s", path)
         return {"ok": True, "applied": True}
-    except Exception as e:
+    except (OSError, json.JSONDecodeError, ValueError) as e:
         logger.exception("Failed to import profile")
         return {"ok": False, "error": str(e)}
 
@@ -166,7 +166,7 @@ def _safe_get(obj: Any, method_name: str) -> dict[str, Any]:
         if isinstance(result, dict):
             return result
         return {}
-    except Exception:
+    except (OSError, ImportError, RuntimeError, ValueError, AttributeError):
         return {}
 
 
@@ -181,7 +181,7 @@ def export_profile_dialog(state: Any) -> dict[str, Any]:
         if not path:
             return {"ok": False, "error": "Cancelled"}
         return export_profile(state, path)
-    except Exception as e:
+    except (OSError, ImportError, RuntimeError) as e:
         logger.exception("export_profile_dialog failed")
         return {"ok": False, "error": str(e)}
 
@@ -197,7 +197,7 @@ def import_profile_dialog(state: Any) -> dict[str, Any]:
         if not path:
             return {"ok": False, "error": "Cancelled"}
         return import_profile(state, path)
-    except Exception as e:
+    except (OSError, ImportError, RuntimeError) as e:
         logger.exception("import_profile_dialog failed")
         return {"ok": False, "error": str(e)}
 
@@ -210,7 +210,7 @@ def save_profile_to_file(state: Any, name: str) -> dict[str, Any]:
         profile_dir.mkdir(parents=True, exist_ok=True)
         path = profile_dir / f"{name}.json"
         return export_profile(state, path)
-    except Exception as e:
+    except (OSError, ImportError, RuntimeError) as e:
         logger.exception("save_profile_to_file failed")
         return {"ok": False, "error": str(e)}
 
@@ -222,7 +222,7 @@ def load_profile_from_file(filename: str, state: Any) -> dict[str, Any]:
         profile_dir = Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
         path = profile_dir / filename
         return import_profile(state, path)
-    except Exception as e:
+    except (OSError, ImportError, RuntimeError) as e:
         logger.exception("load_profile_from_file failed")
         return {"ok": False, "error": str(e)}
 
@@ -236,7 +236,7 @@ def delete_profile_file(filename: str) -> dict[str, Any]:
         if path.exists():
             path.unlink()
         return {"ok": True}
-    except Exception as e:
+    except OSError as e:
         logger.exception("delete_profile_file failed")
         return {"ok": False, "error": str(e)}
 
@@ -251,7 +251,7 @@ def list_profile_files() -> dict[str, Any]:
         files = [f.name for f in profile_dir.glob("*.json")]
         files.sort()
         return {"ok": True, "profiles": files}
-    except Exception as e:
+    except OSError as e:
         logger.exception("list_profile_files failed")
         return {"ok": False, "error": str(e)}
 
@@ -267,7 +267,7 @@ def save_profile(data: dict[str, Any], path: str | Path) -> dict[str, Any]:
         )
         logger.info("Profile saved to %s", path)
         return {"ok": True, "path": str(path), "size_bytes": path.stat().st_size}
-    except Exception as e:
+    except (OSError, json.JSONDecodeError, ValueError) as e:
         logger.exception("Failed to save profile")
         return {"ok": False, "error": str(e)}
 

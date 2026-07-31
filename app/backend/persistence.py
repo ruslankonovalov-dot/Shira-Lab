@@ -80,13 +80,13 @@ def _state_from_dict(data: dict[str, Any]) -> RuntimeState:
     th = data.get("target_hwnd")
     if th is not None:
         try: th = int(th)
-        except Exception: th = None
+        except (ValueError, TypeError): th = None
     # Per-module targets
     def load_target_hwnd(key: str, default_val: int | None) -> int | None:
         val = data.get(key)
         if val is not None:
             try: return int(val)
-            except Exception: return default_val
+            except (ValueError, TypeError): return default_val
         return default_val
     def load_target_name(key: str, default_val: str) -> str:
         val = data.get(key)

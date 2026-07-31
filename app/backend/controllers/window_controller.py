@@ -83,6 +83,7 @@ class WindowController(QObject):
         self._hotkeys: HotkeyService = hotkey_service
         self._sounds: SoundManager = sound_manager
         self._bridge: QmlBridge | None = bridge
+        self._bridge_ref: QmlBridge | None = bridge
 
         # Overlay state
         self.overlayVisible = True
@@ -572,7 +573,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
                 "clicker_cps": clicker_cps,
                 "aim_fps": aim_fps,
             }
-        except Exception as e:
+        except (OSError, ImportError, RuntimeError) as e:
             logger.error(f"Failed to get performance profile: {e}")
             return {"ok": False, "error": str(e)}
 
@@ -585,7 +586,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             result = {"ok": True, "theme": theme}
             self.logMessage.emit("INFO", "SYSTEM", f"System theme detected: {theme}")
             return result
-        except Exception as e:
+        except (OSError, ImportError, RuntimeError) as e:
             logger.error(f"Failed to detect system theme: {e}")
             return {"ok": False, "error": str(e)}
 
@@ -613,7 +614,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             if self._bridge_ref:
                 return export_profile(self._bridge_ref, file_path)
             return {"ok": False, "error": "Bridge reference not set"}
-        except Exception as e:
+        except (OSError, ImportError, RuntimeError) as e:
             logger.error(f"Export profile failed: {e}")
             return {"ok": False, "error": str(e)}
 
@@ -635,7 +636,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             if self._bridge_ref:
                 return import_profile(self._bridge_ref, file_path)
             return {"ok": False, "error": "Bridge reference not set"}
-        except Exception as e:
+        except (OSError, ImportError, RuntimeError) as e:
             logger.error(f"Import profile failed: {e}")
             return {"ok": False, "error": str(e)}
 
@@ -647,7 +648,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             if self._tray:
                 self._tray.update_base_icon(Path(png_path))
             self.iconChanged.emit()
-        except Exception as e:
+        except (OSError, ImportError, RuntimeError) as e:
             logger.warning(f"Failed to apply regenerated icon: {e}")
 
     # ─── hwnd helpers (called from bridge) ────────────────────────────
