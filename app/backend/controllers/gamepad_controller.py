@@ -5,35 +5,43 @@ Extracted from QmlBridge god-object (Phase 2.1).
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Optional, Dict, List, Union
+from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from app.backend.services.vigem_service import get_vigem_service, VigemService, VIGEM_TARGET_TYPE
-from app.backend.services.pico_service import get_pico_service, PicoService, PicoMode as PicoServiceMode, PicoDevice
 from app.backend.services.input_validation import (
-    validate_int, validate_str, validate_enum,
-    make_error_response, make_ok_response,
-    GAMEPAD_TARGET_INDEX_MIN, GAMEPAD_TARGET_INDEX_MAX,
-    GAMEPAD_BUTTONS_MASK_MAX, GAMEPAD_TRIGGER_MIN, GAMEPAD_TRIGGER_MAX,
-    GAMEPAD_STICK_MIN, GAMEPAD_STICK_MAX,
-    PICO_HOLD_MS_MIN, PICO_HOLD_MS_MAX,
-    VALID_GAMEPAD_TYPES, VALID_BACKGROUND_METHODS,
-    VALID_PICO_MODES, VALID_PICO_BUTTONS,
+    GAMEPAD_BUTTONS_MASK_MAX,
+    GAMEPAD_STICK_MAX,
+    GAMEPAD_STICK_MIN,
+    GAMEPAD_TARGET_INDEX_MAX,
+    GAMEPAD_TARGET_INDEX_MIN,
+    GAMEPAD_TRIGGER_MAX,
+    GAMEPAD_TRIGGER_MIN,
+    PICO_HOLD_MS_MAX,
+    PICO_HOLD_MS_MIN,
+    VALID_BACKGROUND_METHODS,
+    VALID_GAMEPAD_TYPES,
+    VALID_PICO_BUTTONS,
+    VALID_PICO_MODES,
     QVariantMap,
 )
+from app.backend.services.pico_service import PicoDevice, PicoService, get_pico_service
+from app.backend.services.vigem_service import VigemService, get_vigem_service
 from window_utils import get_visible_windows
 
 if TYPE_CHECKING:
-    from app.backend.services.vigem_service import VigemService
     from app.backend.services.pico_service import PicoService
+    from app.backend.services.vigem_service import VigemService
+
+# PicoService is used at runtime for list_picos() static method
+from app.backend.services.pico_service import PicoService as PicoServiceRuntime
 
 # Type aliases
 BackgroundMethod = str  # "sendinput", "postmessage", "vigem", "pico"
 GamepadType = str  # "X360", "DS4"
 PicoModeStr = str  # "COMPOSITE", "KEYBOARD", "MOUSE", "GAMEPAD", "hid", "raw_hid", "cdc"
-GamepadStatus = Dict[str, Any]
-WindowInfo = Dict[str, Any]
+GamepadStatus = dict[str, Any]
+WindowInfo = dict[str, Any]
 
 # QVariant-compatible return type - QmlBridge expects dict for @Slot(result="QVariantMap")
 QVariant = QVariantMap
@@ -59,7 +67,7 @@ class GamepadController(QObject):
     physicalGamepadsChanged = Signal()
     logMessage = Signal(str, str, str)  # level, source, message
 
-    def __init__(self, parent: Optional[QObject] = None) -> None:
+    def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._vigem: VigemService = get_vigem_service()
         self._pico: PicoService = get_pico_service()
@@ -85,7 +93,10 @@ class GamepadController(QObject):
     @Slot(str, result="QVariantMap")
     def setGamepadControllerType(self, controller_type: str) -> QVariantMap:
         """Set controller type (X360 or DS4)."""
-        from app.backend.services.input_validation import validate_enum, make_error_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            validate_enum,
+        )
 
         ok, val, err = validate_enum(controller_type, VALID_GAMEPAD_TYPES, name="controller_type")
         if not ok:
@@ -106,7 +117,10 @@ class GamepadController(QObject):
     @Slot(str, result="QVariantMap")
     def setGamepadTargetIndex(self, index_str: str) -> QVariantMap:
         """Set target virtual gamepad index (0-3)."""
-        from app.backend.services.input_validation import validate_int, make_error_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            validate_int,
+        )
 
         try:
             index = int(index_str)
@@ -129,7 +143,10 @@ class GamepadController(QObject):
     @Slot(str, int, result="QVariantMap")
     def setGamepadBackgroundMethod(self, method: str, target_index: int = 0) -> QVariantMap:
         """Set background input method for virtual gamepad."""
-        from app.backend.services.input_validation import validate_enum, make_error_response, make_ok_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            validate_enum,
+        )
 
         ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, name="background_method")
         if not ok or val is None:
@@ -168,21 +185,6 @@ class GamepadController(QObject):
         """Internal physical gamepad detection (XInput)."""
         import ctypes
         from ctypes import wintypes
-
-        XINPUT_GAMEPAD_DPAD_UP = 0x0001
-        XINPUT_GAMEPAD_DPAD_DOWN = 0x0002
-        XINPUT_GAMEPAD_DPAD_LEFT = 0x0004
-        XINPUT_GAMEPAD_DPAD_RIGHT = 0x0008
-        XINPUT_GAMEPAD_START = 0x0010
-        XINPUT_GAMEPAD_BACK = 0x0020
-        XINPUT_GAMEPAD_LEFT_THUMB = 0x0040
-        XINPUT_GAMEPAD_RIGHT_THUMB = 0x0080
-        XINPUT_GAMEPAD_LEFT_SHOULDER = 0x0100
-        XINPUT_GAMEPAD_RIGHT_SHOULDER = 0x0200
-        XINPUT_GAMEPAD_A = 0x1000
-        XINPUT_GAMEPAD_B = 0x2000
-        XINPUT_GAMEPAD_X = 0x4000
-        XINPUT_GAMEPAD_Y = 0x8000
 
         class XINPUT_GAMEPAD(ctypes.Structure):
             _fields_ = [
@@ -329,9 +331,11 @@ class GamepadController(QObject):
             return {"ok": False, "error": str(e), "map": {}}
 
     @Slot("QVariantMap", result="QVariantMap")
-    def setVigemButtonMap(self, mapping: Dict[str, Any]) -> QVariantMap:
+    def setVigemButtonMap(self, mapping: dict[str, Any]) -> QVariantMap:
         """Set ViGEm button mapping."""
-        from app.backend.services.input_validation import make_error_response, make_ok_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+        )
 
         try:
             result = self._vigem.set_button_map(mapping)
@@ -342,13 +346,17 @@ class GamepadController(QObject):
             return make_error_response(str(e))
 
     @Slot("QVariantMap", result="QVariantMap")
-    def sendVigemTestState(self, state_map: Dict[str, Any]) -> QVariantMap:
+    def sendVigemTestState(self, state_map: dict[str, Any]) -> QVariantMap:
         """Send test state to virtual gamepad (for GamepadPage test controls).
 
         Expected state_map keys: buttons, lt, rt, lx, ly, rx, ry, target_id
         All values validated against gamepad limits.
         """
-        from app.backend.services.input_validation import validate_int, make_error_response, make_ok_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            make_ok_response,
+            validate_int,
+        )
 
         # Validate target_id (0-3)
         ok, target_id_val, err = validate_int(
@@ -427,7 +435,12 @@ class GamepadController(QObject):
     @Slot(int, str, result="QVariantMap")
     def vIGEmPressButton(self, target_id: int, button_name: str) -> QVariantMap:
         """Press a button on virtual gamepad."""
-        from app.backend.services.input_validation import validate_int, validate_enum, make_error_response, make_ok_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            make_ok_response,
+            validate_enum,
+            validate_int,
+        )
 
         ok, target_id_val, err = validate_int(target_id, GAMEPAD_TARGET_INDEX_MIN, GAMEPAD_TARGET_INDEX_MAX, name="target_id")
         if not ok or target_id_val is None:
@@ -449,7 +462,12 @@ class GamepadController(QObject):
     @Slot(int, str, result="QVariantMap")
     def vIGEmReleaseButton(self, target_id: int, button_name: str) -> QVariantMap:
         """Release a button on virtual gamepad."""
-        from app.backend.services.input_validation import validate_int, validate_enum, make_error_response, make_ok_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            make_ok_response,
+            validate_enum,
+            validate_int,
+        )
 
         ok, target_id_val, err = validate_int(target_id, GAMEPAD_TARGET_INDEX_MIN, GAMEPAD_TARGET_INDEX_MAX, name="target_id")
         if not ok or target_id_val is None:
@@ -474,7 +492,7 @@ class GamepadController(QObject):
     def listPicoDevices(self) -> QVariantMap:
         """List available Pico devices."""
         try:
-            devices: List[PicoDevice] = PicoService.list_picos()
+            devices: list[PicoDevice] = PicoServiceRuntime.list_picos()
             return {"ok": True, "devices": [
                 {"port": d.port, "vid": d.vid, "pid": d.pid,
                  "serial": d.serial_number, "desc": d.description}
@@ -487,7 +505,10 @@ class GamepadController(QObject):
     @Slot(str, result="QVariantMap")
     def startPico(self, port: str = "") -> QVariantMap:
         """Connect to Pico device."""
-        from app.backend.services.input_validation import make_error_response, make_ok_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            make_ok_response,
+        )
 
         try:
             result = self._pico.connect(port if port else None)
@@ -500,7 +521,10 @@ class GamepadController(QObject):
     @Slot(result="QVariantMap")
     def stopPico(self) -> QVariantMap:
         """Disconnect from Pico device."""
-        from app.backend.services.input_validation import make_error_response, make_ok_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            make_ok_response,
+        )
 
         try:
             self._pico.disconnect()
@@ -531,7 +555,11 @@ class GamepadController(QObject):
     @Slot(str, result="QVariantMap")
     def setPicoMode(self, mode: str) -> QVariantMap:
         """Set Pico USB mode (COMPOSITE, KEYBOARD, MOUSE, GAMEPAD)."""
-        from app.backend.services.input_validation import validate_enum, make_error_response, make_ok_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            make_ok_response,
+            validate_enum,
+        )
         from app.backend.services.pico_service import PicoMode as PicoServiceMode
 
         ok, val, err = validate_enum(mode, VALID_PICO_MODES, name="mode")
@@ -551,7 +579,12 @@ class GamepadController(QObject):
     @Slot(str, str, result="QVariantMap")
     def setPicoButtonMap(self, key: str, button: str) -> QVariantMap:
         """Set Pico button mapping for a key (not implemented in firmware yet)."""
-        from app.backend.services.input_validation import validate_str, validate_enum, make_error_response, make_ok_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            make_ok_response,
+            validate_enum,
+            validate_str,
+        )
 
         ok, key_val, err = validate_str(key, min_len=1, max_len=50, name="key")
         if not ok or key_val is None:
@@ -568,7 +601,10 @@ class GamepadController(QObject):
     @Slot(result="QVariantMap")
     def picoReset(self) -> QVariantMap:
         """Reset Pico to neutral state."""
-        from app.backend.services.input_validation import make_error_response, make_ok_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            make_ok_response,
+        )
 
         try:
             result = self._pico.reset()
@@ -580,7 +616,13 @@ class GamepadController(QObject):
     @Slot(str, str, int, result="QVariantMap")
     def picoSendKey(self, key: str, action: str, hold_ms: int = 50) -> QVariantMap:
         """Send keyboard action via Pico (press, release, tap)."""
-        from app.backend.services.input_validation import validate_str, validate_enum, validate_int, make_error_response, make_ok_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            make_ok_response,
+            validate_enum,
+            validate_int,
+            validate_str,
+        )
 
         ok, key_val, err = validate_str(key, min_len=1, max_len=50, name="key")
         if not ok or key_val is None:
@@ -609,7 +651,11 @@ class GamepadController(QObject):
     @Slot(int, int, int, int, result="QVariantMap")
     def picoSendMouse(self, x: int, y: int, button: int = 0, hold_ms: int = 0) -> QVariantMap:
         """Send mouse action via Pico (click or move+click)."""
-        from app.backend.services.input_validation import validate_int, make_error_response, make_ok_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            make_ok_response,
+            validate_int,
+        )
 
         ok, x_val, err = validate_int(x, -32768, 32767, name="x")
         if not ok or x_val is None:
@@ -637,7 +683,11 @@ class GamepadController(QObject):
     @Slot(int, int, int, int, int, int, int, result="QVariantMap")
     def picoSendGamepad(self, buttons: int, lt: int, rt: int, lx: int, ly: int, rx: int, ry: int) -> QVariantMap:
         """Send gamepad state via Pico."""
-        from app.backend.services.input_validation import validate_int, make_error_response, make_ok_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            make_ok_response,
+            validate_int,
+        )
 
         ok, buttons_val, err = validate_int(buttons, 0, GAMEPAD_BUTTONS_MASK_MAX, name="buttons")
         if not ok or buttons_val is None:
@@ -674,7 +724,11 @@ class GamepadController(QObject):
     @Slot(int, int, int, result="QVariantMap")
     def picoSetStick(self, stick: int, x: int, y: int) -> QVariantMap:
         """Set stick position via Pico (0=left, 1=right)."""
-        from app.backend.services.input_validation import validate_int, make_error_response, make_ok_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            make_ok_response,
+            validate_int,
+        )
 
         ok, stick_val, err = validate_int(stick, 0, 1, name="stick")
         if not ok or stick_val is None:
@@ -701,7 +755,11 @@ class GamepadController(QObject):
     @Slot(str, result="QVariantMap")
     def setClickerBackgroundMethod(self, method: str) -> QVariantMap:
         """Set background input method for clicker service."""
-        from app.backend.services.input_validation import validate_enum, make_error_response, make_ok_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            make_ok_response,
+            validate_enum,
+        )
 
         ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, name="method")
         if not ok or val is None:
@@ -712,7 +770,11 @@ class GamepadController(QObject):
     @Slot(str, result="QVariantMap")
     def setMacroBackgroundMethod(self, method: str) -> QVariantMap:
         """Set background input method for macro service."""
-        from app.backend.services.input_validation import validate_enum, make_error_response, make_ok_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            make_ok_response,
+            validate_enum,
+        )
 
         ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, name="method")
         if not ok or val is None:
@@ -723,7 +785,11 @@ class GamepadController(QObject):
     @Slot(str, result="QVariantMap")
     def setRecorderBackgroundMethod(self, method: str) -> QVariantMap:
         """Set background input method for recorder service."""
-        from app.backend.services.input_validation import validate_enum, make_error_response, make_ok_response
+        from app.backend.services.input_validation import (
+            make_error_response,
+            make_ok_response,
+            validate_enum,
+        )
 
         ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, name="method")
         if not ok or val is None:
