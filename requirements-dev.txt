@@ -1,0 +1,36 @@
+# requirements-dev.txt — Зависимости для разработки и тестирования
+# ============================================================
+# Установить вместе с основным requirements.txt:
+#   pip install -r requirements.txt -r requirements-dev.txt
+
+# ─── Testing ──────────────────────────────────────────────
+pytest>=7.4,<9.0
+pytest-cov>=4.1,<6.0
+pytest-qt>=4.3,<5.0
+pytest-mock>=3.12,<4.0
+pytest-xdist>=3.5,<4.0          # параллельный запуск (pytest -n auto)
+pytest-timeout>=2.2,<3.0
+pytest-asyncio>=0.23,<1.0       # если будут async тесты
+pytest-benchmark>=4.0,<5.0      # для perf тестов
+
+# ─── Linting & Formatting ─────────────────────────────────
+ruff>=0.5.0,<0.7.0
+black>=24.4,<25.0
+isort>=5.13,<6.0
+mypy>=1.10,<2.0                 # опциональная статическая типизация
+
+# ─── QML Linting ──────────────────────────────────────────
+# qmllint поставляется с Qt6, ставится отдельно через системный пакет:
+#   sudo apt install qt6-declarative-dev-tools   (Linux)
+#   choco install qt6                            (Windows)
+
+# ─── Documentation ────────────────────────────────────────
+sphinx>=7.3,<9.0
+sphinx-rtd-theme>=2.0,<3.0
+myst-parser>=3.0,<5.0           # для Markdown в Sphinx
+
+# ─── Coverage extras ──────────────────────────────────────
+coverage[toml]>=7.4,<8.0
+
+# ─── Build (для релизов) ──────────────────────────────────
+pyinstaller>=6.5,<7.0

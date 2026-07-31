@@ -1,0 +1,68 @@
+# .coveragerc — Конфигурация coverage.py для Shira Lab
+# ========================================================
+[run]
+source =
+    app
+    utils
+    config
+
+branch = True
+
+# Файлы, которые не нужно проверять
+omit =
+    */tests/*
+    */__pycache__/*
+    */_debug_*.py
+    */debug_layout.py
+    */setup.py
+    app/main.py
+    run.py
+
+# Параллельный режим (для распределённых тестов)
+parallel = False
+
+# Сигналы для перезапуска coverage
+sigterm = True
+
+[report]
+# Минимальная точность
+precision = 2
+
+# Формат вывода
+show_missing = True
+skip_covered = False
+skip_empty = True
+
+# Сортировка
+sort = cover
+
+# Исключить строки из подсчёта (pragma: no cover и т.п.)
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod
+    @overload
+    \.\.\.  # синтаксис pass/... в заглушках
+
+# Частичные ветки
+partial_branches =
+    pragma: no branch
+    if .*:  # pragma: no branch
+
+# Пределы
+fail_under = 85
+
+[html]
+directory = tests/_coverage_html
+title = Shira Lab Coverage Report
+extra_css = tests/_coverage_extra.css
+
+[xml]
+output = tests/_coverage.xml
+
+[json]
+output = tests/_coverage.json
+pretty_print = True

@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Project specific
+data/profile.json
+data/profiles/
+data/crash_logs/
+logs/
+*.log
+records/REC_*.json
+screenshots/
+
+# Claude local settings
+.claude/
+
+# Build
+dist/
+build/
+*.spec
+*.exe
+
+# Local Claude files
+Dont touch cloude*.json

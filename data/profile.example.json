@@ -1,0 +1,120 @@
+{
+  "version": 5,
+  "state": {
+    "target_hwnd": null,
+    "target_name": "GLOBAL_SCREEN",
+    "clicker_target_hwnd": null,
+    "clicker_target_name": "GLOBAL_SCREEN",
+    "macro_target_hwnd": null,
+    "macro_target_name": "GLOBAL_SCREEN",
+    "aim_target_hwnd": null,
+    "aim_target_name": "GLOBAL_SCREEN",
+    "recorder_target_hwnd": null,
+    "recorder_target_name": "GLOBAL_SCREEN",
+    "theme": {
+      "bg": "#437835",
+      "btn": "#2E5F24",
+      "fg": "#DFFFE0",
+      "acc": "#A5FF7A",
+      "border": "#6FD36A",
+      "trough": "#6FD36A",
+      "danger_text": "#FF6B6B",
+      "danger": "#220000",
+      "success": "#66FF99",
+      "warning": "#FFD166"
+    },
+    "ui_lang": "RU",
+    "is_pinned": false,
+    "hotkeys": {
+      "clicker_toggle": {
+        "key": "f6",
+        "mode": "TOGGLE"
+      },
+      "aim_toggle": {
+        "key": "f9",
+        "mode": "TOGGLE"
+      },
+      "macro_start": {
+        "key": "right ctrl",
+        "mode": "TOGGLE"
+      },
+      "macro_stop": {
+        "key": "right ctrl+shift",
+        "mode": "TOGGLE"
+      },
+      "recorder_start": {
+        "key": "f7",
+        "mode": "TOGGLE"
+      },
+      "recorder_stop": {
+        "key": "f8",
+        "mode": "TOGGLE"
+      },
+      "app_show": {
+        "key": "f10",
+        "mode": "TOGGLE"
+      },
+      "panic_stop": {
+        "key": "f12",
+        "mode": "TOGGLE"
+      }
+    },
+    "terminal_palette": "matrix",
+    "background_method": "sendinput",
+    "gamepad_enabled": false,
+    "gamepad_controller_type": "X360",
+    "gamepad_target_index": 0,
+    "gamepad_button_map": {},
+    "pico_enabled": false,
+    "pico_port": "",
+    "pico_baudrate": 115200,
+    "pico_mode": "COMPOSITE",
+    "pico_button_map": {}
+  },
+  "clicker": {
+    "interval_ms": 1,
+    "hold_ms": 0,
+    "button": "L",
+    "limit": 0,
+    "background_method": "sendinput"
+  },
+  "aim": {
+    "confidence": 0.5,
+    "smooth_steps": 5,
+    "reset_delay": 0.005,
+    "scan_region": {
+      "top": 100,
+      "left": 100,
+      "width": 300,
+      "height": 300
+    },
+    "background_method": "sendinput"
+  },
+  "macro": {
+    "run_mode": "SEQUENTIAL",
+    "actions": [
+      {
+        "key": "space",
+        "delay": 0.5,
+        "hold": 0.05
+      },
+      {
+        "key": "g",
+        "delay": 0.5,
+        "hold": 0.05
+      },
+      {
+        "key": "g",
+        "delay": 0.5,
+        "hold": 0.05
+      }
+    ],
+    "background_method": "postmessage"
+  },
+  "recorder": {
+    "background_method": "sendinput"
+  },
+  "gamepad": {
+    "background_method": "sendinput"
+  }
+}
