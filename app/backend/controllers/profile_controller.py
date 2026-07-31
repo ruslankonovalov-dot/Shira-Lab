@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from PySide6.QtCore import Property, QObject, Signal, Slot
 
@@ -24,9 +24,6 @@ from app.backend.services.input_validation import (
     validate_hwnd,
     validate_str,
 )
-
-if TYPE_CHECKING:
-    pass
 
 logger = logging.getLogger(__name__)
 
@@ -409,7 +406,7 @@ class ProfileController(QObject):
             # This is handled at startup via install_crash_handler
             self.logMessage.emit("INFO", "SYSTEM", f"Crash report sending: {'enabled' if enabled_val else 'disabled'}")
             return _qvar_map(make_ok_response())
-        except Exception as e:
+        except (OSError, ImportError, RuntimeError) as e:
             logger.error(f"setCrashReportSending failed: {e}")
             return _qvar_map(make_error_response(str(e)))
 
@@ -421,7 +418,7 @@ class ProfileController(QObject):
                 list_local_crashes as list_reports,
             )
             return _qvar_map({"ok": True, "crashes": list_reports()})
-        except Exception as e:
+        except (OSError, ImportError, RuntimeError) as e:
             logger.exception("listCrashReports failed")
             return _qvar_map(make_error_response(str(e)))
 
@@ -434,11 +431,9 @@ class ProfileController(QObject):
             )
             count = clear_reports()
             return _qvar_map({"ok": True, "cleared": count})
-        except Exception as e:
+        except (OSError, ImportError, RuntimeError) as e:
             logger.exception("clearAllCrashReports failed")
             return _qvar_map(make_error_response(str(e)))
-
-    # ─── Update Checker ──────────────────────────────────────────────────
 
     @Slot(result="QVariantMap")
     def checkForUpdates(self) -> dict[str, Any]:
@@ -446,7 +441,7 @@ class ProfileController(QObject):
         try:
             from app.backend.services.update_checker import check_for_updates
             return check_for_updates("0.17.0")
-        except Exception as e:
+        except (OSError, ImportError, RuntimeError) as e:
             logger.exception("checkForUpdates failed")
             return _qvar_map(make_error_response(str(e)))
 

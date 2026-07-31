@@ -8,7 +8,7 @@ import ctypes
 import logging
 import threading
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QObject, QTimer, Signal, Slot
 
@@ -34,23 +34,6 @@ if TYPE_CHECKING:
     from app.backend.sound_manager import SoundManager
 
 logger = logging.getLogger(__name__)
-
-
-# Protocol for what the tray needs from its bridge-like object
-class _TrayBridge(Protocol):
-    def getSettings(self) -> dict[str, Any]: ...
-    def resetAllHotkeys(self) -> dict[str, Any]: ...
-    def setTerminalPalette(self, palette_id: str) -> None: ...
-    def saveProfile(self, name: str) -> dict[str, Any]: ...
-    def setHotkey(self, action: str, key: str, mode: str) -> dict[str, Any]: ...
-    def toggleOverlayHUD(self) -> None: ...
-    def panicStop(self) -> dict[str, Any]: ...
-    def getClickerStatus(self) -> dict[str, Any]: ...
-    def aimStatus(self) -> dict[str, Any]: ...
-    def getMacroStatus(self) -> dict[str, Any]: ...
-    def recorderStatus(self) -> dict[str, Any]: ...
-    @property
-    def profile_controller(self) -> Any: ...
 
 
 class WindowController(QObject):
@@ -339,7 +322,7 @@ class WindowController(QObject):
         # Shutdown services
         try:
             self._hotkeys.shutdown()
-        except Exception as e:
+        except (OSError, ImportError, RuntimeError) as e:
             logger.warning(f"Hotkey service shutdown error: {e}")
 
         # Note: Pico and ViGEm cleanup handled by GamepadController
@@ -359,7 +342,7 @@ class WindowController(QObject):
             # For now just log
             logger.info(f"Crash report sending: {'enabled' if enabled else 'disabled'}")
             return True
-        except Exception as e:
+        except (OSError, ImportError, RuntimeError) as e:
             logger.error(f"Failed to set crash report sending: {e}")
             return False
 
@@ -369,7 +352,7 @@ class WindowController(QObject):
         try:
             from app.backend.services.crash_reporter import list_local_crashes
             return {"ok": True, "crashes": list_local_crashes()}
-        except Exception as e:
+        except (OSError, ImportError, RuntimeError) as e:
             logger.error(f"Failed to list crash reports: {e}")
             return {"ok": False, "error": str(e), "crashes": []}
 
@@ -380,7 +363,7 @@ class WindowController(QObject):
             from app.backend.services.crash_reporter import clear_all_crashes
             count = clear_all_crashes()
             return {"ok": True, "cleared": count}
-        except Exception as e:
+        except (OSError, ImportError, RuntimeError) as e:
             logger.error(f"Failed to clear crash reports: {e}")
             return {"ok": False, "error": str(e)}
 
@@ -393,7 +376,7 @@ class WindowController(QObject):
             if data:
                 return {"ok": True, "report": data}
             return {"ok": False, "error": "Report not found"}
-        except Exception as e:
+        except (OSError, ImportError, RuntimeError) as e:
             logger.error(f"Failed to read crash report {filename}: {e}")
             return {"ok": False, "error": str(e)}
 
@@ -404,7 +387,7 @@ class WindowController(QObject):
             from app.backend.services.crash_reporter import delete_local_crash
             deleted = delete_local_crash(filename)
             return {"ok": deleted}
-        except Exception as e:
+        except (OSError, ImportError, RuntimeError) as e:
             logger.error(f"Failed to delete crash report {filename}: {e}")
             return {"ok": False, "error": str(e)}
 
@@ -440,7 +423,7 @@ class WindowController(QObject):
                     self._update_shortcut_icon(unique_ico)
                     # Dispatch to main thread
                     self.iconReady.emit(png_path)
-            except Exception as e:
+            except (OSError, ImportError, RuntimeError) as e:
                 logger.warning(f"Failed to regenerate palette icon: {e}")
 
         t = threading.Thread(target=_generate_async, daemon=True)
@@ -469,7 +452,7 @@ class WindowController(QObject):
             try:
                 public_desktop = Path(os.environ.get("PUBLIC", "C:\\Users\\Public")) / "Desktop"
                 lnk_locations.append(public_desktop / "Shira Lab.lnk")
-            except Exception:
+            except (KeyError, OSError):
                 logger.exception("Failed to resolve public desktop path")
 
             updated_count = 0
@@ -490,7 +473,8 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
                         ["powershell", "-NoProfile", "-Command", ps_script],
                         capture_output=True,
                         text=True,
-                        creationflags=subprocess.CREATE_NO_WINDOW
+                        creationflags=subprocess.CREATE_NO_WINDOW,
+                        check=False
                     )
                     if "UPDATED" in result.stdout:
                         updated_count += 1
@@ -500,7 +484,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             if updated_count > 0:
                 self._refresh_icon_cache()
 
-        except Exception:
+        except (OSError, subprocess.SubprocessError):
             logger.exception("Failed to update shortcut icon")
 
     def _get_desktop_path(self) -> str | None:
@@ -517,8 +501,8 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
                 None, CSIDL_DESKTOP, None, SHGFP_TYPE_CURRENT, path_buf
             )
             return path_buf.value
-        except Exception as e:
-            logger.warning(f"Failed to get desktop path: {e}")
+        except (OSError, ImportError, RuntimeError):
+            logger.warning("Failed to get desktop path")
             return None
 
     def _refresh_icon_cache(self) -> None:
