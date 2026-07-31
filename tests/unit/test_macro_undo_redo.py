@@ -1,7 +1,8 @@
 """Unit tests for MacroService undo/redo functionality (v1.0.0 UX upgrade).
 
-NOTE: MacroService is a @singleton, so we need to access the underlying class
-via `MacroService._original_class` to create a fresh instance per test.
+NOTE: MacroService is a @singleton, so we need to bypass the singleton
+to create a fresh instance per test. We use the reset_instance() method
+added by the @singleton decorator, or access the original class.
 """
 from unittest.mock import MagicMock
 
@@ -15,8 +16,21 @@ def macro_service():
     """Get a fresh MacroService instance per test (bypassing singleton)."""
     from app.backend.services.macro_service import MacroService
 
-    # Access the original class (stored by @singleton decorator)
-    original_cls = MacroService._original_class
+    # Reset the singleton cache first (useful for test isolation, especially with xdist)
+    if hasattr(MacroService, 'reset_instance'):
+        MacroService.reset_instance()
+
+    # Access the original class (stored by @singleton decorator as attribute on wrapper)
+    # In multiprocessing/xdist environments, the wrapper may be different, so try multiple approaches
+    original_cls = getattr(MacroService, '_original_class', None)
+    if original_cls is None:
+        # Fallback: try to get from the underlying class attribute
+        original_cls = getattr(MacroService, 'cls', None)
+
+    if original_cls is None:
+        # Last resort: import the class directly from the module (bypassing decorator)
+        from app.backend.services.macro_service import MacroService as DirectMacroService
+        original_cls = DirectMacroService
 
     # Create a fresh instance, bypassing the singleton cache
     service = original_cls()
