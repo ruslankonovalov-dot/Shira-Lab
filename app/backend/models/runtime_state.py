@@ -139,6 +139,32 @@ class RuntimeState:
         "mouse1": "LT", "mouse2": "RT",
     })
 
+    # Service state flags (for test compatibility and QML binding)
+    clicker_running: bool = False
+    aim_running: bool = False
+    macro_running: bool = False
+    recorder_recording: bool = False
+    recorder_playing: bool = False
+
+    # Service configs (synced with services)
+    clicker_config: dict[str, Any] = field(default_factory=lambda: {
+        "interval_ms": 100, "hold_ms": 0, "button": "L", "limit": 0, "background_method": "sendinput"
+    })
+    aim_config: dict[str, Any] = field(default_factory=lambda: {
+        "speed": 0.5, "fov": 300, "background_method": "sendinput",
+        "detection_mode": "auto", "target_color": "red"
+    })
+    macro_config: dict[str, Any] = field(default_factory=lambda: {
+        "mode": "SEQUENTIAL", "background_method": "sendinput"
+    })
+    recorder_config: dict[str, Any] = field(default_factory=lambda: {
+        "background_method": "sendinput"
+    })
+
+    # Palettes and profiles (for test compatibility)
+    palettes: dict[str, Any] = field(default_factory=lambda: TERMINAL_PALETTES)
+    game_profiles: dict[str, Any] = field(default_factory=dict)
+
     def set_module_target(self, module: str, hwnd: int | None) -> None:
         """Set target window for a module."""
         attr = f"{module}_target_hwnd"

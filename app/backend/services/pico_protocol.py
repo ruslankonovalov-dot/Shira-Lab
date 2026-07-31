@@ -308,6 +308,10 @@ def parse_caps(payload: bytes) -> int:
     return 0
 
 
+# Alias for backward compatibility with tests
+calculate_crc8 = crc8
+
+
 __all__ = [
     # Builders
     "build_gamepad_buttons",

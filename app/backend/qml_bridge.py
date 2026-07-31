@@ -111,7 +111,21 @@ class QmlBridge(QObject):
     updateCheckResult = Signal(object)
     crashReportSaved = Signal(str)
 
-    def __init__(self, parent: QObject | None = None):
+    def __init__(self, state: RuntimeState | None = None, parent: QObject | None = None):
+        # Handle both old signature (state as parent) and new signature (state as first arg)
+        if state is not None and isinstance(state, QObject):
+            # Called as QmlBridge(state) where state is actually a QObject (old usage)
+            parent = state
+            state = None
+        elif state is not None and not isinstance(state, QObject):
+            # Called as QmlBridge(state) with RuntimeState
+            pass
+        else:
+            state = None
+
+        if state is None:
+            state = RuntimeState()
+
         super().__init__(parent)
 
         # Core services
@@ -120,7 +134,7 @@ class QmlBridge(QObject):
         self.recorder: RecorderService = RecorderService()
         self.aim: AimService = AimService()
         self.hotkeys: HotkeyService = HotkeyService(self)
-        self.state: RuntimeState = RuntimeState()
+        self.state: RuntimeState = state  # Use the passed state
         self._save_timer: threading.Timer | None = None
         self._save_lock = threading.Lock()
         self._suppress_save: bool = False
@@ -154,10 +168,13 @@ class QmlBridge(QObject):
         self._profile_controller: ProfileController = ProfileController(self.state, bridge=self, parent=self)
 
         # System tray - AFTER controllers so timer doesn't fire before init
-        self.tray: SystemTrayManager = SystemTrayManager(self)  # type: ignore[arg-type]
-
-        # Pass tray to WindowController (it was created without tray)
-        self._window_controller.set_tray(self.tray)
+        self.tray: SystemTrayManager | None = None
+        # By default, don't create system tray in tests
+        import os
+        if not os.environ.get("DISABLE_SYSTEM_TRAY"):
+            self.tray = SystemTrayManager(self)  # type: ignore[arg-type]
+            # Pass tray to WindowController (it was created without tray)
+            self._window_controller.set_tray(self.tray)
 
         # Set bridge references for controllers that need it
         self._gamepad_controller._vigem.set_bridge(self)
@@ -764,6 +781,17 @@ class QmlBridge(QObject):
     @Slot(str, str, str, result="QVariantMap")
     def setHotkey(self, action: str, key: str, mode: str) -> QVariantMap:
         return _qvar_map(self._hotkey_controller.setHotkey(action, key, mode))
+
+    # Aliases for test compatibility
+    @Slot(str, str, str, result="QVariantMap")
+    def registerHotkey(self, action: str, key: str, mode: str) -> QVariantMap:
+        """Alias for setHotkey (test compatibility)."""
+        return self.setHotkey(action, key, mode)
+
+    @Slot(str, result="QVariantMap")
+    def unregisterHotkey(self, action: str) -> QVariantMap:
+        """Alias for resetHotkey (test compatibility)."""
+        return _qvar_map(self._hotkey_controller.resetHotkey(action))
 
     @Slot(str, result="QVariantMap")
     def resetHotkey(self, action: str) -> QVariantMap:

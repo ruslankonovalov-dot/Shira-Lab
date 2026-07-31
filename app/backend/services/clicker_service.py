@@ -6,7 +6,9 @@ import threading
 import time
 from typing import TYPE_CHECKING, Any
 
+from app.backend.services.input_validation import VALID_BACKGROUND_METHODS
 from app.backend.services.stealth_input import StealthInput
+from utils import send_background_click
 
 # Type alias for background method
 BackgroundMethod = str
@@ -124,7 +126,10 @@ class ClickerService:
     @background_method.setter
     def background_method(self, value: BackgroundMethod) -> None:
         with self._lock:
-            self._background_method = value
+            if value in VALID_BACKGROUND_METHODS:
+                self._background_method = value
+            else:
+                self._log("WARN", f"Invalid background method '{value}', keeping current: {self._background_method}")
 
     @property
     def target_hwnd(self) -> int | None:
@@ -270,7 +275,6 @@ class ClickerService:
     def _send_background_click(self, hwnd: int, button: str, hold_ms: int, method: str) -> None:
         """Send click using configured background_method."""
         if method == "postmessage":
-            from utils import send_background_click
             send_background_click(hwnd, button=button)
             self._log("OK", f"PostMessage click → hwnd={hwnd}")
         elif method == "vigem":
@@ -373,6 +377,11 @@ class ClickerService:
             import logging
             logging.getLogger(__name__).debug(f"ViGEm button press failed: {e}")
             return False
+
+    def get_click_count(self) -> int:
+        """Get current click count (compatible with test expectations)."""
+        with self._lock:
+            return self._click_count
 
     def get_status(self) -> dict[str, Any]:
         return {

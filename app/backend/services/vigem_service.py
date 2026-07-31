@@ -463,7 +463,10 @@ class VigemService:
     @staticmethod
     def stick_normalize(value: float) -> int:
         """Нормализует float -1.0..1.0 в SHORT -32768..32767."""
-        return int(max(-1.0, min(1.0, value)) * 32767)
+        if value >= 0:
+            return int(max(0.0, min(1.0, value)) * 32767)
+        else:
+            return int(max(-1.0, min(0.0, value)) * 32768)
 
     @staticmethod
     def trigger_normalize(value: float) -> int:

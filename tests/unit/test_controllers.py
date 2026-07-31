@@ -11,20 +11,23 @@ class TestWindowController:
     def test_panic_stop(self):
         from app.backend.controllers.window_controller import WindowController
         from app.backend.models.runtime_state import RuntimeState
+        from app.backend.sound_manager import SoundManager
 
         state = RuntimeState()
-        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock())
+        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
 
         result = controller.panicStop()
-        assert isinstance(result, bool)
-        assert result is True
+        assert isinstance(result, dict)
+        assert "ok" in result
+        assert result["ok"] is True
 
     def test_get_overlay_visible(self):
         from app.backend.controllers.window_controller import WindowController
         from app.backend.models.runtime_state import RuntimeState
+        from app.backend.sound_manager import SoundManager
 
         state = RuntimeState()
-        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock())
+        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
 
         result = controller.getOverlayVisible()
         assert isinstance(result, bool)
@@ -34,7 +37,7 @@ class TestWindowController:
         from app.backend.models.runtime_state import RuntimeState
 
         state = RuntimeState()
-        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock())
+        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
 
         result = controller.setOverlayVisible(False)
         assert result is None
@@ -45,7 +48,7 @@ class TestWindowController:
         from app.backend.models.runtime_state import RuntimeState
 
         state = RuntimeState()
-        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock())
+        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
 
         result = controller.getPerformanceProfile()
         assert isinstance(result, dict)
@@ -56,7 +59,7 @@ class TestWindowController:
         from app.backend.models.runtime_state import RuntimeState
 
         state = RuntimeState()
-        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock())
+        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
 
         result = controller.detectSystemTheme()
         assert isinstance(result, dict)
@@ -65,24 +68,30 @@ class TestWindowController:
     def test_export_import_profile_dialog(self):
         from app.backend.controllers.window_controller import WindowController
         from app.backend.models.runtime_state import RuntimeState
+        from unittest.mock import patch
 
         state = RuntimeState()
-        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock())
+        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
 
-        result = controller.exportProfileDialog()
-        assert isinstance(result, dict)
-        assert "ok" in result
+        # Mock QFileDialog to avoid GUI interaction
+        with patch('PySide6.QtWidgets.QFileDialog.getSaveFileName', return_value=("test_profile.json", "JSON Files (*.json)")):
+            with patch('app.backend.profile_io.export_profile', return_value={"ok": True, "path": "test_profile.json"}):
+                result = controller.exportProfileDialog()
+                assert isinstance(result, dict)
+                assert "ok" in result
 
-        result = controller.importProfileDialog()
-        assert isinstance(result, dict)
-        assert "ok" in result
+        with patch('PySide6.QtWidgets.QFileDialog.getOpenFileName', return_value=("test_profile.json", "JSON Files (*.json)")):
+            with patch('app.backend.profile_io.import_profile', return_value={"ok": True, "applied": True}):
+                result = controller.importProfileDialog()
+                assert isinstance(result, dict)
+                assert "ok" in result
 
     def test_crash_report_methods(self):
         from app.backend.controllers.window_controller import WindowController
         from app.backend.models.runtime_state import RuntimeState
 
         state = RuntimeState()
-        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock())
+        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
 
         result = controller.setCrashReportSending(True)
         assert isinstance(result, bool)
@@ -100,7 +109,7 @@ class TestWindowController:
         from app.backend.models.runtime_state import RuntimeState
 
         state = RuntimeState()
-        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock())
+        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
 
         result = controller.getMonitors()
         assert isinstance(result, dict)
@@ -115,7 +124,7 @@ class TestWindowController:
         from app.backend.models.runtime_state import RuntimeState
 
         state = RuntimeState()
-        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock())
+        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
 
         result = controller.getWorkAreaForMonitor(0)
         assert isinstance(result, dict)
@@ -126,7 +135,7 @@ class TestWindowController:
         from app.backend.models.runtime_state import RuntimeState
 
         state = RuntimeState()
-        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock())
+        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
 
         result = controller.clampOverlayPosition(100, 100, 200, 200)
         assert isinstance(result, dict)
@@ -137,7 +146,7 @@ class TestWindowController:
         from app.backend.models.runtime_state import RuntimeState
 
         state = RuntimeState()
-        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock())
+        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
 
         result = controller.toggleWindowPin()
         assert isinstance(result, bool)
@@ -147,7 +156,7 @@ class TestWindowController:
         from app.backend.models.runtime_state import RuntimeState
 
         state = RuntimeState()
-        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock())
+        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
 
         result = controller.showAppWindow()
         assert result is None
@@ -157,7 +166,7 @@ class TestWindowController:
         from app.backend.models.runtime_state import RuntimeState
 
         state = RuntimeState()
-        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock())
+        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
 
         result = controller.toggleOverlayHUD()
         assert result is None
@@ -167,7 +176,7 @@ class TestWindowController:
         from app.backend.models.runtime_state import RuntimeState
 
         state = RuntimeState()
-        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock())
+        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
 
         result = controller.reassertOverlayTopmost()
         assert result is None
@@ -177,7 +186,7 @@ class TestWindowController:
         from app.backend.models.runtime_state import RuntimeState
 
         state = RuntimeState()
-        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock())
+        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
 
         result = controller.setCrashReportSending(True)
         assert isinstance(result, bool)
@@ -187,7 +196,7 @@ class TestWindowController:
         from app.backend.models.runtime_state import RuntimeState
 
         state = RuntimeState()
-        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock())
+        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
 
         # Should not raise
         controller.log("INFO", "TEST", "test message")
@@ -206,8 +215,9 @@ class TestGamepadController:
         assert isinstance(result, dict)
         assert "ok" in result
         if result["ok"]:
-            assert "data" in result
-            assert "available" in result["data"]
+            assert "connected" in result
+            assert "targets" in result
+            assert "target_count" in result
 
     def test_detect_physical_gamepads(self):
         result = self.controller.detectPhysicalGamepads()
@@ -311,17 +321,30 @@ class TestHotkeyController:
     def setup_method(self):
         from app.backend.controllers.hotkey_controller import HotkeyController
         from app.backend.models.runtime_state import RuntimeState
+        from app.backend.services.hotkey_service import HotkeyService
+        from unittest.mock import Mock
 
         self.state = RuntimeState()
-        self.controller = HotkeyController(self.state)
+        mock_api = Mock()
+        mock_api.clicker = Mock()
+        mock_api.clicker.is_running = False
+        mock_api.aim = Mock()
+        mock_api.aim.is_running = False
+        mock_api.macro = Mock()
+        mock_api.macro.is_running = False
+        mock_api.recorder = Mock()
+        mock_api.recorder.is_running = False
+        self.hotkey_service = HotkeyService(mock_api)
+        self.controller = HotkeyController(self.state, self.hotkey_service)
 
     def test_get_hotkeys(self):
         result = self.controller.getHotkeys()
         assert isinstance(result, dict)
-        assert "ok" in result
-        if result["ok"]:
-            assert "bindings" in result
-            assert isinstance(result["bindings"], dict)
+        # The result is bindings dict directly
+        assert "clicker_toggle" in result
+        assert isinstance(result["clicker_toggle"], dict)
+        assert "key" in result["clicker_toggle"]
+        assert "mode" in result["clicker_toggle"]
 
     def test_set_hotkey(self):
         result = self.controller.setHotkey("clicker_toggle", "f6", "TOGGLE")
@@ -356,15 +379,17 @@ class TestHotkeyController:
     def test_hotkeys_debug_status(self):
         result = self.controller.hotkeysDebugStatus()
         assert isinstance(result, dict)
-        assert "ok" in result
-        if result["ok"]:
-            assert "data" in result
-            assert isinstance(result["data"], dict)
+        # debug_status returns raw dict, not wrapped in ok
+        assert "keyboard_lib" in result
+        assert "mouse_lib" in result
+        assert "pynput" in result
 
     def test_hotkeys_debug_thread(self):
         result = self.controller.hotkeysDebugThread()
         assert isinstance(result, dict)
-        assert "ok" in result
+        # debug_dispatcher_thread returns raw dict
+        assert "dispatcher_connected" in result
+        assert "handler_set" in result
 
     def test_log_method(self):
         # Should not raise
@@ -409,7 +434,7 @@ class TestProfileController:
         assert result["ok"] is False
 
     def test_current_lang(self):
-        result = self.controller.currentLang()
+        result = self.controller.currentLang
         assert isinstance(result, str)
         assert result in ["RU", "EN"]
 

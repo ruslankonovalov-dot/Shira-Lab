@@ -83,8 +83,8 @@ class ProfileController(QObject):
         """Get current UI language."""
         return self._state.ui_lang
 
-    @Slot(str)
-    def setUiLang(self, code: str) -> None:
+    @Slot(str, result="QVariantMap")
+    def setUiLang(self, code: str) -> dict[str, Any]:
         """Set UI language and emit signals for QML re-evaluation."""
         code = code.upper()
         if code in ("RU", "EN"):
@@ -92,6 +92,8 @@ class ProfileController(QObject):
             self._schedule_save()
             self.settingsChanged.emit()
             self.langChanged.emit()
+            return _qvar_map(make_ok_response())
+        return _qvar_map(make_error_response("Invalid language code"))
 
     # ─── Settings ──────────────────────────────────────────────────────────
 
@@ -311,6 +313,7 @@ class ProfileController(QObject):
         return _qvar_map(make_ok_response())
 
     # ─── Module Target Windows ────────────────────────────────────────────
+    VALID_TARGET_MODULES = ("clicker", "aim", "macro", "recorder", "gamepad")
 
     @Slot(str, int, result="QVariantMap")
     def setModuleTargetWindow(self, module: str, hwnd: int) -> dict[str, Any]:
@@ -320,6 +323,10 @@ class ProfileController(QObject):
             if not ok or module_val is None:
                 logger.warning(f"setModuleTargetWindow: {err}")
                 return _qvar_map(make_error_response(err or "Invalid module"))
+            # Validate module is supported
+            if module_val not in self.VALID_TARGET_MODULES:
+                logger.warning(f"setModuleTargetWindow: Unsupported module: {module_val}")
+                return _qvar_map(make_error_response(f"Unsupported module: {module_val}"))
             ok, val, err = validate_hwnd(hwnd)
             if not ok or val is None:
                 logger.warning(f"setModuleTargetWindow: {err}")
@@ -340,7 +347,8 @@ class ProfileController(QObject):
             logger.warning(f"getModuleTargetWindow: {err}")
             return _qvar_map(make_error_response(err or "Invalid module"))
         try:
-            return _qvar_map(self._state.get_module_target(module_val))
+            result = self._state.get_module_target(module_val)
+            return _qvar_map(make_ok_response(data=result))
         except Exception as e:
             logger.exception("getModuleTargetWindow failed")
             return _qvar_map(make_error_response(str(e)))

@@ -405,7 +405,8 @@ def main() -> None:
             bridge._flush_save()
         except Exception:
             pass
-        bridge.tray.cleanup()
+        if bridge.tray is not None:
+            bridge.tray.cleanup()
         # Clean up hotkey service listeners
         try:
             bridge.hotkeys.shutdown()
@@ -425,8 +426,9 @@ def main() -> None:
             logger.warning("ViGEm shutdown error: %s", e)
         app.quit()
 
-    bridge.tray.showWindowRequested.connect(on_show_hide_window)
-    bridge.tray.quitRequested.connect(on_quit)
+    if bridge.tray is not None:
+        bridge.tray.showWindowRequested.connect(on_show_hide_window)
+        bridge.tray.quitRequested.connect(on_quit)
 
     # ─── Make overlay window INDEPENDENT from main window ──────────────
     # CRITICAL: QML Window declared inside ApplicationWindow gets a transient

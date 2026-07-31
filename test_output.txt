@@ -1,0 +1,15 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.4, pytest-9.1.1, pluggy-1.6.0 -- C:\Code\shira_lab_qt\venv\Scripts\python.exe
+cachedir: .pytest_cache
+PySide6 6.11.1 -- Qt runtime 6.11.1 -- Qt compiled 6.11.1
+rootdir: C:\Code\shira_lab_qt
+configfile: pytest.ini
+plugins: cov-7.1.0, qt-4.5.0
+collecting ... collected 54 items
+
+tests/unit/test_controllers.py::TestWindowController::test_panic_stop PASSED [  1%]
+tests/unit/test_controllers.py::TestWindowController::test_get_overlay_visible PASSED [  3%]
+tests/unit/test_controllers.py::TestWindowController::test_set_overlay_visible PASSED [  5%]
+tests/unit/test_controllers.py::TestWindowController::test_get_performance_profile PASSED [  7%]
+tests/unit/test_controllers.py::TestWindowController::test_detect_system_theme PASSED [  9%]
+tests/unit/test_controllers.py::TestWindowController::test_export_import_profile_dialog 

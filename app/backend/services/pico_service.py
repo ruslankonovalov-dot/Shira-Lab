@@ -205,6 +205,9 @@ class PicoService:
         # Bridge reference for logging
         self._bridge: Any = None  # Any to avoid circular imports
 
+        # Button mapping (loaded from state)
+        self._button_map: dict[str, str] = {}
+
     def set_bridge(self, bridge: Any) -> None:
         """Set bridge reference for logging."""
         self._bridge = bridge
@@ -303,6 +306,14 @@ class PicoService:
             self._log("INFO", "Disconnected")
             if self._on_disconnect:
                 self._on_disconnect()
+
+    def get_button_map(self, button: str) -> str:
+        """Get the mapped key for a Pico button."""
+        return self._button_map.get(button.upper(), "space")
+
+    def set_button_map(self, button: str, key: str) -> None:
+        """Set the mapped key for a Pico button."""
+        self._button_map[button.upper()] = key.lower()
 
     def _cleanup(self) -> None:
         # Idempotent: safe to call multiple times

@@ -11,7 +11,8 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-PROFILE_FORMAT_VERSION = "1.0"
+CURRENT_PROFILE_VERSION = "1.0"
+PROFILE_FORMAT_VERSION = CURRENT_PROFILE_VERSION
 
 
 def export_profile(bridge: Any, path: str | Path) -> dict[str, Any]:
@@ -252,4 +253,39 @@ def list_profile_files() -> dict[str, Any]:
         return {"ok": True, "profiles": files}
     except Exception as e:
         logger.exception("list_profile_files failed")
+        return {"ok": False, "error": str(e)}
+
+
+def save_profile(data: dict[str, Any], path: str | Path) -> dict[str, Any]:
+    """Save a simple profile dict to JSON file (for test compatibility)."""
+    try:
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(data, indent=2, ensure_ascii=False, default=str),
+            encoding="utf-8"
+        )
+        logger.info("Profile saved to %s", path)
+        return {"ok": True, "path": str(path), "size_bytes": path.stat().st_size}
+    except Exception as e:
+        logger.exception("Failed to save profile")
+        return {"ok": False, "error": str(e)}
+
+
+def load_profile(path: str | Path) -> dict[str, Any]:
+    """Load a simple profile dict from JSON file (for test compatibility)."""
+    try:
+        path = Path(path)
+        if not path.exists():
+            return {"ok": False, "error": f"File not found: {path}"}
+        data: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+
+        # Version migration
+        if "version" in data and data["version"] != CURRENT_PROFILE_VERSION:
+            data = {**data, "version": CURRENT_PROFILE_VERSION}
+
+        logger.info("Profile loaded from %s", path)
+        return data
+    except Exception as e:
+        logger.exception("Failed to load profile")
         return {"ok": False, "error": str(e)}

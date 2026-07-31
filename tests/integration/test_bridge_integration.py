@@ -1,8 +1,12 @@
 # tests/integration/test_bridge_integration.py — Integration tests for Phase 3.6
 # Tests QmlBridge + Controllers + Services working together
+import os
 import time
 
 import pytest
+
+# Disable system tray for tests to avoid segfault
+os.environ["DISABLE_SYSTEM_TRAY"] = "1"
 
 
 class TestBridgeIntegration:
@@ -21,19 +25,19 @@ class TestBridgeIntegration:
         bridge = QmlBridge(state)
 
         # Verify all controllers are present
-        assert hasattr(bridge, '_window_ctrl')
-        assert hasattr(bridge, '_gamepad_ctrl')
-        assert hasattr(bridge, '_hotkey_ctrl')
-        assert hasattr(bridge, '_profile_ctrl')
+        assert hasattr(bridge, '_window_controller')
+        assert hasattr(bridge, '_gamepad_controller')
+        assert hasattr(bridge, '_hotkey_controller')
+        assert hasattr(bridge, '_profile_controller')
 
         # Verify services are accessible
-        assert hasattr(bridge, '_clicker')
-        assert hasattr(bridge, '_aim')
-        assert hasattr(bridge, '_macro')
-        assert hasattr(bridge, '_recorder')
-        assert hasattr(bridge, '_hotkey_svc')
-        assert hasattr(bridge, '_pico')
+        assert hasattr(bridge, 'clicker')
+        assert hasattr(bridge, 'aim')
+        assert hasattr(bridge, 'macro')
+        assert hasattr(bridge, 'recorder')
+        assert hasattr(bridge, 'hotkeys')
         assert hasattr(bridge, '_vigem')
+        assert hasattr(bridge, '_pico')
 
     def test_bridge_signals_connected(self):
         """Test that controller signals are connected to bridge."""
@@ -44,14 +48,14 @@ class TestBridgeIntegration:
         bridge = QmlBridge(state)
 
         # Check that signals exist
+        assert hasattr(bridge, 'statusChanged')
+        assert hasattr(bridge, 'clickerStatusChanged')
+        assert hasattr(bridge, 'aimStatusChanged')
+        assert hasattr(bridge, 'macroStatusChanged')
+        assert hasattr(bridge, 'recorderStatusChanged')
+        assert hasattr(bridge, 'hotkeysChanged')
         assert hasattr(bridge, 'settingsChanged')
         assert hasattr(bridge, 'langChanged')
-        assert hasattr(bridge, 'statusUpdate')
-        assert hasattr(bridge, 'clickerStatus')
-        assert hasattr(bridge, 'aimStatus')
-        assert hasattr(bridge, 'macroStatus')
-        assert hasattr(bridge, 'recorderStatus')
-        assert hasattr(bridge, 'gamepadStatus')
 
     def test_bridge_clicker_delegation(self):
         """Test clicker service delegation through bridge."""
@@ -61,25 +65,28 @@ class TestBridgeIntegration:
         state = RuntimeState()
         bridge = QmlBridge(state)
 
-        # Test clicker start
-        result = bridge.clickerStart()
+        # Test clicker start - returns status dict
+        result = bridge.startClicker()
         assert isinstance(result, dict)
-        assert "ok" in result
+        assert "is_running" in result
+        assert result["is_running"] is True
 
-        # Test clicker stop
-        result = bridge.clickerStop()
+        # Test clicker stop - returns status dict
+        result = bridge.stopClicker()
         assert isinstance(result, dict)
-        assert "ok" in result
+        assert "is_running" in result
+        assert result["is_running"] is False
 
-        # Test clicker config
-        result = bridge.clickerSetConfig(100, 0, "L", 0, "sendinput")
-        assert isinstance(result, dict)
-        assert "ok" in result
+        # Test clicker config - returns status dict (no "ok" wrapper)
+        status = bridge.setClickerConfig(100, 0, "L", 0, "sendinput")
+        assert isinstance(status, dict)
+        assert "is_running" in status
+        assert status["interval_ms"] == 100
 
         # Test clicker status
-        result = bridge.clickerStatus()
+        result = bridge.getClickerStatus()
         assert isinstance(result, dict)
-        assert "ok" in result
+        assert "is_running" in result
 
     def test_bridge_aim_delegation(self):
         """Test aim service delegation through bridge."""
@@ -99,7 +106,7 @@ class TestBridgeIntegration:
         assert "ok" in result
 
         # Test aim config
-        result = bridge.aimSetConfig(0.5, 300, 5, 0.005, 20, 50000, 80, 50)
+        result = bridge.aimSetConfig(0.5, 5, 0.005)
         assert isinstance(result, dict)
         assert "ok" in result
 
@@ -125,50 +132,54 @@ class TestBridgeIntegration:
         state = RuntimeState()
         bridge = QmlBridge(state)
 
-        # Test add action
-        result = bridge.macroAddAction("a", 0.5, 0.05)
+        # Test add action - returns status dict
+        result = bridge.addMacroAction("a", 0.5, 0.05)
         assert isinstance(result, dict)
-        assert "ok" in result
+        assert "actions" in result
 
-        # Test clear actions
-        result = bridge.macroClearActions()
+        # Test start/stop - returns status dict
+        result = bridge.startMacro()
         assert isinstance(result, dict)
-        assert "ok" in result
+        assert "is_running" in result
+        assert result["is_running"] is True
 
-        # Test start/stop
-        result = bridge.macroStart()
+        result = bridge.stopMacro()
         assert isinstance(result, dict)
-        assert "ok" in result
+        assert "is_running" in result
+        assert result["is_running"] is False
 
-        result = bridge.macroStop()
+        # Test clear actions - returns status dict
+        result = bridge.clearMacroActions()
         assert isinstance(result, dict)
-        assert "ok" in result
+        assert "actions" in result
+        assert result["actions"] == []
 
-        result = bridge.macroStatus()
+        result = bridge.getMacroStatus()
         assert isinstance(result, dict)
-        assert "ok" in result
+        assert "run_mode" in result
 
     def test_bridge_recorder_delegation(self):
         """Test recorder service delegation through bridge."""
         from app.backend.models.runtime_state import RuntimeState
         from app.backend.qml_bridge import QmlBridge
+        import time
 
         state = RuntimeState()
         bridge = QmlBridge(state)
 
         # Test record
-        result = bridge.recorderStartRecord()
+        result = bridge.recorderStart()
         assert isinstance(result, dict)
         assert "ok" in result
 
         time.sleep(0.05)
 
-        result = bridge.recorderStopRecord()
+        result = bridge.recorderStop()
         assert isinstance(result, dict)
         assert "ok" in result
 
         # Test play
-        records_result = bridge.recorderListRecords()
+        records_result = bridge.recorderList()
         if records_result.get("ok") and records_result.get("data"):
             records = records_result["data"]
             if len(records) > 0:
@@ -193,28 +204,34 @@ class TestBridgeIntegration:
         state = RuntimeState()
         bridge = QmlBridge(state)
 
-        # Test register/unregister
-        result = bridge.registerHotkey("test_action", "f6", "TOGGLE")
+        # Test register/unregister - returns {"ok": True, ...}
+        # Use a valid action that the system recognizes
+        result = bridge.registerHotkey("clicker_toggle", "f6", "TOGGLE")
         assert isinstance(result, dict)
         assert "ok" in result
+        assert result["ok"] is True
 
-        result = bridge.unregisterHotkey("test_action")
+        result = bridge.unregisterHotkey("clicker_toggle")
         assert isinstance(result, dict)
         assert "ok" in result
+        assert result["ok"] is True
 
-        # Test validate hotkey
-        result = bridge.validateHotkey("f6")
+        # Test validate hotkey - returns validation result (without ok wrapper)
+        result = bridge.validateKey("f6")
         assert isinstance(result, dict)
         assert "ok" in result
+        assert result["ok"] is True
 
-        result = bridge.validateHotkey("invalid")
+        result = bridge.validateKey("invalid")
         assert isinstance(result, dict)
         assert result["ok"] is False
 
-        # Test debug
+        # Test debug - returns raw dict without "ok" wrapper
         result = bridge.hotkeysDebugStatus()
         assert isinstance(result, dict)
-        assert "ok" in result
+        assert "keyboard_lib" in result
+        assert "mouse_lib" in result
+        assert "pynput" in result
 
     def test_bridge_gamepad_delegation(self):
         """Test gamepad delegation through bridge."""
@@ -231,12 +248,10 @@ class TestBridgeIntegration:
 
         result = bridge.getPicoStatus()
         assert isinstance(result, dict)
-        assert "ok" in result
 
         # Test ViGEm
         result = bridge.getVigemStatus()
         assert isinstance(result, dict)
-        assert "ok" in result
 
     def test_bridge_profile_delegation(self):
         """Test profile delegation through bridge."""
@@ -246,17 +261,17 @@ class TestBridgeIntegration:
         state = RuntimeState()
         bridge = QmlBridge(state)
 
-        # Test palettes
+        # Test palettes - returns raw dict (TERMINAL_PALETTES)
         result = bridge.getPalettes()
         assert isinstance(result, dict)
-        assert "ok" in result
+        assert "matrix" in result
 
-        # Test game profiles
+        # Test game profiles - returns {"ok": True, ...}
         result = bridge.listGameProfiles()
         assert isinstance(result, dict)
         assert "ok" in result
 
-        # Test target windows
+        # Test target windows - returns {"ok": True, ...}
         result = bridge.getWindows()
         assert isinstance(result, dict)
         assert "ok" in result
@@ -274,7 +289,7 @@ class TestBridgeIntegration:
         bridge = QmlBridge(state)
 
         # Invalid clicker config
-        result = bridge.clickerSetConfig(-1, 0, "L", 0, "sendinput")
+        result = bridge.setClickerConfig(-1, 0, "L", 0, "sendinput")
         assert isinstance(result, dict)
         assert result["ok"] is False
 

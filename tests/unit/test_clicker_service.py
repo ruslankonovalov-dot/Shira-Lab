@@ -11,6 +11,8 @@ class TestClickerService:
 
     def setup_method(self):
         from app.backend.services.clicker_service import ClickerService
+        # Reset singleton to get fresh instance
+        ClickerService.reset_instance()
         self.service = ClickerService()
         self.service._bridge = Mock()
 
@@ -137,6 +139,8 @@ class TestClickerServiceThreadSafety:
 
     def setup_method(self):
         from app.backend.services.clicker_service import ClickerService
+        # Reset singleton to get fresh instance
+        ClickerService.reset_instance()
         self.service = ClickerService()
         self.service._bridge = Mock()
 
@@ -180,6 +184,8 @@ class TestClickerServiceBackgroundMethods:
 
     def setup_method(self):
         from app.backend.services.clicker_service import ClickerService
+        # Reset singleton to get fresh instance
+        ClickerService.reset_instance()
         self.service = ClickerService()
         self.service._bridge = Mock()
 
