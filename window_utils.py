@@ -50,7 +50,7 @@ def set_window_topmost(hwnd: int, pinned: bool) -> None:
     hwnd_c = wintypes.HWND(hwnd)
     try:
         ex_style = user32.GetWindowLongW(hwnd_c, GWL_EXSTYLE)
-    except Exception:
+    except (OSError, AttributeError, ValueError):
         ex_style = 0
     if pinned:
         new_style = ex_style | WS_EX_TOPMOST
@@ -61,12 +61,12 @@ def set_window_topmost(hwnd: int, pinned: bool) -> None:
     if new_style != ex_style:
         try:
             user32.SetWindowLongW(hwnd_c, GWL_EXSTYLE, ctypes.c_long(new_style))
-        except Exception:
+        except (OSError, AttributeError, ValueError):
             pass
     flags = SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW
     try:
         user32.SetWindowPos(hwnd_c, insert_after, 0, 0, 0, 0, flags)
-    except Exception:
+    except (OSError, AttributeError, ValueError):
         pass
 
 
@@ -85,20 +85,20 @@ def set_overlay_always_topmost(hwnd: int) -> None:
     hwnd_c = wintypes.HWND(hwnd)
     try:
         ex_style = user32.GetWindowLongW(hwnd_c, GWL_EXSTYLE)
-    except Exception:
+    except (OSError, AttributeError, ValueError):
         ex_style = 0
     # Add TOPMOST + TOOLWINDOW, keep any existing flags
     new_style = ex_style | WS_EX_TOPMOST | WS_EX_TOOLWINDOW
     if new_style != ex_style:
         try:
             user32.SetWindowLongW(hwnd_c, GWL_EXSTYLE, ctypes.c_long(new_style))
-        except Exception:
+        except (OSError, AttributeError, ValueError):
             pass
     # Assert Z-order: TOPMOST with NOACTIVATE (don't steal focus)
     flags = SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW | SWP_NOACTIVATE
     try:
         user32.SetWindowPos(hwnd_c, HWND_TOPMOST, 0, 0, 0, 0, flags)
-    except Exception:
+    except (OSError, AttributeError, ValueError):
         pass
 
 
@@ -112,7 +112,7 @@ def get_work_area() -> tuple[int, int, int, int]:
         rect = wintypes.RECT()
         if user32.SystemParametersInfoW(SPI_GETWORKAREA, 0, ctypes.byref(rect), 0):
             return (rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top)
-    except Exception:
+    except (OSError, AttributeError, ValueError):
         pass
     # Fallback: assume 1920x1080 with 40px taskbar
     return (0, 0, 1920, 1040)
@@ -134,7 +134,7 @@ try:
     user32.MonitorFromWindow.restype = wintypes.HANDLE
     user32.GetMonitorInfoW.argtypes = [wintypes.HANDLE, ctypes.POINTER(MONITORINFO)]
     user32.GetMonitorInfoW.restype = wintypes.BOOL
-except Exception:
+except (OSError, AttributeError):
     pass
 
 
@@ -154,7 +154,7 @@ def get_work_area_for_window(hwnd: int) -> tuple[int, int, int, int]:
             return (mi.rcWork.left, mi.rcWork.top,
                     mi.rcWork.right - mi.rcWork.left,
                     mi.rcWork.bottom - mi.rcWork.top)
-    except Exception:
+    except (OSError, AttributeError, ValueError):
         pass
     return get_work_area()
 
@@ -178,7 +178,7 @@ def find_app_hwnd(title: str = "Shira Lab") -> int:
         hwnd = user32.FindWindowW(None, title)
         if hwnd:
             return int(hwnd)
-    except Exception:
+    except (OSError, AttributeError, ValueError):
         pass
     return 0
 
@@ -189,7 +189,7 @@ def get_foreground_hwnd() -> int:
         hwnd = user32.GetForegroundWindow()
         if hwnd:
             return int(hwnd)
-    except Exception:
+    except (OSError, AttributeError, ValueError):
         pass
     return 0
 
@@ -237,7 +237,7 @@ def get_monitors() -> list[dict[str, int]]:
     MONITORENUMPROC = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HANDLE, wintypes.HANDLE, ctypes.POINTER(wintypes.RECT), wintypes.LPARAM)
     try:
         user32.EnumDisplayMonitors(None, None, MONITORENUMPROC(enum_monitor_proc), 0)
-    except Exception:
+    except (OSError, AttributeError, ValueError):
         # Fallback
         wa = get_work_area()
         monitors.append({

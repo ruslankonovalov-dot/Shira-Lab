@@ -20,7 +20,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import IntEnum
 from queue import Empty, Queue
-from typing import Any
+from typing import Any, ClassVar
 
 import serial
 import serial.tools.list_ports
@@ -161,8 +161,8 @@ class PicoService:
     """
 
     # Стандартные VID:PID для Pico в CDC режиме
-    DEFAULT_VIDS = [0x2E8A]  # Raspberry Pi
-    DEFAULT_PIDS = [0x000A, 0x0005, 0x0009]  # Pico CDC, Pico Boot, Custom
+    DEFAULT_VIDS: ClassVar[list[int]] = [0x2E8A]  # Raspberry Pi
+    DEFAULT_PIDS: ClassVar[list[int]] = [0x000A, 0x0005, 0x0009]  # Pico CDC, Pico Boot, Custom
 
     def __init__(
         self,
@@ -292,7 +292,7 @@ class PicoService:
                     self._on_connect(info)
                 return True
 
-            except Exception as e:
+            except (OSError, serial.SerialException, ValueError) as e:
                 logger.error(f"Ошибка подключения: {e}")
                 self._log("ERROR", f"Connection failed: {e}")
                 self._cleanup()
@@ -323,7 +323,7 @@ class PicoService:
         if ser:
             try:
                 ser.close()
-            except Exception:
+            except OSError:
                 logger.debug("Error closing serial port during cleanup")
         reader = self._reader_thread
         writer = self._writer_thread
@@ -375,13 +375,13 @@ class PicoService:
                     resp = ser.read(64)
                     if resp and len(resp) >= 2 and resp[0] == RESP_INFO:
                         dev.info = parse_info(resp[2:])
-                except Exception:
+                except (OSError, serial.SerialException, ValueError):
                     logger.debug(f"Failed to probe Pico on {p.device}")
                 finally:
                     if ser:
                         try:
                             ser.close()
-                        except Exception:
+                        except OSError:
                             logger.debug(f"Error closing serial port {p.device}")
                 result.append(dev)
         return result
@@ -457,7 +457,7 @@ class PicoService:
                 logger.error(f"Serial ошибка чтения: {e}")
                 self._handle_disconnect()
                 break
-            except Exception as e:
+            except (OSError, ValueError, struct.error) as e:
                 logger.error(f"Reader loop ошибка: {e}")
 
     def _writer_loop(self) -> None:
@@ -467,7 +467,7 @@ class PicoService:
             if not ser or not ser.is_open:
                 break
             try:
-                frame, seq = self._cmd_queue.get(timeout=0.1)
+                frame, _ = self._cmd_queue.get(timeout=0.1)
                 ser.write(frame)
                 ser.flush()
             except Empty:
@@ -476,7 +476,7 @@ class PicoService:
                 logger.error(f"Serial ошибка записи: {e}")
                 self._handle_disconnect()
                 break
-            except Exception as e:
+            except (OSError, ValueError) as e:
                 logger.error(f"Writer loop ошибка: {e}")
 
     def _handle_response(self, cmd: int, seq: int, payload: bytes) -> None:
@@ -514,7 +514,7 @@ class PicoService:
                     if self.connect():
                         logger.info("Переподключение успешно")
                         break
-                except Exception:
+                except (OSError, serial.SerialException, ValueError, RuntimeError):
                     logger.exception("Failed to reconnect to Pico")
         threading.Thread(target=attempt, daemon=True).start()
 

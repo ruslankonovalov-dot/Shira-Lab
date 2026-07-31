@@ -17,6 +17,7 @@ import platform
 import sys
 import traceback
 import urllib.request
+from datetime import timezone
 from pathlib import Path
 from types import TracebackType
 from typing import Any
@@ -47,7 +48,7 @@ def install_crash_handler(app_version: str, send_reports: bool = False) -> None:
 
             if send_reports:
                 _send_to_server(report)
-        except Exception:
+        except Exception:  # noqa: BLE001,S110 - crash handler must never crash
             # Crash handler must never crash -- otherwise it hangs
             pass
         finally:
@@ -64,7 +65,7 @@ def _build_report(exc_type: type[BaseException],
                   app_version: str) -> dict[str, Any]:
     """Build structured crash report."""
     return {
-        "timestamp": datetime.datetime.now().isoformat(),
+        "timestamp": datetime.datetime.now(timezone.utc).isoformat(),
         "app_version": app_version,
         "python_version": platform.python_version(),
         "platform": platform.platform(),
@@ -81,7 +82,7 @@ def _build_report(exc_type: type[BaseException],
 def _save_local(report: dict[str, Any]) -> Path:
     """Save report locally to data/crash_logs/."""
     CRASH_LOG_DIR.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     exc_type = report.get("exception_type", "Unknown")
     filename = f"crash_{timestamp}_{exc_type}.json"
     path = CRASH_LOG_DIR / filename
@@ -92,7 +93,7 @@ def _save_local(report: dict[str, Any]) -> Path:
             encoding="utf-8"
         )
         logger.error("Crash report saved to %s", path)
-    except Exception as e:
+    except OSError as e:
         logger.error("Failed to save crash report: %s", e)
     return path
 
@@ -116,7 +117,7 @@ def _send_to_server(report: dict[str, Any]) -> bool:
             else:
                 logger.warning("Crash report server returned %s", response.status)
                 return False
-    except Exception as e:
+    except (OSError, ValueError) as e:
         logger.warning("Failed to send crash report: %s", e)
         return False
 
@@ -137,7 +138,7 @@ def list_local_crashes() -> list[dict[str, Any]]:
                 "exception_message": data.get("exception_message", ""),
                 "size_bytes": path.stat().st_size,
             })
-        except Exception:
+        except (OSError, json.JSONDecodeError, ValueError):
             continue
 
     return crashes
@@ -152,7 +153,7 @@ def read_local_crash(filename: str) -> dict[str, Any] | None:
         data = json.loads(path.read_text(encoding="utf-8"))
         if isinstance(data, dict):
             return data
-    except Exception:
+    except (OSError, json.JSONDecodeError, ValueError):
         pass
     return None
 
@@ -164,7 +165,7 @@ def delete_local_crash(filename: str) -> bool:
         if path.exists():
             path.unlink()
             return True
-    except Exception:
+    except OSError:
         pass
     return False
 
@@ -178,6 +179,6 @@ def clear_all_crashes() -> int:
         try:
             path.unlink()
             count += 1
-        except Exception:
+        except OSError:
             pass
     return count

@@ -28,6 +28,7 @@ from __future__ import annotations
 import ctypes
 import logging
 from ctypes import wintypes
+from typing import ClassVar
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +96,7 @@ class HARDWAREINPUT(ctypes.Structure):
 
 
 class _INPUT_UNION(ctypes.Union):
-    _fields_ = [
+    _fields_: ClassVar = [
         ("mi", MOUSEINPUT),
         ("ki", KEYBDINPUT),
         ("hi", HARDWAREINPUT),
@@ -211,7 +212,7 @@ class StealthInput:
             inputs = (INPUT * 1)(up)
             sent = _user32.SendInput(1, inputs, ctypes.sizeof(INPUT))
             return bool(sent == 1)
-        except Exception:
+        except (OSError, RuntimeError, ValueError, AttributeError):
             logger.debug("Failed to send key via SendInput")
             return False
 
@@ -247,7 +248,7 @@ class StealthInput:
             }
             extended = vk in EXTENDED_VK
             return StealthInput.send_key_scancode(scancode, hold_ms, extended)
-        except Exception:
+        except (OSError, RuntimeError, ValueError, AttributeError):
             logger.debug("Failed to send key VK via SendInput")
             return False
 
@@ -297,7 +298,7 @@ class StealthInput:
             inputs = (INPUT * 1)(up)
             sent = _user32.SendInput(1, inputs, ctypes.sizeof(INPUT))
             return bool(sent == 1)
-        except Exception:
+        except (OSError, RuntimeError, ValueError, AttributeError):
             logger.debug("Failed to send mouse click via SendInput")
             return False
 
@@ -330,7 +331,7 @@ class StealthInput:
             inputs = (INPUT * 1)(inp)
             sent: int = _user32.SendInput(1, inputs, ctypes.sizeof(INPUT))
             return bool(sent == 1)
-        except Exception:
+        except (OSError, RuntimeError, ValueError, AttributeError):
             logger.debug("Failed to send mouse wheel via SendInput")
             return False
 
@@ -350,7 +351,7 @@ class StealthInput:
             inputs = (INPUT * 1)(inp)
             sent: int = _user32.SendInput(1, inputs, ctypes.sizeof(INPUT))
             return bool(sent == 1)
-        except Exception:
+        except (OSError, RuntimeError, ValueError, AttributeError):
             logger.debug("Failed to send mouse move via SendInput")
             return False
 
@@ -370,7 +371,7 @@ class StealthInput:
                 return False
             result: int = _user32.AttachThreadInput(current_tid, target_tid, attach)
             return bool(result)
-        except Exception:
+        except (OSError, RuntimeError, ValueError, AttributeError):
             logger.debug("Failed to attach/detach thread input")
             return False
 
@@ -423,7 +424,7 @@ class StealthInput:
                 return False
             extended = vk in (0xA3, 0xA5)  # RCONTROL, RMENU
             return StealthInput.send_key_scancode_attached(hwnd, scancode, hold_ms, extended)
-        except Exception:
+        except (OSError, RuntimeError, ValueError, AttributeError):
             logger.debug("Failed to send key VK attached")
             return False
 
@@ -481,7 +482,7 @@ class StealthInput:
                 return bool(sent == 1)
             finally:
                 StealthInput._attach_thread_input(hwnd, False)
-        except Exception:
+        except (OSError, RuntimeError, ValueError, AttributeError):
             logger.debug("Failed to send mouse click attached")
             return False
 

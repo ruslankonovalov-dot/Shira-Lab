@@ -72,7 +72,7 @@ class SoundManager(QObject):
                 winsound.Beep(frequency, duration)
             else:
                 sys.stdout.write('\a')  # ASCII bell
-        except Exception:
+        except (OSError, ImportError, ValueError):
             logger.debug("Failed to play system beep fallback")
 
     def set_enabled(self, enabled: bool) -> None:

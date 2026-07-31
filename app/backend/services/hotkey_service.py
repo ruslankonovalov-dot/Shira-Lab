@@ -9,7 +9,6 @@ from typing import (
     Any,
     Protocol,
     TypedDict,
-    Union,
     cast,
 )
 
@@ -112,13 +111,13 @@ class ParsedKeyKeyboard(TypedDict):
     sequence: list[str]
 
 
-_ParsedKey = Union[
-    ParsedKeyEmpty,
-    ParsedKeySequence,
-    ParsedKeyMouse,
-    ParsedKeyWheel,
-    ParsedKeyKeyboard,
-]
+_ParsedKey = (
+    ParsedKeyEmpty
+    | ParsedKeySequence
+    | ParsedKeyMouse
+    | ParsedKeyWheel
+    | ParsedKeyKeyboard
+)
 
 
 class BindingBase(TypedDict, total=False):
@@ -154,13 +153,13 @@ class EmptyBinding(BindingBase):
     key: str
 
 
-_BindingDict = Union[
-    KeyboardBinding,
-    MouseBinding,
-    WheelBinding,
-    SequenceBinding,
-    EmptyBinding,
-]
+_BindingDict = (
+    KeyboardBinding
+    | MouseBinding
+    | WheelBinding
+    | SequenceBinding
+    | EmptyBinding
+)
 
 _BindingMap = dict[str, _BindingDict | dict[str, str]]
 _RegisteredMap = dict[str, list[Any]]
@@ -305,7 +304,7 @@ class HotkeyService:
             else:
                 if pressed:  # TOGGLE mode only triggers on press
                     self._action_handler(action)()
-        except Exception as e:
+        except (OSError, RuntimeError, ValueError, AttributeError) as e:
             logger.warning("Dispatched hotkey action %s error: %s", action, e)
 
     # ─── Привязка обработчиков к действиям ────────────────────────────────
@@ -318,7 +317,7 @@ class HotkeyService:
                     api.stop_clicker()
                 else:
                     api.start_clicker()
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 logger.warning("clicker_toggle hotkey error: %s", e)
 
         def _aim_toggle() -> None:
@@ -327,19 +326,19 @@ class HotkeyService:
                     api.aim_stop()
                 else:
                     api.aim_start()
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 logger.warning("aim_toggle hotkey error: %s", e)
 
         def _macro_start() -> None:
             try:
                 api.start_macro()
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 logger.warning("macro_start hotkey error: %s", e)
 
         def _macro_stop() -> None:
             try:
                 api.stop_macro()
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 logger.warning("macro_stop hotkey error: %s", e)
 
         def _recorder_start() -> None:
@@ -348,19 +347,19 @@ class HotkeyService:
                     api.recorder_stop()
                 else:
                     api.recorder_start()
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 logger.warning("recorder_start hotkey error: %s", e)
 
         def _recorder_stop() -> None:
             try:
                 api.recorder_stop_play()
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 logger.warning("recorder_stop hotkey error: %s", e)
 
         def _app_show() -> None:
             try:
                 api.show_app_window()
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 logger.warning("app_show hotkey error: %s", e)
 
         def _panic_stop() -> None:
@@ -376,7 +375,7 @@ class HotkeyService:
                     api.recorder_stop_play()
                 if api.recorder.is_recording:
                     api.recorder_stop()
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 logger.warning("panic_stop hotkey error: %s", e)
 
         mapping: dict[str, Callable[[], None]] = {
@@ -398,27 +397,27 @@ class HotkeyService:
             try:
                 if not api.clicker.is_running:
                     api.start_clicker()
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 logger.warning("clicker HOLD start error: %s", e)
 
         def _aim_start() -> None:
             try:
                 if not api.aim.is_running:
                     api.aim_start()
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 logger.warning("aim HOLD start error: %s", e)
 
         def _macro_start() -> None:
             try:
                 api.start_macro()
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 logger.warning("macro HOLD start error: %s", e)
 
         def _recorder_start() -> None:
             try:
                 if not api.recorder.is_recording:
                     api.recorder_start()
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 logger.warning("recorder HOLD start error: %s", e)
 
         mapping: dict[str, Callable[[], None]] = {
@@ -436,27 +435,27 @@ class HotkeyService:
             try:
                 if api.clicker.is_running:
                     api.stop_clicker()
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 logger.warning("clicker HOLD stop error: %s", e)
 
         def _aim_stop() -> None:
             try:
                 if api.aim.is_running:
                     api.aim_stop()
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 logger.warning("aim HOLD stop error: %s", e)
 
         def _macro_stop() -> None:
             try:
                 api.stop_macro()
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 logger.warning("macro HOLD stop error: %s", e)
 
         def _recorder_stop() -> None:
             try:
                 if api.recorder.is_recording:
                     api.recorder_stop()
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 logger.warning("recorder HOLD stop error: %s", e)
 
         mapping: dict[str, Callable[[], None]] = {
@@ -564,15 +563,15 @@ class HotkeyService:
                 def on_event(event: Any) -> None:
                     try:
                         self._handle_mouse_event_safe(event)
-                    except Exception as e:
-                        logger.exception("mouse hook callback crashed: %s", e)
-                        self._mouse_hook_last_error = str(e)
+                    except Exception:
+                        logger.exception("mouse hook callback crashed")
+                        self._mouse_hook_last_error = "callback crashed"
 
                 self._mouse_hook = mouse_lib.hook(on_event)
                 self._mouse_hook_started = True
                 self._mouse_hook_last_error = None
                 logger.info("mouse lib hook started successfully")
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 self._mouse_hook_last_error = f"Failed to start mouse hook: {e}"
                 logger.error("Failed to start mouse hook: %s", e)
 
@@ -589,14 +588,14 @@ class HotkeyService:
                 def on_click(x: float, y: float, button: Any, pressed: bool) -> None:
                     try:
                         self._handle_pynput_click(button, pressed)
-                    except Exception as e:
-                        logger.exception("pynput click callback crashed: %s", e)
+                    except Exception:
+                        logger.exception("pynput click callback crashed")
 
                 def on_scroll(x: float, y: float, dx: int, dy: int) -> None:
                     try:
                         self._handle_wheel_event(dx, dy)
-                    except Exception as e:
-                        logger.exception("pynput scroll callback crashed: %s", e)
+                    except Exception:
+                        logger.exception("pynput scroll callback crashed")
 
                 self._pynput_listener = pynput_mouse.Listener(
                     on_click=on_click,
@@ -606,7 +605,7 @@ class HotkeyService:
                 self._pynput_listener.start()
                 self._pynput_started = True
                 logger.info("pynput listener started successfully")
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, AttributeError) as e:
                 logger.error("Failed to start pynput listener: %s", e)
 
     def _handle_mouse_event_safe(self, event: Any) -> None:
@@ -767,7 +766,7 @@ class HotkeyService:
             try:
                 if not keyboard.is_pressed(check_key):
                     return False
-            except Exception:
+            except (OSError, RuntimeError, ValueError, AttributeError):
                 logger.exception("Failed to check key state")
                 return False
         return True
@@ -785,10 +784,8 @@ class HotkeyService:
                     keyboard.unhook(h)
                 elif hasattr(keyboard, "remove_hotkey"):
                     keyboard.remove_hotkey(h)
-            except (KeyError, ValueError):
+            except (KeyError, ValueError, OSError, RuntimeError, AttributeError):
                 pass
-            except Exception:
-                logger.exception("Failed to unregister hotkey")
 
     def _register_action(self, action: str, key: str, mode: str) -> tuple[bool, str | None]:
         if not _HAS_KEYBOARD:
@@ -813,7 +810,7 @@ class HotkeyService:
             else:
                 return self._register_keyboard(action, parsed["modifiers"],
                                                 parsed["main"], mode)
-        except Exception as e:
+        except (OSError, RuntimeError, ValueError, AttributeError, ImportError) as e:
             logger.error("Failed to register hotkey %s=%s: %s", action, key, e)
             return False, str(e)
 
@@ -842,7 +839,7 @@ class HotkeyService:
                     h = keyboard.add_hotkey(combo, handler, suppress=False)
                     self._registered[action] = [h]
             return True, None
-        except Exception as e:
+        except (OSError, RuntimeError, ValueError, AttributeError, ImportError) as e:
             return False, str(e)
 
     def _register_mouse(self, action: str, modifiers: list[str], button_key: str,
@@ -880,7 +877,7 @@ class HotkeyService:
             logger.info("Registered mouse hotkey: %s = %s [%s]",
                         action, button_key, mode)
             return True, None
-        except Exception as e:
+        except (OSError, RuntimeError, ValueError, AttributeError) as e:
             return False, str(e)
 
     def _register_wheel(self, action: str, modifiers: list[str], wheel_key: str,
@@ -903,7 +900,7 @@ class HotkeyService:
                     "mode": mode,
                 }
             return True, None
-        except Exception as e:
+        except (OSError, RuntimeError, ValueError, AttributeError) as e:
             return False, str(e)
 
     def _register_sequence(self, action: str, keys: list[str], mode: str) -> tuple[bool, str | None]:
@@ -917,7 +914,7 @@ class HotkeyService:
                                      timeout=0.5)
             self._registered[action] = [h]
             return True, None
-        except Exception as e:
+        except (OSError, RuntimeError, ValueError, AttributeError, ImportError) as e:
             return False, str(e)
 
     # ─── Публичный API ────────────────────────────────────────────────────
@@ -957,7 +954,7 @@ class HotkeyService:
                         try:
                             self._register_action(action, str(prev_binding["key"]),
                                                    str(prev_binding["mode"]))
-                        except Exception:
+                        except (OSError, RuntimeError, ValueError, AttributeError):
                             logger.exception("Failed to restore previous hotkey binding")
                     return {
                         "ok": False,
@@ -1063,7 +1060,7 @@ class HotkeyService:
                             keyboard.parse_hotkey(k)
                     except ValueError as e:
                         return {"ok": False, "error": f"Invalid key '{k}': {e}"}
-                    except Exception as e:
+                    except (OSError, RuntimeError, AttributeError) as e:
                         return {"ok": False, "error": f"Invalid key '{k}': {e}"}
             return {"ok": True, "type": "sequence"}
 
@@ -1097,7 +1094,7 @@ class HotkeyService:
             return {"ok": True, "type": "keyboard"}
         except ValueError as e:
             return {"ok": False, "error": str(e)}
-        except Exception as e:
+        except (OSError, RuntimeError, AttributeError) as e:
             return {"ok": False, "error": str(e)}
 
     # ─── Диагностика ──────────────────────────────────────────────────────
@@ -1175,7 +1172,7 @@ class HotkeyService:
                         self._mouse_hook = None
                     self._mouse_hook_started = False
                     logger.info("mouse lib hook stopped")
-                except Exception as e:
+                except (OSError, RuntimeError, AttributeError) as e:
                     logger.warning("Failed to stop mouse hook: %s", e)
 
             # Stop pynput listener
@@ -1186,7 +1183,7 @@ class HotkeyService:
                         self._pynput_listener = None
                     self._pynput_started = False
                     logger.info("pynput listener stopped")
-                except Exception as e:
+                except (OSError, RuntimeError, AttributeError) as e:
                     logger.warning("Failed to stop pynput listener: %s", e)
 
 

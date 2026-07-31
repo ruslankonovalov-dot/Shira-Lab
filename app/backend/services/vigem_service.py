@@ -221,10 +221,9 @@ class VigemService:
         with self._lock:
             if self._client:
                 return True
-            if not self._dll:
-                if not self._load_dll():
-                    self._log("ERROR", "ViGEmClient.dll not found")
-                    return False
+            if not self._dll and not self._load_dll():
+                self._log("ERROR", "ViGEmClient.dll not found")
+                return False
             assert self._dll is not None  # _load_dll ensures this
             self._client = self._dll.vigem_alloc()
             if not self._client:
@@ -367,7 +366,7 @@ class VigemService:
         with self._lock:
             if target_id not in self._targets:
                 return False
-            target, ttype = self._targets[target_id]
+            _, ttype = self._targets[target_id]
             if ttype != VIGEM_TARGET_TYPE.XBOX360:
                 return False
 
@@ -393,7 +392,7 @@ class VigemService:
         with self._lock:
             if target_id not in self._targets:
                 return False
-            target, ttype = self._targets[target_id]
+            _, ttype = self._targets[target_id]
             if ttype != VIGEM_TARGET_TYPE.XBOX360:
                 return False
 

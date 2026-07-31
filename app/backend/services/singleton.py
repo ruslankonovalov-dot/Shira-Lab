@@ -32,16 +32,13 @@ def singleton(cls: type[T]) -> Callable[..., T]:
     def reset_instance() -> None:
         """Reset the singleton instance (useful for testing)."""
         with lock:
-            if cls in instances:
-                del instances[cls]
+            instances.pop(cls, None)
 
-    # Preserve original class attributes
+    # Preserve original class attributes and add singleton helpers
     get_instance.__name__ = cls.__name__
     get_instance.__doc__ = cls.__doc__
-    setattr(get_instance, '_original_class', cls)
-    setattr(get_instance, 'reset_instance', reset_instance)
-
-    # Allow access to class methods
-    setattr(get_instance, 'cls', cls)
+    object.__setattr__(get_instance, "_original_class", cls)
+    object.__setattr__(get_instance, "reset_instance", reset_instance)
+    object.__setattr__(get_instance, "cls", cls)
 
     return get_instance

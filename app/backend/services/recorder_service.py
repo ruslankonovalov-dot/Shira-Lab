@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import datetime
 import json
 import logging
 import os
 import threading
 import time
+from datetime import timezone
 from pathlib import Path
 from typing import (
     Any,
@@ -103,14 +105,14 @@ class RecorderService:
             if not target_path.is_relative_to(records_dir):
                 return None
             return str(target_path)
-        except Exception:
+        except (OSError, ValueError):
             return None
 
     def list_records(self) -> dict[str, Any]:
         try:
             items = [f for f in os.listdir(self.records_dir) if f.endswith(".json")]
             items.sort(reverse=True)
-        except Exception:
+        except (OSError, ValueError):
             logger.exception("Failed to list records")
             items = []
         return {"ok": True, "records": items}
@@ -120,7 +122,7 @@ class RecorderService:
         if path and os.path.exists(path):
             try:
                 os.remove(path)
-            except Exception:
+            except (OSError, ValueError):
                 logger.exception(f"Failed to delete record {name}")
         return self.list_records()
 
@@ -160,7 +162,7 @@ class RecorderService:
             if listener:
                 try:
                     listener.stop()
-                except Exception:
+                except (OSError, RuntimeError, AttributeError):
                     logger.exception("Failed to stop input listener")
             if thread and thread.is_alive():
                 thread.join(timeout=1.0)
@@ -178,7 +180,7 @@ class RecorderService:
             try:
                 with open(path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-            except Exception as e:
+            except (OSError, json.JSONDecodeError, ValueError) as e:
                 self._log("ERROR", f"Failed to load {name}: {e}")
                 return {"ok": False, "error": f"Failed to load record: {e}"}
             if self.is_playing:
@@ -235,7 +237,7 @@ class RecorderService:
             report.wButtons = mask
             err = vigem._dll.vigem_target_x360_update(vigem._client, target, ctypes.byref(report))
             return bool(err == 0)
-        except Exception:
+        except (OSError, ValueError, RuntimeError, AttributeError, ImportError):
             logger.exception("ViGEm press button failed")
             return False
 
@@ -262,7 +264,7 @@ class RecorderService:
             report.wButtons = 0
             err = vigem._dll.vigem_target_x360_update(vigem._client, target, ctypes.byref(report))
             return bool(err == 0)
-        except Exception:
+        except (OSError, ValueError, RuntimeError, AttributeError, ImportError):
             logger.exception("ViGEm release failed")
             return False
 
@@ -471,7 +473,7 @@ class RecorderService:
                                     send_background_key_up(self.target_hwnd, key_str)
                                 else:
                                     k_ctrl.release(k_obj)
-                    except Exception as e:
+                    except (OSError, ValueError, RuntimeError, AttributeError) as e:
                         # Report error via bridge (user-visible) AND log
                         self._log("ERROR", f"Playback error: {e}")
                         logger.exception("Failed to execute action during playback")
@@ -500,7 +502,7 @@ class RecorderService:
         try:
             key_str = str(key).replace("Key.", "").replace("'", "").lower()
             return getattr(pynput_key.Key, key_str, key_str)
-        except Exception:
+        except (AttributeError, ValueError):
             return None
 
     def _save_record(self) -> None:
@@ -512,17 +514,16 @@ class RecorderService:
         if not self.recorded_events:
             return
         try:
-            import datetime
-            filename = "REC_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + ".json"
+            filename = "REC_" + datetime.datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S") + ".json"
             path = os.path.join(self.records_dir, filename)
             data = {
                 "events": self.recorded_events,
-                "created_at": datetime.datetime.now().isoformat(),
+                "created_at": datetime.datetime.now(timezone.utc).isoformat(),
                 "events_count": len(self.recorded_events),
             }
             with open(path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
-        except Exception:
+        except (OSError, ValueError, TypeError):
             logger.exception("Failed to save record")
 
     def status(self) -> dict[str, Any]:
@@ -577,7 +578,7 @@ class RecorderService:
                 # Tap: press and immediately release
                 return pico.gp_set_buttons(btn) and pico.gp_set_buttons(0)
 
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError, AttributeError, ImportError) as e:
             self._log("ERROR", f"Pico key press failed: {e}")
             logger.exception("Pico key press failed")
             return False
@@ -593,7 +594,7 @@ class RecorderService:
             port = state.get("pico_port")
             baudrate = int(state.get("pico_baudrate", 115200))
             return port, baudrate
-        except Exception:
+        except (OSError, json.JSONDecodeError, ValueError):
             return None, 115200
 
     def _pico_send_click(self, button: str, hold_ms: int) -> bool:
@@ -613,7 +614,7 @@ class RecorderService:
             btn_mask = btn_map.get(button, 1)
             return pico.ms_click(btn_mask, hold_ms)
 
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError, AttributeError, ImportError) as e:
             self._log("ERROR", f"Pico click failed: {e}")
             logger.exception("Pico click failed")
             return False

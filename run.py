@@ -10,7 +10,7 @@ if sys.platform == "win32":
     try:
         import ctypes
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("ShiraLab.ShiraLab")
-    except Exception:
+    except Exception:  # noqa: BLE001 - best effort for AppUserModelID
         pass
 
 # Set style env var BEFORE importing PySide6

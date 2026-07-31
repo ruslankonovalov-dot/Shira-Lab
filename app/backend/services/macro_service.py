@@ -9,7 +9,6 @@ from typing import (
     Optional,
     TypedDict,
     TypeGuard,
-    Union,
     cast,
 )
 
@@ -18,9 +17,6 @@ from app.backend.services.stealth_input import StealthInput
 
 if TYPE_CHECKING:
     from app.backend.qml_bridge import QmlBridge
-    from app.backend.services.vigem_service import (
-        VigemService,
-    )
 
 from app.backend.services.singleton import singleton
 
@@ -52,7 +48,7 @@ class DeleteActionEntry(TypedDict):
     index: int
 
 
-UndoEntry = Union[AddActionEntry, ClearActionsEntry, MoveActionEntry, DeleteActionEntry]
+UndoEntry = AddActionEntry | ClearActionsEntry | MoveActionEntry | DeleteActionEntry
 RedoEntry = UndoEntry  # Same structure for redo stack
 
 
@@ -77,8 +73,14 @@ def _is_delete_entry(entry: UndoEntry) -> TypeGuard[DeleteActionEntry]:
 KeyAction = dict[str, object]
 RunMode = str
 BackgroundMethod = str
-VigemServiceRef = Optional["VigemService"]
-PicoServiceRef = Optional[PicoService]
+
+if TYPE_CHECKING:
+    from app.backend.services.vigem_service import VigemService
+    VigemServiceRef = VigemService | None
+else:
+    VigemServiceRef = Optional["VigemService"]
+
+PicoServiceRef = PicoService | None
 
 
 @singleton
@@ -584,7 +586,7 @@ class MacroService:
                 self._vigem_service._client, target, ctypes.byref(report)
             )
             return bool(err == 0)
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError, AttributeError) as e:
             logging.getLogger(__name__).debug(f"ViGEm key press failed: {e}")
             return False
 
@@ -623,7 +625,7 @@ class MacroService:
                     state = data.get("state") or {}
                     port = state.get("pico_port")
                     baudrate = int(state.get("pico_baudrate", 115200))
-                except Exception:
+                except (OSError, json.JSONDecodeError, ValueError):
                     pass
                 if port:
                     # Reconfigure existing instance with new port
@@ -662,7 +664,7 @@ class MacroService:
                 # Tap: press and immediately release
                 return pico.gp_set_buttons(btn) and pico.gp_set_buttons(0)
 
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError, AttributeError, ImportError) as e:
             logging.getLogger(__name__).debug(f"Pico key press failed: {e}")
             return False
 

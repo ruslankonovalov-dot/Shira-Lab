@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Union
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,15 @@ logger = logging.getLogger(__name__)
 # Type alias for QVariant-compatible return types
 QVariantMap = dict[str, Any]
 QVariantList = list[Any]
-QVariant = Union[dict[str, Any], list[Any], str, int, float, bool, None]
+QVariant = (
+    dict[str, Any]
+    | list[Any]
+    | str
+    | int
+    | float
+    | bool
+    | None
+)
 
 
 def _qvar(obj: QVariant) -> QVariant:
@@ -291,7 +299,7 @@ def validate_pico_mode(
 
     Returns (ok, err) tuple for test compatibility.
     """
-    ok, val, err = validate_enum(
+    ok, _, err = validate_enum(
         value,
         {"COMPOSITE", "KEYBOARD", "MOUSE", "GAMEPAD", "hid", "raw_hid", "cdc"},
         default=default,
@@ -354,43 +362,43 @@ def make_ok_response(**kwargs: Any) -> QVariantMap:
 
 def validate_interval_ms(value: Any) -> tuple[bool, str]:
     """Validate clicker interval in milliseconds."""
-    ok, val, err = validate_int(value, CLICKER_INTERVAL_MIN, CLICKER_INTERVAL_MAX, name="interval_ms")
+    ok, _, err = validate_int(value, CLICKER_INTERVAL_MIN, CLICKER_INTERVAL_MAX, name="interval_ms")
     return (ok, err or "")
 
 
 def validate_hold_ms(value: Any) -> tuple[bool, str]:
     """Validate clicker hold time in milliseconds."""
-    ok, val, err = validate_int(value, CLICKER_HOLD_MIN, CLICKER_HOLD_MAX, name="hold_ms")
+    ok, _, err = validate_int(value, CLICKER_HOLD_MIN, CLICKER_HOLD_MAX, name="hold_ms")
     return (ok, err or "")
 
 
 def validate_button(value: Any) -> tuple[bool, str]:
     """Validate mouse button."""
-    ok, val, err = validate_enum(value, VALID_CLICKER_BUTTONS, case_sensitive=False, name="button")
+    ok, _, err = validate_enum(value, VALID_CLICKER_BUTTONS, case_sensitive=False, name="button")
     return (ok, err or "")
 
 
 def validate_limit(value: Any) -> tuple[bool, str]:
     """Validate click limit."""
-    ok, val, err = validate_int(value, CLICKER_LIMIT_MIN, CLICKER_LIMIT_MAX, name="limit")
+    ok, _, err = validate_int(value, CLICKER_LIMIT_MIN, CLICKER_LIMIT_MAX, name="limit")
     return (ok, err or "")
 
 
 def validate_detection_mode(value: Any) -> tuple[bool, str]:
     """Validate aim detection mode."""
-    ok, val, err = validate_enum(value, VALID_AIM_DETECTION_MODES, name="mode")
+    ok, _, err = validate_enum(value, VALID_AIM_DETECTION_MODES, name="mode")
     return (ok, err or "")
 
 
 def validate_target_color(value: Any) -> tuple[bool, str]:
     """Validate aim target color."""
-    ok, val, err = validate_enum(value, VALID_AIM_TARGET_COLORS, name="color")
+    ok, _, err = validate_enum(value, VALID_AIM_TARGET_COLORS, name="color")
     return (ok, err or "")
 
 
 def validate_background_method(value: Any) -> tuple[bool, str]:
     """Validate background input method."""
-    ok, val, err = validate_enum(value, VALID_BACKGROUND_METHODS, default="sendinput", name="background_method")
+    ok, _, err = validate_enum(value, VALID_BACKGROUND_METHODS, default="sendinput", name="background_method")
     return (ok, err or "")
 
 
@@ -424,18 +432,18 @@ def validate_hotkey_key(value: Any) -> tuple[bool, str]:
             return (True, "")
 
         return (False, "invalid key")
-    except Exception as e:
+    except (OSError, ValueError, AttributeError, ImportError) as e:
         return (False, str(e))
 
 
 def validate_hotkey_mode(value: Any) -> tuple[bool, str]:
     """Validate hotkey mode."""
     # The test expects REPEAT to be valid too
-    ok, val, err = validate_enum(value, {"TOGGLE", "HOLD", "REPEAT"}, name="mode")
+    ok, _, err = validate_enum(value, {"TOGGLE", "HOLD", "REPEAT"}, name="mode")
     return (ok, err or "")
 
 
 def validate_vigem_target_type(value: Any) -> tuple[bool, str]:
     """Validate ViGEm target type."""
-    ok, val, err = validate_enum(value, VALID_GAMEPAD_TYPES, name="target_type")
+    ok, _, err = validate_enum(value, VALID_GAMEPAD_TYPES, name="target_type")
     return (ok, err or "")

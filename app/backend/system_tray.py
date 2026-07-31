@@ -2,20 +2,13 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Protocol, cast
+from typing import Any, Protocol, cast
 
 from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
-if TYPE_CHECKING:
-    pass
-
-
 logger = logging.getLogger(__name__)
-
-
-# Protocol for what the tray needs from its bridge-like object
 class _TrayBridge(Protocol):
     def getSettings(self) -> dict[str, Any]: ...
     def resetAllHotkeys(self) -> dict[str, Any]: ...
@@ -186,7 +179,7 @@ class SystemTrayManager(QObject):
             settings = self._bridge.getSettings()
             profiles = settings.get("profiles", {})
             current = settings.get("active_profile", "default")
-        except Exception:
+        except (AttributeError, KeyError, ValueError, TypeError):
             logger.exception("Failed to parse settings for profiles")
             profiles = {}
             current = "default"
@@ -238,7 +231,7 @@ class SystemTrayManager(QObject):
             self._bridge.saveProfile(profile_name)
             self._update_profiles_menu()
             self._update_menu_states()
-        except Exception as e:
+        except (AttributeError, KeyError, ValueError, TypeError) as e:
             logger.debug(f"Failed to switch profile: {e}")
 
     def _save_current_profile(self) -> None:
@@ -318,10 +311,10 @@ class SystemTrayManager(QObject):
             try:
                 overlay_visible = self._bridge.overlayVisible
                 self._actions["overlay"].setChecked(overlay_visible)
-            except Exception:
+            except (AttributeError, RuntimeError):
                 logger.debug("overlayVisible property not ready yet")
 
-        except Exception:
+        except (AttributeError, KeyError, ValueError, TypeError):
             logger.exception("Failed to update tray menu states")
 
     def update_base_icon(self, png_path: Path) -> None:
@@ -331,7 +324,7 @@ class SystemTrayManager(QObject):
         try:
             if png_path.exists():
                 self._tray.setIcon(QIcon(str(png_path)))
-        except Exception:
+        except (OSError, ValueError, RuntimeError):
             logger.exception("Failed to update tray icon")
 
     def is_visible(self) -> bool:

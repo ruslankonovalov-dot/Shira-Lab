@@ -6,16 +6,14 @@ import os
 import threading
 import time
 from collections.abc import Callable, Sequence
-from typing import (
-    Any,
-    cast,
-)
+from typing import Any, ClassVar, cast
 
 import cv2
 import mss
 import numpy as np
 import numpy.typing as npt
 from mss import MSS as MSSClass
+from mss import exception as mss_exception
 
 from app.backend.services.singleton import singleton
 
@@ -41,7 +39,7 @@ class AimService:
     5. Multi-mode detection with visual feedback
     """
 
-    HSV_PRESETS = {
+    HSV_PRESETS: ClassVar[dict[str, list[tuple[tuple[int, int, int], tuple[int, int, int]]]]] = {
         "red":    [((0, 50, 50), (15, 255, 255)), ((165, 50, 50), (180, 255, 255))],
         "blue":   [((85, 50, 50), (135, 255, 255))],
         "green":  [((35, 50, 50), (85, 255, 255))],
@@ -217,7 +215,7 @@ class AimService:
         """
         try:
             # Validate coordinates are within screen bounds
-            sw, sh, sx, sy = self._get_screen_size()
+            sw, sh, _, _ = self._get_screen_size()
             if x < 0 or y < 0 or x >= sw or y >= sh:
                 self._log("ERROR", f"Pipette coordinates out of bounds: ({x},{y}) screen={sw}x{sh}")
                 return {"ok": False, "error": f"Coordinates ({x},{y}) out of screen bounds ({sw}x{sh})"}
@@ -276,7 +274,7 @@ class AimService:
                 "std": [int(std_h), std_s, std_v],
                 "range": [[h_low, s_low, v_low], [h_high, s_high, v_high]],
             }
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError) as e:
             self._log("ERROR", f"Pipette failed: {e}")
             return {"ok": False, "error": str(e)}
 
@@ -317,7 +315,7 @@ class AimService:
         try:
             from app.backend.services.stealth_input import StealthInput
             StealthInput.send_mouse_move(int(dx), int(dy))
-        except Exception:
+        except (OSError, ValueError, AttributeError):
             logger.debug("StealthInput send_mouse_move failed, falling back to mouse_event")
             # Fallback to mouse_event
             user32 = ctypes.windll.user32
@@ -467,7 +465,7 @@ class AimService:
             area = cv2.contourArea(cnt)
             if area < min_area or area > max_area:
                 continue
-            x, y, w, h = cv2.boundingRect(cnt)
+            _, _, w, h = cv2.boundingRect(cnt)
             if w == 0 or h == 0:
                 continue
             aspect = max(w, h) / min(w, h)
@@ -530,7 +528,7 @@ class AimService:
             if len(files) > 10:
                 for old in files[:-10]:
                     os.remove(os.path.join(debug_dir, old))
-        except Exception:
+        except OSError:
             logger.debug("Failed to clean up debug frames")
 
     # ─── Worker ────────────────────────────────────────────────────────
@@ -540,7 +538,7 @@ class AimService:
             init_mode = self.detection_mode
             init_fov = self.fov_radius
         self._log("INFO", f"Worker started — mode={init_mode} fov={init_fov}")
-        self._sct = mss.mss()
+        self._sct = mss.MSS()
         sw, sh, sx, sy = self._get_screen_size()
 
         # Determine capture region:
@@ -621,7 +619,7 @@ class AimService:
 
                 # Move mouse
                 if nearest:
-                    tx, ty, score, dist = nearest
+                    tx, ty, _, _ = nearest
                     dx = tx - cx
                     dy = ty - cy
 
@@ -681,7 +679,7 @@ class AimService:
 
                 time.sleep(reset_delay)
 
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError, cv2.error, mss_exception.ScreenShotError) as e:
             with self._lock:
                 self.last_log = f"ERR {e}"
             self._log("ERROR", f"Worker: {e}")

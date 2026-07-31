@@ -303,7 +303,7 @@ class ClickerService:
                     state = data.get("state") or {}
                     port = state.get("pico_port")
                     baudrate = int(state.get("pico_baudrate", 115200))
-                except Exception:
+                except (OSError, json.JSONDecodeError, ValueError):
                     pass
                 if port:
                     pico = get_pico_service(port=port, baudrate=baudrate)
@@ -315,7 +315,7 @@ class ClickerService:
             btn_map = {"L": 1, "R": 2, "M": 4, "X1": 8, "X2": 16}
             btn_mask = btn_map.get(button, 1)
             return pico.ms_click(btn_mask, hold_ms)
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError, AttributeError, ImportError) as e:
             import logging
             logging.getLogger(__name__).debug(f"Pico click failed: {e}")
             return False
@@ -373,7 +373,7 @@ class ClickerService:
             report.wButtons = 0
             err = self._vigem_service._dll.vigem_target_x360_update(self._vigem_service._client, target, ctypes.byref(report))
             return err == 0
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError, AttributeError) as e:
             import logging
             logging.getLogger(__name__).debug(f"ViGEm button press failed: {e}")
             return False

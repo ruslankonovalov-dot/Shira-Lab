@@ -12,7 +12,7 @@ from pathlib import Path
 
 # ─── Logging Configuration ────────────────────────────────────────────
 # Must be configured BEFORE any module that creates a logger.
-def setup_logging() -> None:
+def setup_logging() -> logging.Logger:
     """Configure logging: stdout + rotating file."""
     log_dir = Path(__file__).resolve().parents[1] / "logs"
     log_dir.mkdir(exist_ok=True)
@@ -49,13 +49,18 @@ def setup_logging() -> None:
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("PySide6").setLevel(logging.WARNING)
 
-    logging.info("=" * 60)
-    logging.info("Shira Lab starting...")
-    logging.info("=" * 60)
+    # Get logger for this module
+    logger = logging.getLogger(__name__)
+
+    logger.info("=" * 60)
+    logger.info("Shira Lab starting...")
+    logger.info("=" * 60)
+
+    return logger
 
 
 # ─── Crash Handler + Auto-Recovery ────────────────────────────────────
-def setup_crash_handler() -> None:
+def setup_crash_handler(logger: logging.Logger) -> None:
     """Install global exception handler with structured crash reports.
 
     v1.0.0 SSS upgrade: Uses app.backend.services.crash_reporter for:
@@ -72,13 +77,13 @@ def setup_crash_handler() -> None:
     # Try to read user's privacy preference
     send_reports = False
     try:
-        import json as _json
+        import json
         profile_path = Path(__file__).resolve().parents[1] / "data" / "profile.json"
         if profile_path.exists():
-            data = _json.loads(profile_path.read_text(encoding="utf-8"))
+            data = json.loads(profile_path.read_text(encoding="utf-8"))
             state = data.get("state") or {}
             send_reports = bool(state.get("send_crash_reports", False))
-    except Exception:
+    except (OSError, json.JSONDecodeError, ValueError, KeyError):
         pass
 
     # Install structured crash reporter (saves local JSON, optionally sends to server)
@@ -87,13 +92,13 @@ def setup_crash_handler() -> None:
             install_crash_handler as install_structured,
         )
         install_structured(app_version=APP_VERSION, send_reports=send_reports)
-    except Exception:
-        logging.exception("Failed to install structured crash reporter")
+    except (OSError, RuntimeError, ImportError, ValueError):
+        logger.exception("Failed to install structured crash reporter")
 
     def excepthook(exc_type: type[BaseException], exc_value: BaseException, exc_tb: object) -> None:
         # Type narrow the traceback for logging.critical
         tb: TracebackType | None = exc_tb if isinstance(exc_tb, BaseException) else None  # type: ignore[assignment]
-        logging.critical(
+        logger.critical(
             "Unhandled exception: %s: %s",
             exc_type.__name__,
             exc_value,
@@ -119,7 +124,7 @@ def setup_crash_handler() -> None:
                 python_exe = sys.executable
                 script = os.path.abspath(__file__)
                 subprocess.Popen([python_exe, script])
-        except Exception:
+        except (OSError, RuntimeError, AttributeError, ValueError):
             pass
         # Cast to TracebackType | None for sys.__excepthook__
         sys.__excepthook__(exc_type, exc_value, tb)
@@ -128,10 +133,8 @@ def setup_crash_handler() -> None:
 
 
 # Initialize logging and crash handler ASAP
-setup_logging()
-setup_crash_handler()
-
-logger = logging.getLogger(__name__)
+logger = setup_logging()
+setup_crash_handler(logger)
 
 
 # Windows: Set AppUserModelID for proper taskbar grouping and icon
@@ -140,7 +143,7 @@ logger = logging.getLogger(__name__)
 if sys.platform == "win32":
     try:
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("ShiraLab.ShiraLab")
-    except Exception:
+    except (OSError, AttributeError):
         pass
 
 # Принудительно Basic style для консистентного вида
@@ -179,7 +182,7 @@ def make_window_click_through(hwnd: int) -> None:
                                ctypes.c_long(ex_style | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE))
         # Set color key to transparent (pure black corner pixel becomes click-through)
         _user32.SetLayeredWindowAttributes(hwnd, 0, 0, LWA_COLORKEY)
-    except Exception as e:
+    except (OSError, RuntimeError, AttributeError) as e:
         logger.warning("Click-through setup failed: %s", e)
 
 
@@ -205,7 +208,7 @@ def main() -> None:
             if state.get("terminal_palette"):
                 saved_palette = state["terminal_palette"]
                 logger.info(f"Loaded saved palette: {saved_palette}")
-    except Exception:
+    except (OSError, json.JSONDecodeError, ValueError, KeyError):
         logger.exception("Failed to read saved palette from profile")
 
     # ─── Bulletproof icon setup ───────────────────────────────────────
@@ -233,7 +236,7 @@ def main() -> None:
             app.setWindowIcon(QIcon(str(png_path)))
             icon_set = True
             logger.info(f"Icon: generated PNG: {png_path}")
-    except Exception as e:
+    except (OSError, RuntimeError, ImportError, ValueError, AttributeError) as e:
         logger.warning(f"Icon: generation failed: {e}")
 
     # Step 2: Try existing icon files
@@ -272,7 +275,7 @@ def main() -> None:
             app.setWindowIcon(QIcon(pix))
             icon_set = True
             logger.info("Icon: created emergency QPixmap icon")
-        except Exception as e:
+        except (OSError, RuntimeError, ImportError, ValueError, AttributeError) as e:
             logger.warning(f"Icon: emergency creation failed: {e}")
 
     # Step 4: Flush Windows icon cache
@@ -281,7 +284,7 @@ def main() -> None:
             import ctypes
             # SHChangeNotify: tells Windows to refresh icon cache
             ctypes.windll.shell32.SHChangeNotify(0x080000, 0x0000, None, None)
-        except Exception:
+        except (OSError, AttributeError, ValueError):
             pass
 
     # Шрифт по умолчанию — моноширинный терминальный
@@ -353,9 +356,9 @@ def main() -> None:
                         hwnd, 0, 0, 0, 0, 0,
                         SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED
                     )
-            except Exception:
+            except (OSError, RuntimeError, AttributeError, ValueError):
                 pass
-    except Exception as e:
+    except (OSError, RuntimeError, AttributeError, ValueError) as e:
         logger.warning(f"Failed to re-set icon after window creation: {e}")
 
     # ─── Store the main window's Win32 HWND in the bridge ───────────────
@@ -378,13 +381,13 @@ def main() -> None:
                 app_hwnd, 0, 0, 0, 0, 0,
                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED
             )
-        except Exception:
+        except (OSError, RuntimeError, AttributeError, ValueError):
             pass
         # Apply topmost on startup if is_pinned was saved as True
         if bridge.state.is_pinned:
             from window_utils import set_window_topmost
             set_window_topmost(app_hwnd, True)
-    except Exception as e:
+    except (OSError, RuntimeError, AttributeError, ValueError) as e:
         logger.warning("Failed to store app hwnd: %s", e)
 
     # Connect bridge tray signals to main window
@@ -403,26 +406,26 @@ def main() -> None:
         # Flush any pending save BEFORE cleanup
         try:
             bridge._flush_save()
-        except Exception:
+        except (OSError, RuntimeError, AttributeError, ValueError):
             pass
         if bridge.tray is not None:
             bridge.tray.cleanup()
         # Clean up hotkey service listeners
         try:
             bridge.hotkeys.shutdown()
-        except Exception as e:
+        except (OSError, RuntimeError, AttributeError, ValueError) as e:
             logger.warning("Hotkey shutdown error: %s", e)
         # Clean up Pico service
         try:
             if getattr(bridge, '_pico', None):
                 bridge._pico.disconnect()
-        except Exception as e:
+        except (OSError, RuntimeError, AttributeError, ValueError) as e:
             logger.warning("Pico shutdown error: %s", e)
         # Clean up ViGEm service
         try:
             if getattr(bridge, '_vigem', None):
                 bridge._vigem.disconnect()
-        except Exception as e:
+        except (OSError, RuntimeError, AttributeError, ValueError) as e:
             logger.warning("ViGEm shutdown error: %s", e)
         app.quit()
 
@@ -496,7 +499,7 @@ def main() -> None:
             try:
                 import ctypes
                 ctypes.windll.shell32.SHChangeNotify(0x080000, 0x0000, None, None)
-            except Exception:
+            except (OSError, AttributeError, ValueError):
                 pass
 
             # Prefer unique ICO (forces Windows to reload due to different path)
@@ -508,9 +511,8 @@ def main() -> None:
                 main_window.setIcon(new_icon)
 
             # Update tray icon
-            if hasattr(bridge, 'tray') and bridge.tray:
-                if icon_path and icon_path.exists():
-                    bridge.tray.update_base_icon(Path(str(icon_path)))
+            if hasattr(bridge, 'tray') and bridge.tray and icon_path and icon_path.exists():
+                bridge.tray.update_base_icon(Path(str(icon_path)))
 
             # Force Windows taskbar to refresh icon via Win32 API
             try:
@@ -532,9 +534,9 @@ def main() -> None:
                             hwnd, 0, 0, 0, 0, 0,
                             SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED
                         )
-            except Exception:
+            except (OSError, AttributeError, ValueError):
                 pass
-        except Exception as e:
+        except (OSError, RuntimeError, ValueError, AttributeError) as e:
             logger.warning("Failed to update icon on palette change: %s", e)
 
     bridge.iconChanged.connect(on_icon_changed)
@@ -545,7 +547,7 @@ def main() -> None:
     try:
         bridge.checkForUpdatesAsync("0.17.0")
         logger.info("Update check started in background")
-    except Exception as e:
+    except (OSError, RuntimeError, ValueError, AttributeError, ImportError) as e:
         logger.debug("Update check failed: %s", e)
 
     sys.exit(app.exec())

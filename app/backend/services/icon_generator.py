@@ -31,7 +31,7 @@ OUTPUT_PNG = PROJECT_ROOT / "shira_current.png"
 # Import palettes from runtime_state
 try:
     from app.backend.models.runtime_state import TERMINAL_PALETTES
-except Exception:
+except (ImportError, AttributeError):
     logger.debug("TERMINAL_PALETTES not available from runtime_state, using fallback")
     TERMINAL_PALETTES = {
         "matrix": {"name": "Terminal Green", "bg": "#0d1b0d", "fg": "#8fbf8f", "acc": "#6aa86a",
@@ -135,7 +135,7 @@ def generate_palette_icon(palette_id: str, output_path: Path | None = None) -> P
         os.replace(str(tmp_path), str(output_path))
         return output_path
 
-    except Exception as e:
+    except (OSError, ValueError, RuntimeError, AttributeError) as e:
         logger.error(f"Failed to generate palette icon: {e}")
         return None
 
@@ -167,12 +167,12 @@ def generate_palette_ico(palette_id: str, output_path: Path | None = None) -> Pa
         os.replace(str(tmp_path), str(output_path))
         return output_path
 
-    except Exception as e:
+    except (OSError, ValueError, RuntimeError, AttributeError) as e:
         logger.error(f"Failed to generate palette ICO: {e}")
         try:
             if 'tmp_path' in locals() and tmp_path.exists():
                 tmp_path.unlink()
-        except Exception:
+        except (OSError, ValueError):
             logger.debug("Failed to clean up temporary ICO file")
         return None
 
@@ -204,7 +204,7 @@ def generate_palette_ico_unique(palette_id: str) -> Path | None:
         img.save(tmp_path, format="ICO", sizes=sizes)
         os.replace(str(tmp_path), str(unique_ico))
         return unique_ico
-    except Exception as e:
+    except (OSError, ValueError, RuntimeError, AttributeError) as e:
         logger.error(f"Failed to generate unique palette ICO: {e}")
         return None
 

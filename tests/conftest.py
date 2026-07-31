@@ -36,9 +36,9 @@ def bridge(monkeypatch, tmp_path):
         # Cleanup
         try:
             b.hotkeys.shutdown()
-        except Exception:
+        except (OSError, RuntimeError, AttributeError):
             pass
-    except Exception as e:
+    except (ImportError, RuntimeError, AttributeError, OSError) as e:
         pytest.skip(f"Не удалось создать QmlBridge: {e}")
 
 

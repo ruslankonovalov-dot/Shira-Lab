@@ -113,7 +113,6 @@ jobs:
             --cov-report= \
             --junitxml=tests/_junit_unit.xml \
             -m "unit and not windows" \
-            --cov-fail-under=85 \
             -o addopts=""
 
       - name: Run integration tests

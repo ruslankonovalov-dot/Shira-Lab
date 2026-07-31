@@ -157,7 +157,7 @@ class TestPicoServiceIntegration:
         """Test Pico connection failure."""
         from app.backend.services.pico_service import PicoService
 
-        mock_serial.side_effect = Exception("Port not found")
+        mock_serial.side_effect = OSError("Port not found")
 
         service = PicoService()
         result = service.connect("COM999")

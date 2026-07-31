@@ -313,22 +313,6 @@ calculate_crc8 = crc8
 
 
 __all__ = [
-    # Builders
-    "build_gamepad_buttons",
-    "build_gamepad_state",
-    "build_gamepad_stick",
-    "build_gamepad_triggers",
-    "build_key_modifiers",
-    "build_key_press",
-    "build_key_release",
-    "build_key_tap",
-    "build_mouse_click",
-    "build_mouse_move",
-    "build_mouse_press",
-    "build_mouse_release",
-    "build_mouse_scroll",
-    "build_set_mode",
-    # Commands
     "CMD_GET_CAPS",
     "CMD_GET_INFO",
     "CMD_GP_BUTTONS",
@@ -347,24 +331,32 @@ __all__ = [
     "CMD_PING",
     "CMD_RESET",
     "CMD_SET_MODE",
-    # Constants
     "END_BYTE",
     "MAX_PAYLOAD",
     "START_BYTE",
-    # CRC
-    "crc8",
-    # Gamepad buttons
     "GPBtn",
-    # Mouse buttons
     "MouseBtn",
-    # Packet
-    "PicoPacket",
-    # Parsers
-    "PicoInfo",
-    "PicoResp",
     "PicoCap",
+    "PicoCmd",
+    "PicoInfo",
+    "PicoPacket",
+    "PicoResp",
+    "build_gamepad_buttons",
+    "build_gamepad_state",
+    "build_gamepad_stick",
+    "build_gamepad_triggers",
+    "build_key_modifiers",
+    "build_key_press",
+    "build_key_release",
+    "build_key_tap",
+    "build_mouse_click",
+    "build_mouse_move",
+    "build_mouse_press",
+    "build_mouse_release",
+    "build_mouse_scroll",
+    "build_set_mode",
+    "calculate_crc8",
+    "crc8",
     "parse_caps",
     "parse_info",
-    # Types
-    "PicoCmd",
 ]

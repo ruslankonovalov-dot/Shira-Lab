@@ -5,6 +5,7 @@ All @Slot methods return native dict/list/str/int/float/bool (QVariantMap compat
 """
 from __future__ import annotations
 
+import json
 import logging
 import threading
 from typing import TYPE_CHECKING, Any
@@ -292,7 +293,7 @@ class QmlBridge(QObject):
                         "recorder": self.recorder.status() if hasattr(self.recorder, 'status') else {},
                     }
                     self.overlayStatusUpdate.emit(status)
-                except Exception as e:
+                except (OSError, RuntimeError, AttributeError, ValueError) as e:
                     logger.debug(f"Status poller error: {e}")
 
         self._status_poller = threading.Thread(target=poll_loop, daemon=True, name="OverlayStatusPoller")
@@ -345,7 +346,7 @@ class QmlBridge(QObject):
             if lang not in VALID_LANGUAGES:
                 lang = "RU"
             return _tr(key, lang)
-        except Exception:
+        except (OSError, RuntimeError, AttributeError, ValueError, KeyError):
             return key
 
     # Compatibility: QML calls Bridge.tr() — delegate to trKey()
@@ -364,7 +365,7 @@ class QmlBridge(QObject):
             if lang not in VALID_LANGUAGES:
                 lang = "RU"
             return _tr(key, lang)
-        except Exception:
+        except (OSError, RuntimeError, AttributeError, ValueError, KeyError):
             return key
 
     @Slot(result="QVariantMap")
@@ -380,7 +381,7 @@ class QmlBridge(QObject):
                 "coverage": get_translation_coverage(),
                 "languages": get_available_languages(),
             })
-        except Exception as e:
+        except (OSError, RuntimeError, AttributeError, ValueError, KeyError) as e:
             return _qvar_map({"ok": False, "error": str(e)})
 
     # ─── App version for QML ───────────────────────────────────────────────
@@ -509,7 +510,7 @@ class QmlBridge(QObject):
             self._schedule_save()
             self.macroStatusChanged.emit()
             return _qvar_map(result)
-        except Exception as e:
+        except (OSError, RuntimeError, AttributeError, ValueError, IndexError) as e:
             return _qvar_map({"ok": False, "error": str(e)})
 
     @Slot(result="QVariantMap")
@@ -519,7 +520,7 @@ class QmlBridge(QObject):
             self._schedule_save()
             self.macroStatusChanged.emit()
             return _qvar_map(result)
-        except Exception as e:
+        except (OSError, RuntimeError, AttributeError, ValueError, IndexError) as e:
             return _qvar_map({"ok": False, "error": str(e)})
 
     @Slot(int, result="QVariantMap")
@@ -529,7 +530,7 @@ class QmlBridge(QObject):
             self._schedule_save()
             self.macroStatusChanged.emit()
             return _qvar_map(result)
-        except Exception as e:
+        except (OSError, RuntimeError, AttributeError, ValueError, IndexError) as e:
             return _qvar_map({"ok": False, "error": str(e)})
 
     @Slot(int, int, result="QVariantMap")
@@ -539,14 +540,14 @@ class QmlBridge(QObject):
             self._schedule_save()
             self.macroStatusChanged.emit()
             return _qvar_map(result)
-        except Exception as e:
+        except (OSError, RuntimeError, AttributeError, ValueError, IndexError) as e:
             return _qvar_map({"ok": False, "error": str(e)})
 
     @Slot(result="QVariantMap")
     def macroGetUndoRedoStatus(self) -> QVariantMap:
         try:
             return _qvar_map(self.macro.get_undo_redo_status())
-        except Exception as e:
+        except (OSError, RuntimeError, AttributeError, ValueError) as e:
             return _qvar_map({"ok": False, "error": str(e)})
 
     # ─── Recorder ──────────────────────────────────────────────────────────
@@ -769,7 +770,7 @@ class QmlBridge(QObject):
             user32 = ctypes.windll.user32
             user32.GetCursorPos(ctypes.byref(pt))
             return _qvar_map({"x": int(pt.x), "y": int(pt.y)})
-        except Exception as e:
+        except (OSError, RuntimeError, AttributeError, ValueError, OverflowError) as e:
             return _qvar_map({"x": 0, "y": 0, "error": str(e)})
 
     # ─── Hotkeys (delegated to HotkeyController) ───────────────────────────
@@ -1284,7 +1285,7 @@ class QmlBridge(QObject):
             from app.backend.profile_io import export_profile
             result = export_profile(self, path)
             return _qvar_map(result)
-        except Exception as e:
+        except (OSError, RuntimeError, AttributeError, ValueError, json.JSONDecodeError) as e:
             return _qvar_map({"ok": False, "error": str(e)})
 
     @Slot(str, result="QVariantMap")
@@ -1293,7 +1294,7 @@ class QmlBridge(QObject):
             from app.backend.profile_io import import_profile
             result = import_profile(self, path)
             return _qvar_map(result)
-        except Exception as e:
+        except (OSError, RuntimeError, AttributeError, ValueError, json.JSONDecodeError) as e:
             return _qvar_map({"ok": False, "error": str(e)})
 
     @Slot(result="QVariantMap")
@@ -1337,7 +1338,7 @@ class QmlBridge(QObject):
             palette = get_palette_for_theme(theme, self.state.terminal_palette)
             self.settingsChanged.emit()
             return _qvar_map({"ok": True, "theme": theme, "palette": palette})
-        except Exception as e:
+        except (OSError, RuntimeError, AttributeError, ValueError, ImportError) as e:
             return _qvar_map({"ok": False, "error": str(e)})
 
     # ─── Update Checker ─────────────────────────────────────────────────────
@@ -1348,7 +1349,7 @@ class QmlBridge(QObject):
             from app.backend.services.update_checker import check_for_updates
             result = check_for_updates(current_version)
             return _qvar_map(result)
-        except Exception as e:
+        except (OSError, RuntimeError, AttributeError, ValueError, ImportError) as e:
             return _qvar_map({"ok": False, "error": str(e)})
 
     @Slot(str, result="QVariantMap")
@@ -1359,11 +1360,11 @@ class QmlBridge(QObject):
                 try:
                     import json as _json
                     self.updateCheckResult.emit(_qvar_map(_json.loads(result)))
-                except Exception:
+                except (json.JSONDecodeError, ValueError):
                     pass
             check_for_updates_async(current_version, callback)
             return _qvar_map({"ok": True, "started": True})
-        except Exception as e:
+        except (OSError, RuntimeError, AttributeError, ValueError, ImportError) as e:
             return _qvar_map({"ok": False, "error": str(e)})
 
     # ─── Crash Reporter (delegated to WindowController) ────────────────────
