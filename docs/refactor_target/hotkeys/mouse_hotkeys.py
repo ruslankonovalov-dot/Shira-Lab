@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Callable
+from collections.abc import Callable
 
 from app.backend.services.hotkeys.validators import KeyValidator
 

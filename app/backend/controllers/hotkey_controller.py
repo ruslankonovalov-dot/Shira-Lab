@@ -5,14 +5,18 @@ Extracted from QmlBridge god-object (Phase 2.1).
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Optional, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from PySide6.QtCore import QObject, Signal, Slot
 
 from app.backend.services.hotkey_service import HotkeyService
 from app.backend.services.input_validation import (
-    validate_enum, make_error_response, make_ok_response,
-    VALID_HOTKEY_ACTIONS, VALID_HOTKEY_MODES, _qvar, _qvar_map, QVariantMap
+    VALID_HOTKEY_ACTIONS,
+    VALID_HOTKEY_MODES,
+    QVariantMap,
+    _qvar_map,
+    make_error_response,
+    validate_enum,
 )
 
 if TYPE_CHECKING:
@@ -36,9 +40,9 @@ class HotkeyController(QObject):
     hotkeysChanged = Signal()
     logMessage = Signal(str, str, str)  # level, source, message
 
-    def __init__(self, state: "RuntimeState", hotkeys_service: HotkeyService, parent: Optional[QObject] = None) -> None:
+    def __init__(self, state: RuntimeState, hotkeys_service: HotkeyService, parent: QObject | None = None) -> None:
         super().__init__(parent)
-        self._state: "RuntimeState" = state
+        self._state: RuntimeState = state
         self._hotkeys: HotkeyService = hotkeys_service
 
     @property

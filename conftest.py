@@ -8,14 +8,13 @@
 """
 from __future__ import annotations
 
-import os
-import sys
 import json
-import tempfile
+import os
 import platform
+import sys
 from pathlib import Path
-from typing import Any, Iterator
-from unittest.mock import MagicMock, patch
+from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -37,7 +36,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 # ============================================================
 
 try:
-    from pytestqt.plugin import QtBot, QApplication  # noqa: F401
+    from pytestqt.plugin import QApplication, QtBot  # noqa: F401
     HAS_PYTEST_QT = True
 except ImportError:
     HAS_PYTEST_QT = False

@@ -1,7 +1,5 @@
 # utils.py — Win32 PostMessageW helpers
 import ctypes
-from ctypes import wintypes
-from typing import Optional
 
 user32 = ctypes.windll.user32
 
@@ -45,7 +43,7 @@ def _make_lparam(x: int, y: int) -> int:
     return (y << 16) | (x & 0xFFFF)
 
 
-def _vk_from_name(key: str) -> Optional[int]:
+def _vk_from_name(key: str) -> int | None:
     k = (key or "").strip().lower()
     if not k:
         return None

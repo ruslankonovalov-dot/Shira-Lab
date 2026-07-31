@@ -1,6 +1,6 @@
 # tests/unit/test_vigem_service.py — VigemService comprehensive tests for Phase 3.6
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
 
 
 class TestVigemService:
@@ -34,7 +34,7 @@ class TestVigemService:
 
     def test_button_name_to_mask(self):
         """Test button name to mask conversion."""
-        from app.backend.services.vigem_service import VigemService, XUSB_BUTTON_MAP
+        from app.backend.services.vigem_service import XUSB_BUTTON_MAP, VigemService
 
         # Test known button mappings
         assert VigemService.button_name_to_mask("a") == XUSB_BUTTON_MAP.get("a", 0)

@@ -3,8 +3,9 @@
 # CRITICAL: Set AppUserModelID BEFORE any imports or QApplication creation.
 # This prevents Windows from showing the default Python icon in the taskbar
 # during the 2-3 seconds it takes to import PySide6 and create the window.
-import sys
 import os
+import sys
+
 if sys.platform == "win32":
     try:
         import ctypes

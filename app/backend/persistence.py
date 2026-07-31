@@ -1,11 +1,13 @@
 from __future__ import annotations
+
 import json
 import logging
 import threading
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
+
 from app.backend.models.runtime_state import RuntimeState
-from app.backend.services.hotkey_service import default_hotkeys, HOTKEY_ACTIONS
+from app.backend.services.hotkey_service import HOTKEY_ACTIONS, default_hotkeys
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +82,7 @@ def _state_from_dict(data: dict[str, Any]) -> RuntimeState:
         try: th = int(th)
         except Exception: th = None
     # Per-module targets
-    def load_target_hwnd(key: str, default_val: Optional[int]) -> Optional[int]:
+    def load_target_hwnd(key: str, default_val: int | None) -> int | None:
         val = data.get(key)
         if val is not None:
             try: return int(val)
@@ -158,7 +160,6 @@ def save_profile(api: Any) -> None:
     """Save current profile to disk."""
     with _profile_lock:
         _ensure_dir()
-        from app.backend.services.clicker_service import ClickerService
         clicker = api.clicker.get_status() if hasattr(api, 'clicker') else {}
         aim = api.aim.get_status() if hasattr(api, 'aim') else {}
         macro = api.macro.get_status() if hasattr(api, 'macro') else {}

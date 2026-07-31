@@ -1,11 +1,14 @@
 """Unit tests for app.backend.profile_io module."""
-import pytest
 import json
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+
+import pytest
 
 from app.backend.profile_io import (
-    export_profile, import_profile, _safe_get, PROFILE_FORMAT_VERSION,
+    PROFILE_FORMAT_VERSION,
+    _safe_get,
+    export_profile,
+    import_profile,
 )
 
 pytestmark = pytest.mark.unit

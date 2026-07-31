@@ -7,9 +7,8 @@ from __future__ import annotations
 import json
 import platform
 
-from PySide6.QtCore import Slot
-
 from app.backend.bridges.bridge_base import BridgeBase
+from PySide6.QtCore import Slot
 
 
 class DiagnosticsBridge(BridgeBase):
@@ -69,6 +68,7 @@ class DiagnosticsBridge(BridgeBase):
     def getPerformanceProfile(self):
         """Возвращает метрики производительности для Diagnostics → Profiler."""
         import time
+
         import psutil  # type: ignore
         try:
             process = psutil.Process()

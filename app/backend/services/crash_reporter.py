@@ -10,17 +10,16 @@ in Settings -> Privacy -> "Send crash reports to help improve Shira Lab".
 """
 from __future__ import annotations
 
-import sys
-import os
+import datetime
 import json
 import logging
 import platform
+import sys
 import traceback
-import datetime
 import urllib.request
 from pathlib import Path
-from typing import Any, Dict, List, Optional
 from types import TracebackType
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +61,7 @@ def install_crash_handler(app_version: str, send_reports: bool = False) -> None:
 def _build_report(exc_type: type[BaseException],
                   exc_value: BaseException | None,
                   tb: TracebackType | None,
-                  app_version: str) -> Dict[str, Any]:
+                  app_version: str) -> dict[str, Any]:
     """Build structured crash report."""
     return {
         "timestamp": datetime.datetime.now().isoformat(),
@@ -79,7 +78,7 @@ def _build_report(exc_type: type[BaseException],
     }
 
 
-def _save_local(report: Dict[str, Any]) -> Path:
+def _save_local(report: dict[str, Any]) -> Path:
     """Save report locally to data/crash_logs/."""
     CRASH_LOG_DIR.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -98,7 +97,7 @@ def _save_local(report: Dict[str, Any]) -> Path:
     return path
 
 
-def _send_to_server(report: Dict[str, Any]) -> bool:
+def _send_to_server(report: dict[str, Any]) -> bool:
     """Send report to server (best-effort, non-blocking)."""
     try:
         req = urllib.request.Request(
@@ -122,12 +121,12 @@ def _send_to_server(report: Dict[str, Any]) -> bool:
         return False
 
 
-def list_local_crashes() -> List[Dict[str, Any]]:
+def list_local_crashes() -> list[dict[str, Any]]:
     """Return list of local crash logs (for Diagnostics display)."""
     if not CRASH_LOG_DIR.exists():
         return []
 
-    crashes: List[Dict[str, Any]] = []
+    crashes: list[dict[str, Any]] = []
     for path in sorted(CRASH_LOG_DIR.glob("crash_*.json"), reverse=True):
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
@@ -144,7 +143,7 @@ def list_local_crashes() -> List[Dict[str, Any]]:
     return crashes
 
 
-def read_local_crash(filename: str) -> Optional[Dict[str, Any]]:
+def read_local_crash(filename: str) -> dict[str, Any] | None:
     """Read content of specific crash log."""
     path = CRASH_LOG_DIR / filename
     if not path.exists() or not path.is_file():

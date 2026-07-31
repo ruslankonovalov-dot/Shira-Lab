@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable
+from collections.abc import Callable
 
 from app.backend.services.hotkeys.validators import KeyValidator
 
@@ -63,7 +63,6 @@ class KeyboardHotkeyManager:
     def _register_single(self, action, parsed, mode, on_press, on_release):
         """Регистрирует single key (без modifiers)."""
         try:
-            from pynput import keyboard
             # TODO: полная реализация с GlobalHotKeys или Listener
             self._registered[action] = {
                 "parsed": parsed, "mode": mode,
@@ -77,7 +76,6 @@ class KeyboardHotkeyManager:
     def _register_combo(self, action, parsed, mode, on_press, on_release):
         """Регистрирует combo (с modifiers)."""
         try:
-            from pynput import keyboard
             # TODO: использовать keyboard.GlobalHotKeys
             self._registered[action] = {
                 "parsed": parsed, "mode": mode,

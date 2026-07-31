@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-import os
-import time
 import ctypes
-import threading
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Sequence, Tuple, Literal, cast
+import os
+import threading
+import time
+from collections.abc import Callable, Sequence
+from typing import (
+    Any,
+    cast,
+)
 
 import cv2
 import mss
@@ -19,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 # Type aliases
-HSVRange = Tuple[Tuple[int, int, int], Tuple[int, int, int]]
+HSVRange = tuple[tuple[int, int, int], tuple[int, int, int]]
 DetectionMode = str
 BackgroundMethod = str
 TargetColor = str
@@ -53,15 +57,15 @@ class AimService:
         self.confidence: float = 0.5
         self.smooth_steps: int = 5
         self.reset_delay: float = 0.005
-        self.scan_region: Optional[Dict[str, int]] = None
+        self.scan_region: dict[str, int] | None = None
         self.last_log: str = "READY"
-        self.target_hwnd: Optional[int] = None
+        self.target_hwnd: int | None = None
         self.background_method: BackgroundMethod = "sendinput"
 
         self.detection_mode: DetectionMode = "auto"
         self.target_color: TargetColor = "red"
-        self.multi_colors: List[TargetColor] = ["red", "blue", "green"]
-        self.calibrated_hsv_ranges: List[HSVRange] = []
+        self.multi_colors: list[TargetColor] = ["red", "blue", "green"]
+        self.calibrated_hsv_ranges: list[HSVRange] = []
 
         # Filters
         self.min_area: int = 20
@@ -77,29 +81,29 @@ class AimService:
 
         # Predictive aim — compensate for latency
         self.prediction_factor: float = 0.15  # 0 = off, 0.15 = light prediction
-        self.last_target_pos: Optional[Tuple[int, int, float]] = None    # (tx, ty, timestamp)
-        self.last_mouse_delta: Tuple[int, int] = (0, 0) # for smoothing
+        self.last_target_pos: tuple[int, int, float] | None = None    # (tx, ty, timestamp)
+        self.last_mouse_delta: tuple[int, int] = (0, 0) # for smoothing
 
         # Debug
         self.debug_screenshots: bool = True
         self.debug_frame_count: int = 0
 
         # Performance: pre-built HSV arrays
-        self._hsv_cache: Dict[str, List[Tuple[npt.NDArray[np.uint8], npt.NDArray[np.uint8]]]] = {}  # color_name → list of (lower_arr, upper_arr)
+        self._hsv_cache: dict[str, list[tuple[npt.NDArray[np.uint8], npt.NDArray[np.uint8]]]] = {}  # color_name → list of (lower_arr, upper_arr)
         self._kernel_3x3: npt.NDArray[np.uint8] = np.ones((3, 3), np.uint8)
 
-        self._bridge: Optional[object] = None
-        self._bridge_log: Optional[Callable[[str, str, str], None]] = None
+        self._bridge: object | None = None
+        self._bridge_log: Callable[[str, str, str], None] | None = None
         self._screen_w: int = 0
         self._screen_h: int = 0
         self._screen_x: int = 0  # Virtual screen X offset (multi-monitor)
         self._screen_y: int = 0  # Virtual screen Y offset (multi-monitor)
-        self._sct: Optional[MSSClass] = None  # mss.mss instance
+        self._sct: MSSClass | None = None  # mss.mss instance
 
         # Thread safety
         self._lock: threading.RLock = threading.RLock()
 
-    def _get_hsv_arrays(self, color_name: str) -> List[Tuple[npt.NDArray[np.uint8], npt.NDArray[np.uint8]]]:
+    def _get_hsv_arrays(self, color_name: str) -> list[tuple[npt.NDArray[np.uint8], npt.NDArray[np.uint8]]]:
         """Get cached numpy arrays for HSV range (avoids re-creating every frame)."""
         if color_name not in self._hsv_cache:
             ranges = self.HSV_PRESETS.get(color_name, [])
@@ -109,7 +113,7 @@ class AimService:
             ]
         return self._hsv_cache[color_name]
 
-    def set_bridge(self, bridge: Optional[object]) -> None:
+    def set_bridge(self, bridge: object | None) -> None:
         self._bridge = bridge
         # Expect bridge to have a log(level, module, message) method
         if bridge and hasattr(bridge, 'log'):
@@ -121,7 +125,7 @@ class AimService:
         if self._bridge_log is not None:
             self._bridge_log(level, "AIM", message)
 
-    def _get_screen_size(self) -> Tuple[int, int, int, int]:
+    def _get_screen_size(self) -> tuple[int, int, int, int]:
         if self._screen_w == 0:
             # Use VIRTUAL screen metrics for multi-monitor support
             # SM_CXVIRTUALSCREEN = 78, SM_CYVIRTUALSCREEN = 79
@@ -141,15 +145,15 @@ class AimService:
 
     # ─── Config ────────────────────────────────────────────────────────
 
-    def update_config(self, confidence: float, smooth_steps: int, reset_delay: float) -> Dict[str, Any]:
+    def update_config(self, confidence: float, smooth_steps: int, reset_delay: float) -> dict[str, Any]:
         with self._lock:
             self.confidence = max(0.1, min(1.0, float(confidence)))
             self.smooth_steps = max(1, int(smooth_steps))
             self.reset_delay = max(0.001, float(reset_delay))
         return self.get_status()
 
-    def set_detection_mode(self, mode: DetectionMode) -> Dict[str, Any]:
-        valid: Tuple[DetectionMode, ...] = ("auto", "multi", "circles", "color", "calibrate")
+    def set_detection_mode(self, mode: DetectionMode) -> dict[str, Any]:
+        valid: tuple[DetectionMode, ...] = ("auto", "multi", "circles", "color", "calibrate")
         if mode in valid:
             with self._lock:
                 self.detection_mode = mode
@@ -157,7 +161,7 @@ class AimService:
             return {"ok": True, "detection_mode": mode}
         return {"ok": False, "error": f"Invalid mode: {mode}"}
 
-    def set_target_color(self, color: TargetColor) -> Dict[str, Any]:
+    def set_target_color(self, color: TargetColor) -> dict[str, Any]:
         if color in self.HSV_PRESETS:
             with self._lock:
                 self.target_color = color
@@ -165,24 +169,24 @@ class AimService:
             return {"ok": True, "target_color": color}
         return {"ok": False, "error": f"Unknown color: {color}"}
 
-    def set_multi_colors(self, colors: List[TargetColor]) -> Dict[str, Any]:
+    def set_multi_colors(self, colors: list[TargetColor]) -> dict[str, Any]:
         with self._lock:
             self.multi_colors = colors
         self._log("INFO", f"Multi colors: {colors}")
         return {"ok": True, "multi_colors": colors}
 
-    def set_fov(self, radius: int) -> Dict[str, Any]:
+    def set_fov(self, radius: int) -> dict[str, Any]:
         with self._lock:
             self.fov_radius = max(50, min(1000, int(radius)))
         self._log("INFO", f"FOV: {self.fov_radius}px")
         return {"ok": True, "fov_radius": self.fov_radius}
 
-    def set_aim_speed(self, speed: float) -> Dict[str, Any]:
+    def set_aim_speed(self, speed: float) -> dict[str, Any]:
         with self._lock:
             self.aim_speed = max(0.05, min(1.0, float(speed)))
         return {"ok": True, "aim_speed": self.aim_speed}
 
-    def set_filters(self, min_area: int, max_area: int, aspect_min: float, aspect_max: float, brightness: int, saturation: int) -> Dict[str, Any]:
+    def set_filters(self, min_area: int, max_area: int, aspect_min: float, aspect_max: float, brightness: int, saturation: int) -> dict[str, Any]:
         with self._lock:
             self.min_area = max(1, int(min_area))
             self.max_area = max(self.min_area + 1, int(max_area))
@@ -192,7 +196,7 @@ class AimService:
             self.saturation_threshold = max(0, min(255, int(saturation)))
         return {"ok": True}
 
-    def set_scan_region(self, top: int, left: int, width: int, height: int) -> Dict[str, Any]:
+    def set_scan_region(self, top: int, left: int, width: int, height: int) -> dict[str, Any]:
         """Set custom scan region. Pass all zeros to reset to full screen."""
         if top == 0 and left == 0 and width == 0 and height == 0:
             with self._lock:
@@ -207,7 +211,7 @@ class AimService:
 
     # ─── Calibration (pipette) ─────────────────────────────────────────
 
-    def sample_color_at(self, x: int, y: int) -> Dict[str, Any]:
+    def sample_color_at(self, x: int, y: int) -> dict[str, Any]:
         """Sample HSV color at screen position. Takes 7x7 region, computes mean + std.
         Creates adaptive tolerance range based on standard deviation.
         """
@@ -288,7 +292,7 @@ class AimService:
 
     # ─── Start/Stop ────────────────────────────────────────────────────────
 
-    def start(self, target_hwnd: Optional[int] = None) -> Dict[str, Any]:
+    def start(self, target_hwnd: int | None = None) -> dict[str, Any]:
         if self.is_running:
             return self.get_status()
         if target_hwnd is not None:
@@ -299,7 +303,7 @@ class AimService:
         threading.Thread(target=self._worker, daemon=True).start()
         return self.get_status()
 
-    def stop(self) -> Dict[str, Any]:
+    def stop(self) -> dict[str, Any]:
         if self.is_running:
             self._log("INFO", "Stopped")
         self.is_running = False
@@ -477,10 +481,10 @@ class AimService:
             filtered.append((cx, cy, area))
         return filtered
 
-    def _find_nearest(self, targets: list[tuple[int, int, float]], cx: int, cy: int) -> Optional[tuple[int, int, float, float]]:
+    def _find_nearest(self, targets: list[tuple[int, int, float]], cx: int, cy: int) -> tuple[int, int, float, float] | None:
         if not targets:
             return None
-        nearest: Optional[tuple[int, int, float, float]] = None
+        nearest: tuple[int, int, float, float] | None = None
         min_dist = float('inf')
         for tx, ty, score in targets:
             d = ((tx - cx) ** 2 + (ty - cy) ** 2) ** 0.5
@@ -686,7 +690,7 @@ class AimService:
                 self.is_running = False
             self._log("INFO", "Worker ended")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         with self._lock:
             return {
                 "ok": True,
@@ -710,8 +714,8 @@ class AimService:
                 "prediction_factor": self.prediction_factor,
             }
 
-    def set_background_method(self, method: BackgroundMethod) -> Dict[str, Any]:
-        valid: Tuple[BackgroundMethod, ...] = ("sendinput", "postmessage", "vigem", "pico")
+    def set_background_method(self, method: BackgroundMethod) -> dict[str, Any]:
+        valid: tuple[BackgroundMethod, ...] = ("sendinput", "postmessage", "vigem", "pico")
         if method in valid:
             with self._lock:
                 self.background_method = method

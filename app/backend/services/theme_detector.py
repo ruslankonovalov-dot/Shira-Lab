@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 import platform
-from typing import Dict, Literal, Callable, Optional
+from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -55,20 +55,20 @@ def on_theme_change(callback: Callable[[], None]) -> None:
 
 # ─── Recommended palettes for each theme ────────────────────
 
-DARK_PALETTE: Dict[str, Dict[str, str]] = {
+DARK_PALETTE: dict[str, dict[str, str]] = {
     "matrix": {"bg": "#000000", "fg": "#00FF00"},
     "cyberpunk": {"bg": "#0A0014", "fg": "#FF00FF"},
     "amber": {"bg": "#1A0F00", "fg": "#FFB000"},
 }
 
-LIGHT_PALETTE: Dict[str, Dict[str, str]] = {
+LIGHT_PALETTE: dict[str, dict[str, str]] = {
     "matrix": {"bg": "#F0F0F0", "fg": "#006600"},
     "cyberpunk": {"bg": "#F8F0F8", "fg": "#990099"},
     "amber": {"bg": "#FFFAF0", "fg": "#996600"},
 }
 
 
-def get_palette_for_theme(theme: Theme, palette_id: str = "matrix") -> Dict[str, str]:
+def get_palette_for_theme(theme: Theme, palette_id: str = "matrix") -> dict[str, str]:
     """Return palette taking system theme into account."""
     source = LIGHT_PALETTE if theme == "light" else DARK_PALETTE
     return source.get(palette_id, source["matrix"])

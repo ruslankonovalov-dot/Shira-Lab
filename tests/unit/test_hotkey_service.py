@@ -1,8 +1,8 @@
 # tests/unit/test_hotkey_service.py — HotkeyService comprehensive tests for Phase 3.6
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 import threading
-import time
+from unittest.mock import MagicMock, Mock
+
+import pytest
 
 
 class TestHotkeyService:
@@ -10,7 +10,6 @@ class TestHotkeyService:
 
     def setup_method(self):
         from app.backend.services.hotkey_service import HotkeyService
-        from unittest.mock import Mock, MagicMock
         # Create a mock API that mimics QmlBridge/HotkeyController
         mock_api = MagicMock()
         mock_api.clicker = MagicMock()
@@ -266,7 +265,6 @@ class TestHotkeyServiceIntegration:
 
     def setup_method(self):
         from app.backend.services.hotkey_service import HotkeyService
-        from unittest.mock import MagicMock
         mock_api = MagicMock()
         mock_api.clicker = MagicMock()
         mock_api.clicker.is_running = False

@@ -1,7 +1,8 @@
 # tests/unit/test_controllers.py — Controller unit tests for Phase 3.6
 # Target: ≥80% coverage on 4 controllers
+from unittest.mock import Mock
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
 
 
 class TestWindowController:
@@ -430,8 +431,8 @@ class TestProfileController:
         assert result["ok"] is False
 
     def test_profile_io(self):
-        import tempfile
         import os
+        import tempfile
 
         with tempfile.TemporaryDirectory() as tmpdir:
             path = os.path.join(tmpdir, "test_profile.json")

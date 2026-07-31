@@ -23,18 +23,18 @@
 """
 from __future__ import annotations
 
+from app.backend.bridges.aim_bridge import AimBridge
 from app.backend.bridges.bridge_base import BridgeBase
+from app.backend.bridges.clicker_bridge import ClickerBridge
+from app.backend.bridges.diagnostics_bridge import DiagnosticsBridge
+from app.backend.bridges.gamepad_bridge import GamepadBridge
+from app.backend.bridges.hotkeys_bridge import HotkeysBridge
+from app.backend.bridges.macro_bridge import MacroBridge
+from app.backend.bridges.overlay_bridge import OverlayBridge
+from app.backend.bridges.pico_bridge import PicoBridge
+from app.backend.bridges.recorder_bridge import RecorderBridge
 from app.backend.bridges.settings_bridge import SettingsBridge
 from app.backend.bridges.window_bridge import WindowBridge
-from app.backend.bridges.clicker_bridge import ClickerBridge
-from app.backend.bridges.macro_bridge import MacroBridge
-from app.backend.bridges.recorder_bridge import RecorderBridge
-from app.backend.bridges.aim_bridge import AimBridge
-from app.backend.bridges.hotkeys_bridge import HotkeysBridge
-from app.backend.bridges.gamepad_bridge import GamepadBridge
-from app.backend.bridges.pico_bridge import PicoBridge
-from app.backend.bridges.overlay_bridge import OverlayBridge
-from app.backend.bridges.diagnostics_bridge import DiagnosticsBridge
 
 
 class QmlBridge(

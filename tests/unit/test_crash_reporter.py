@@ -1,8 +1,8 @@
 """Unit tests for app.backend.services.crash_reporter module."""
-import pytest
 import json
-from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
+
+import pytest
 
 from app.backend.services import crash_reporter
 

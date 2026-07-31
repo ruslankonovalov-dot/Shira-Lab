@@ -5,30 +5,33 @@ import logging
 import os
 import threading
 import time
-from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple, Callable, Literal, Protocol
-
-from pynput import mouse, keyboard as pynput_key
-from pynput.mouse import Listener as MouseListener
-from pynput.keyboard import Listener as KeyboardListener
-from pynput.mouse import Controller as MouseController
-from pynput.keyboard import Controller as KeyboardController
-from pynput.keyboard import Key as PynputKey
+from typing import (
+    Any,
+    Protocol,
+)
 
 # keyboard lib — тоже нет стабов
-import keyboard
+from pynput import keyboard as pynput_key
+from pynput import mouse
+from pynput.keyboard import Controller as KeyboardController
+from pynput.keyboard import Key as PynputKey
+from pynput.keyboard import Listener as KeyboardListener
+from pynput.mouse import Controller as MouseController
+from pynput.mouse import Listener as MouseListener
 
-from app.backend.services.stealth_input import StealthInput, VK_MAP
-from app.backend.services.vigem_service import VIGEM_TARGET_TYPE, XUSB_REPORT, XUSB_BUTTON_MAP
-from app.backend.services.pico_service import PicoService
 from app.backend.services.singleton import singleton
+from app.backend.services.stealth_input import VK_MAP, StealthInput
+from app.backend.services.vigem_service import (
+    VIGEM_TARGET_TYPE,
+    XUSB_REPORT,
+)
 
 logger = logging.getLogger(__name__)
 
 # Type aliases
 BackgroundMethod = str
-RecordedEvents = List[List[Any]]
+RecordedEvents = list[list[Any]]
 
 # Bridge protocol для типизации _bridge
 class BridgeLike(Protocol):
@@ -46,17 +49,17 @@ class RecorderService:
         self.is_playing: bool = False
         self.recorded_events: RecordedEvents = []
         self.start_time: float = 0.0
-        self._m_listener: Optional[MouseListener] = None
-        self._k_listener: Optional[KeyboardListener] = None
-        self._m_listener_thread: Optional[threading.Thread] = None
-        self._k_listener_thread: Optional[threading.Thread] = None
+        self._m_listener: MouseListener | None = None
+        self._k_listener: KeyboardListener | None = None
+        self._m_listener_thread: threading.Thread | None = None
+        self._k_listener_thread: threading.Thread | None = None
         self._lock: threading.RLock = threading.RLock()  # Protect all state
         # Per-module target window (set by bridge)
-        self.target_hwnd: Optional[int] = None
+        self.target_hwnd: int | None = None
         # Background input method: "sendinput", "postmessage", "vigem", "pico"
         self._background_method: BackgroundMethod = "sendinput"
         # Bridge reference for logging
-        self._bridge: Optional[BridgeLike] = None
+        self._bridge: BridgeLike | None = None
 
     @property
     def background_method(self) -> BackgroundMethod:
@@ -69,7 +72,7 @@ class RecorderService:
             if value in ("sendinput", "postmessage", "vigem", "pico"):
                 self._background_method = value
 
-    def set_bridge(self, bridge: Optional[BridgeLike]) -> None:
+    def set_bridge(self, bridge: BridgeLike | None) -> None:
         """Set bridge reference for logging."""
         self._bridge = bridge
 
@@ -77,7 +80,7 @@ class RecorderService:
         if self._bridge:
             self._bridge.log(level, "RECORDER", message)
 
-    def _safe_record_path(self, name: str) -> Optional[str]:
+    def _safe_record_path(self, name: str) -> str | None:
         """Resolve a record filename to a safe absolute path inside records_dir.
 
         SECURITY: Prevents path traversal attacks (e.g. name='../../../etc/passwd').
@@ -103,7 +106,7 @@ class RecorderService:
         except Exception:
             return None
 
-    def list_records(self) -> Dict[str, Any]:
+    def list_records(self) -> dict[str, Any]:
         try:
             items = [f for f in os.listdir(self.records_dir) if f.endswith(".json")]
             items.sort(reverse=True)
@@ -112,7 +115,7 @@ class RecorderService:
             items = []
         return {"ok": True, "records": items}
 
-    def delete_record(self, name: str) -> Dict[str, Any]:
+    def delete_record(self, name: str) -> dict[str, Any]:
         path = self._safe_record_path(name)
         if path and os.path.exists(path):
             try:
@@ -121,7 +124,7 @@ class RecorderService:
                 logger.exception(f"Failed to delete record {name}")
         return self.list_records()
 
-    def start_recording(self) -> Dict[str, Any]:
+    def start_recording(self) -> dict[str, Any]:
         with self._lock:
             if self.is_recording:
                 return self.status()
@@ -139,7 +142,7 @@ class RecorderService:
             self._log("OK", "Recording started")
             return self.status()
 
-    def stop_recording(self) -> Dict[str, Any]:
+    def stop_recording(self) -> dict[str, Any]:
         with self._lock:
             if not self.is_recording:
                 return self.status()
@@ -166,7 +169,7 @@ class RecorderService:
         self._m_listener_thread = None
         self._k_listener_thread = None
 
-    def play_record(self, name: str, repeats: int = 1) -> Dict[str, Any]:
+    def play_record(self, name: str, repeats: int = 1) -> dict[str, Any]:
         with self._lock:
             path = self._safe_record_path(name)
             if not path or not os.path.exists(path):
@@ -185,7 +188,7 @@ class RecorderService:
             threading.Thread(target=self._play_thread, args=(data, max(1, int(repeats))), daemon=True).start()
             return self.status()
 
-    def stop_playing(self) -> Dict[str, Any]:
+    def stop_playing(self) -> dict[str, Any]:
         with self._lock:
             was_playing = self.is_playing
             self.is_playing = False
@@ -193,7 +196,7 @@ class RecorderService:
                 self._log("INFO", "Playback stopped")
             return self.status()
 
-    def set_background_method(self, method: str) -> Dict[str, Any]:
+    def set_background_method(self, method: str) -> dict[str, Any]:
         with self._lock:
             if method in ("sendinput", "postmessage", "vigem", "pico"):
                 self.background_method = method
@@ -202,8 +205,12 @@ class RecorderService:
     def _vigem_press_button(self, btn_name: str) -> bool:
         """Press a gamepad button via ViGEm. Returns success."""
         try:
-            from app.backend.services.vigem_service import get_vigem_service, XUSB_BUTTON_MAP
             import ctypes
+
+            from app.backend.services.vigem_service import (
+                XUSB_BUTTON_MAP,
+                get_vigem_service,
+            )
             vigem = get_vigem_service()
             if not vigem.connect():
                 return False
@@ -235,8 +242,9 @@ class RecorderService:
     def _vigem_release_all(self) -> bool:
         """Release all gamepad buttons via ViGEm. Returns success."""
         try:
-            from app.backend.services.vigem_service import get_vigem_service
             import ctypes
+
+            from app.backend.services.vigem_service import get_vigem_service
             vigem = get_vigem_service()
             if not vigem.connect():
                 return False
@@ -403,11 +411,11 @@ class RecorderService:
             if pico.is_connected:
                 pico.ms_click(0, 0)
 
-    def _play_thread(self, data: List[List[Any]], repeats: int) -> None:
+    def _play_thread(self, data: list[list[Any]], repeats: int) -> None:
         m_ctrl: MouseController = mouse.Controller()
         k_ctrl: KeyboardController = pynput_key.Controller()
         try:
-            events: List[List[Any]] = data.get("events", []) if isinstance(data, dict) else data
+            events: list[list[Any]] = data.get("events", []) if isinstance(data, dict) else data
             for _ in range(repeats):
                 if not self.is_playing:
                     break
@@ -487,7 +495,7 @@ class RecorderService:
         if self.is_recording:
             self.recorded_events.append(["ku", str(key), time.time() - self.start_time])
 
-    def _resolve_key_obj(self, key: PynputKey) -> Optional[PynputKey]:
+    def _resolve_key_obj(self, key: PynputKey) -> PynputKey | None:
         """Convert a pynput key string back to a pynput key object."""
         try:
             key_str = str(key).replace("Key.", "").replace("'", "").lower()
@@ -517,7 +525,7 @@ class RecorderService:
         except Exception:
             logger.exception("Failed to save record")
 
-    def status(self) -> Dict[str, Any]:
+    def status(self) -> dict[str, Any]:
         with self._lock:
             return {
                 "ok": True,
@@ -574,11 +582,12 @@ class RecorderService:
             logger.exception("Pico key press failed")
             return False
 
-    def _get_pico_config(self) -> Tuple[Optional[str], int]:
+    def _get_pico_config(self) -> tuple[str | None, int]:
         """Read Pico port/baudrate from profile. Returns (port, baudrate)."""
         try:
-            from app.backend.persistence import PROFILE_PATH
             import json
+
+            from app.backend.persistence import PROFILE_PATH
             data = json.loads(PROFILE_PATH.read_text(encoding="utf-8"))
             state = data.get("state") or {}
             port = state.get("pico_port")

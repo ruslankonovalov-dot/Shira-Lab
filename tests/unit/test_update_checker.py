@@ -1,10 +1,13 @@
 """Unit tests for app.backend.services.update_checker module."""
-import pytest
-from unittest.mock import patch, MagicMock
 import urllib.error
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.backend.services.update_checker import (
-    check_for_updates, _compare_versions, check_for_updates_async,
+    _compare_versions,
+    check_for_updates,
+    check_for_updates_async,
 )
 
 pytestmark = pytest.mark.unit

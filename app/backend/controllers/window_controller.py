@@ -6,31 +6,32 @@ from __future__ import annotations
 
 import ctypes
 import logging
-import subprocess
-import sys
 import threading
-import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
-from PySide6.QtCore import QObject, Signal, Slot, QTimer
+from PySide6.QtCore import QObject, QTimer, Signal, Slot
 
 from app.backend.models.runtime_state import RuntimeState
-from app.backend.system_tray import SystemTrayManager
 from app.backend.sound_manager import SoundManager
-from window_utils import (get_work_area, get_work_area_for_window,
-                          set_overlay_always_topmost, clamp_to_work_area,
-                          find_app_hwnd, get_monitors)
+from app.backend.system_tray import SystemTrayManager
+from window_utils import (
+    clamp_to_work_area,
+    find_app_hwnd,
+    get_monitors,
+    get_work_area,
+    get_work_area_for_window,
+    set_overlay_always_topmost,
+)
 
 if TYPE_CHECKING:
+    from app.backend.qml_bridge import QmlBridge
+    from app.backend.services.aim_service import AimService
     from app.backend.services.clicker_service import ClickerService
+    from app.backend.services.hotkey_service import HotkeyService
     from app.backend.services.macro_service import MacroService
     from app.backend.services.recorder_service import RecorderService
-    from app.backend.services.aim_service import AimService
-    from app.backend.services.hotkey_service import HotkeyService
     from app.backend.sound_manager import SoundManager
-    from app.backend.qml_bridge import QmlBridge
-    from app.backend.controllers.profile_controller import ProfileController
 
 logger = logging.getLogger(__name__)
 
@@ -81,34 +82,34 @@ class WindowController(QObject):
     def __init__(
         self,
         state: RuntimeState,
-        clicker_service: "ClickerService",
-        macro_service: "MacroService",
-        recorder_service: "RecorderService",
-        aim_service: "AimService",
-        hotkey_service: "HotkeyService",
-        sound_manager: "SoundManager",
-        bridge: Optional["QmlBridge"] = None,
-        parent: Optional[QObject] = None
+        clicker_service: ClickerService,
+        macro_service: MacroService,
+        recorder_service: RecorderService,
+        aim_service: AimService,
+        hotkey_service: HotkeyService,
+        sound_manager: SoundManager,
+        bridge: QmlBridge | None = None,
+        parent: QObject | None = None
     ) -> None:
         super().__init__(parent)
         self._state: RuntimeState = state
-        self._clicker: "ClickerService" = clicker_service
-        self._macro: "MacroService" = macro_service
-        self._recorder: "RecorderService" = recorder_service
-        self._aim: "AimService" = aim_service
-        self._hotkeys: "HotkeyService" = hotkey_service
-        self._sounds: "SoundManager" = sound_manager
-        self._bridge: Optional["QmlBridge"] = bridge
+        self._clicker: ClickerService = clicker_service
+        self._macro: MacroService = macro_service
+        self._recorder: RecorderService = recorder_service
+        self._aim: AimService = aim_service
+        self._hotkeys: HotkeyService = hotkey_service
+        self._sounds: SoundManager = sound_manager
+        self._bridge: QmlBridge | None = bridge
 
         # Overlay state
         self.overlayVisible = True
 
         # System tray - passed from bridge, don't create here
-        self._tray: Optional[SystemTrayManager] = None
+        self._tray: SystemTrayManager | None = None
 
         # Visibility check timer
         self._visibility_timer: QTimer | None = None
-        self._last_visibility: Optional[bool] = None
+        self._last_visibility: bool | None = None
         # Don't start visibility check until tray is set
         # self._start_visibility_check()
 
@@ -116,13 +117,13 @@ class WindowController(QObject):
         self._connect_tray_signals()
 
         # Timer for debounced icon regeneration
-        self._icon_regen_timer: Optional[threading.Timer] = None
+        self._icon_regen_timer: threading.Timer | None = None
 
         # Window handles
         self._app_hwnd: int = 0
         self._overlay_hwnd: int = 0
 
-    def set_tray(self, tray: "SystemTrayManager") -> None:
+    def set_tray(self, tray: SystemTrayManager) -> None:
         """Set the tray manager (called from bridge after both are initialized)."""
         self._tray = tray
         self._connect_tray_signals()
@@ -164,7 +165,6 @@ class WindowController(QObject):
 
     def is_app_visible(self) -> bool:
         """Check if app is visible to user (window on taskbar OR tray icon)."""
-        import ctypes
         hwnd = self._get_app_hwnd()
         window_visible = False
         if hwnd:
@@ -354,7 +354,6 @@ class WindowController(QObject):
     def setCrashReportSending(self, enabled: bool) -> bool:
         """Enable/disable automatic crash report sending."""
         try:
-            from app.backend.services.crash_reporter import install_crash_handler
             # The crash reporter only has install_crash_handler with send_reports parameter
             # We need to reinstall with new setting
             # For now just log
@@ -430,8 +429,9 @@ class WindowController(QObject):
         def _generate_async() -> None:
             try:
                 from app.backend.services.icon_generator import (
-                    generate_palette_icon, generate_palette_ico,
-                    generate_palette_ico_unique
+                    generate_palette_ico,
+                    generate_palette_ico_unique,
+                    generate_palette_icon,
                 )
                 png_path = generate_palette_icon(palette_id)
                 generate_palette_ico(palette_id)
@@ -449,8 +449,8 @@ class WindowController(QObject):
     def _update_shortcut_icon(self, new_icon_path: Path) -> None:
         """Update all .lnk shortcuts pointing to launch.bat."""
         try:
-            import subprocess
             import os
+            import subprocess
 
             project_root = Path(__file__).resolve().parents[3]
             target_path = project_root / "launch.bat"
@@ -500,7 +500,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             if updated_count > 0:
                 self._refresh_icon_cache()
 
-        except Exception as e:
+        except Exception:
             logger.exception("Failed to update shortcut icon")
 
     def _get_desktop_path(self) -> str | None:
@@ -560,9 +560,10 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
     def getPerformanceProfile(self) -> dict[str, Any]:
         """Get current performance metrics (CPU, memory, threads, uptime)."""
         try:
-            import psutil
             import os
             import time
+
+            import psutil
 
             process = psutil.Process(os.getpid())
             cpu_percent = process.cpu_percent(interval=0.1)
@@ -606,7 +607,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
 
     # ─── Profile Import/Export ────────────────────────────────────────────
 
-    def set_bridge_reference(self, bridge: "QmlBridge") -> None:
+    def set_bridge_reference(self, bridge: QmlBridge) -> None:
         """Set reference to QmlBridge for profile import/export."""
         self._bridge_ref = bridge
 
@@ -614,8 +615,9 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
     def exportProfileDialog(self) -> dict[str, Any]:
         """Show file dialog and export profile to selected path."""
         try:
-            from app.backend.profile_io import export_profile
             from PySide6.QtWidgets import QFileDialog
+
+            from app.backend.profile_io import export_profile
 
             file_path, _ = QFileDialog.getSaveFileName(
                 None, "Export Profile", "profile.json",
@@ -635,8 +637,9 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
     def importProfileDialog(self) -> dict[str, Any]:
         """Show file dialog and import profile from selected path."""
         try:
-            from app.backend.profile_io import import_profile
             from PySide6.QtWidgets import QFileDialog
+
+            from app.backend.profile_io import import_profile
 
             file_path, _ = QFileDialog.getOpenFileName(
                 None, "Import Profile", "",
@@ -669,8 +672,11 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         """Called from main.py after the QML window is created.
         Stores the main window's Win32 HWND so we never confuse it with
         the overlay window."""
-        from app.backend.services.input_validation import validate_int, make_error_response
-        from app.backend.services.input_validation import _qvar
+        from app.backend.services.input_validation import (
+            _qvar,
+            make_error_response,
+            validate_int,
+        )
 
         ok, hwnd_val, err = validate_int(hwnd, 0, None, name="hwnd")
         if not ok or err is not None or hwnd_val is None:
@@ -683,8 +689,11 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         """Called from main.py after the overlay window becomes visible.
         Stores the overlay's Win32 HWND so we can re-assert its topmost
         priority after any app pin operation."""
-        from app.backend.services.input_validation import validate_int, make_error_response
-        from app.backend.services.input_validation import _qvar
+        from app.backend.services.input_validation import (
+            _qvar,
+            make_error_response,
+            validate_int,
+        )
 
         ok, hwnd_val, err = validate_int(hwnd, 0, None, name="hwnd")
         if not ok or err is not None or hwnd_val is None:
@@ -718,7 +727,11 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
     @Slot(result="QVariantMap")
     def getMonitors(self) -> dict[str, Any]:
         """Get list of monitors with work areas."""
-        from app.backend.services.input_validation import _qvar, make_ok_response, make_error_response
+        from app.backend.services.input_validation import (
+            _qvar,
+            make_error_response,
+            make_ok_response,
+        )
         try:
             return _qvar(make_ok_response(monitors=get_monitors()))  # type: ignore[return-value]
         except Exception as e:
@@ -728,7 +741,12 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
     @Slot(int, result="QVariantMap")
     def getMonitorForWindow(self, hwnd: int) -> dict[str, Any]:
         """Get monitor info for a specific window handle."""
-        from app.backend.services.input_validation import validate_int, make_error_response, make_ok_response, _qvar
+        from app.backend.services.input_validation import (
+            _qvar,
+            make_error_response,
+            make_ok_response,
+            validate_int,
+        )
 
         ok, hwnd_val, err = validate_int(hwnd, 0, None, name="hwnd")
         if not ok or hwnd_val is None:
@@ -736,6 +754,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
 
         try:
             import ctypes
+
             from window_utils import get_monitors
             monitors = get_monitors()
             if not monitors:
@@ -767,7 +786,11 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         """Returns {x, y, width, height} of the work area for the monitor
         the overlay is on (excludes taskbar). Used by OverlayHUD to position
         itself at bottom-left without overlapping taskbar."""
-        from app.backend.services.input_validation import _qvar, make_ok_response, make_error_response
+        from app.backend.services.input_validation import (
+            _qvar,
+            make_error_response,
+            make_ok_response,
+        )
         try:
             overlay_hwnd = self._get_overlay_hwnd()
             if overlay_hwnd:
@@ -783,7 +806,12 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
     def clampOverlayPosition(self, x: int, y: int, w: int, h: int) -> dict[str, Any]:
         """Clamp overlay position to stay within work area (no taskbar overlap).
         Called from QML after drag. Returns {x, y} with clamped position."""
-        from app.backend.services.input_validation import validate_int, make_error_response, make_ok_response, _qvar
+        from app.backend.services.input_validation import (
+            _qvar,
+            make_error_response,
+            make_ok_response,
+            validate_int,
+        )
 
         ok, x_val, err = validate_int(x, -10000, 10000, name="x")
         if not ok or x_val is None:
@@ -805,7 +833,12 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
     @Slot(int, result="QVariantMap")
     def getWorkAreaForMonitor(self, monitor_index: int) -> dict[str, Any]:
         """Get work area for specific monitor."""
-        from app.backend.services.input_validation import validate_int, make_error_response, make_ok_response, _qvar
+        from app.backend.services.input_validation import (
+            _qvar,
+            make_error_response,
+            make_ok_response,
+            validate_int,
+        )
 
         ok, idx_val, err = validate_int(monitor_index, 0, 10, name="monitor_index")
         if not ok or idx_val is None:
@@ -834,8 +867,8 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         if self._bridge:
             return self._bridge.getSettings()
         # Fallback to state
-        from config import LANGUAGES, LOGO_SHIRA
         from app.backend.models.runtime_state import TERMINAL_PALETTES
+        from config import LANGUAGES, LOGO_SHIRA
         lang = dict(LANGUAGES.get(self._state.ui_lang, LANGUAGES["RU"]))
         return {
             "terminal_palette": self._state.terminal_palette,
@@ -854,7 +887,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         if self._bridge:
             return self._bridge.resetAllHotkeys()
         # Fallback - reset in hotkey service
-        from app.backend.services.input_validation import make_ok_response, _qvar
+        from app.backend.services.input_validation import _qvar, make_ok_response
         self._hotkeys.reset_all()
         return _qvar(make_ok_response())  # type: ignore[return-value]
 
@@ -871,7 +904,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         if self._bridge:
             return self._bridge.saveProfile(name)
         # Fallback -TODO: implement profile saving
-        from app.backend.services.input_validation import make_error_response, _qvar
+        from app.backend.services.input_validation import _qvar, make_error_response
         return _qvar(make_error_response("Bridge not available"))  # type: ignore[return-value]
 
     def setHotkey(self, action: str, key: str, mode: str) -> dict[str, Any]:
@@ -879,7 +912,11 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         if self._bridge:
             return self._bridge.setHotkey(action, key, mode)
         # Fallback - set in hotkey service
-        from app.backend.services.input_validation import validate_enum, make_error_response, _qvar
+        from app.backend.services.input_validation import (
+            _qvar,
+            make_error_response,
+            validate_enum,
+        )
         ok, val, err = validate_enum(mode, {"TOGGLE", "HOLD"}, name="mode")
         if not ok or val is None:
             return _qvar(make_error_response(err or "Invalid mode"))  # type: ignore[return-value]

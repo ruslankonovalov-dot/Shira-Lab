@@ -2,8 +2,11 @@
 import pytest
 
 from app.backend.i18n import (
-    tr, get_available_languages, get_translation_keys, get_translation_coverage,
     TRANSLATIONS,
+    get_available_languages,
+    get_translation_coverage,
+    get_translation_keys,
+    tr,
 )
 
 pytestmark = pytest.mark.unit

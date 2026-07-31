@@ -15,11 +15,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from PySide6.QtCore import Slot, Signal
-
 from app.backend.bridges.bridge_base import BridgeBase
-from config import LANGUAGES, LOGO_SHIRA
+from PySide6.QtCore import Slot
+
 from app.backend.models.runtime_state import TERMINAL_PALETTES
+from config import LANGUAGES, LOGO_SHIRA
 
 
 class SettingsBridge(BridgeBase):

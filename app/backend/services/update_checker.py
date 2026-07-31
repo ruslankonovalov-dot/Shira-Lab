@@ -7,9 +7,10 @@ from __future__ import annotations
 
 import json
 import logging
-import urllib.request
 import urllib.error
-from typing import Any, Callable, Dict, Optional
+import urllib.request
+from collections.abc import Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ GITHUB_API_LATEST = "https://api.github.com/repos/shira/shira-lab/releases/lates
 TIMEOUT_SEC = 5
 
 
-def check_for_updates(current_version: str, repo_url: str = GITHUB_API_LATEST) -> Dict[str, Any]:
+def check_for_updates(current_version: str, repo_url: str = GITHUB_API_LATEST) -> dict[str, Any]:
     """Check for new version on GitHub.
 
     Args:
@@ -54,7 +55,7 @@ def check_for_updates(current_version: str, repo_url: str = GITHUB_API_LATEST) -
         update_available = _compare_versions(latest_tag, current_version) > 0
 
         # Find .exe asset for Windows
-        download_url: Optional[str] = None
+        download_url: str | None = None
         for asset in data.get("assets", []):
             if asset.get("name", "").endswith(".exe"):
                 download_url = asset.get("browser_download_url")

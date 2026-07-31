@@ -14,11 +14,10 @@ from __future__ import annotations
 import ctypes
 import logging
 import os
-import sys
 import threading
 from ctypes import wintypes
 from enum import IntEnum
-from typing import Optional, Tuple, Dict, Any
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +71,7 @@ class DS4_REPORT(ctypes.Structure):
 
 # ─── Button mapping helpers ─────────────────────────────────────────────
 # Map user-friendly names to XUSB button flags
-XUSB_BUTTON_MAP: Dict[str, Optional[int]] = {
+XUSB_BUTTON_MAP: dict[str, int | None] = {
     "a": XUSB_BUTTON_A,
     "b": XUSB_BUTTON_B,
     "x": XUSB_BUTTON_X,
@@ -101,16 +100,16 @@ class VigemService:
     Thread-safe: all public methods are protected by RLock.
     """
 
-    def __init__(self, dll_path: Optional[str] = None):
-        self._client: Optional[ctypes.c_void_p] = None
-        self._targets: Dict[int, Tuple[ctypes.c_void_p, VIGEM_TARGET_TYPE]] = {}
-        self._dll: Optional[ctypes.CDLL] = None
+    def __init__(self, dll_path: str | None = None):
+        self._client: ctypes.c_void_p | None = None
+        self._targets: dict[int, tuple[ctypes.c_void_p, VIGEM_TARGET_TYPE]] = {}
+        self._dll: ctypes.CDLL | None = None
         self._dll_path = dll_path
         self._next_target_id = 1
         self._lock = threading.RLock()  # Protects all mutable state
-        self._bridge: Optional[Any] = None
+        self._bridge: Any | None = None
         # Internal button state per target_id (mask of currently pressed buttons)
-        self._btn_state: Dict[int, int] = {}
+        self._btn_state: dict[int, int] = {}
         self._load_dll()
 
     def set_bridge(self, bridge: Any) -> None:
@@ -121,7 +120,7 @@ class VigemService:
         if self._bridge:
             self._bridge.log(level, "GAMEPAD", message)
 
-    def _find_dll(self) -> Optional[str]:
+    def _find_dll(self) -> str | None:
         """Автопоиск ViGEmClient.dll в стандартных местах."""
         if self._dll_path and os.path.exists(self._dll_path):
             return self._dll_path
@@ -252,7 +251,7 @@ class VigemService:
             self._log("INFO", "ViGEm disconnected")
 
     # ─── Target management ──────────────────────────────────────────────
-    def add_x360(self) -> Optional[int]:
+    def add_x360(self) -> int | None:
         """Создаёт виртуальный Xbox 360 контроллер. Возвращает target_id или None."""
         with self._lock:
             if not self.connect():
@@ -270,7 +269,7 @@ class VigemService:
             self._targets[target_id] = (target, VIGEM_TARGET_TYPE.XBOX360)
             return target_id
 
-    def add_ds4(self) -> Optional[int]:
+    def add_ds4(self) -> int | None:
         """Создаёт виртуальный DualShock 4 контроллер. Возвращает target_id или None."""
         with self._lock:
             if not self.connect():
@@ -304,7 +303,7 @@ class VigemService:
                     self._dll.vigem_target_ds4_free(target)
             return True
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get status for UI/HUD."""
         with self._lock:
             return {
@@ -314,12 +313,12 @@ class VigemService:
                 "target_count": len(self._targets)
             }
 
-    def get_target_type(self, target_id: int) -> Optional[VIGEM_TARGET_TYPE]:
+    def get_target_type(self, target_id: int) -> VIGEM_TARGET_TYPE | None:
         with self._lock:
             info = self._targets.get(target_id)
             return info[1] if info else None
 
-    def list_targets(self) -> Dict[int, str]:
+    def list_targets(self) -> dict[int, str]:
         with self._lock:
             return {tid: ttype.name for tid, (_, ttype) in self._targets.items()}
 
@@ -473,7 +472,7 @@ class VigemService:
 
     # ─── Button Mapping (for QML) ───────────────────────────────────
 
-    def get_button_map(self) -> Dict[str, str]:
+    def get_button_map(self) -> dict[str, str]:
         """Get current button mapping (reverse mapping from mask to name).
 
         Returns mapping of button names to their mask values as strings.
@@ -481,14 +480,14 @@ class VigemService:
         with self._lock:
             return {name: str(mask) for name, mask in XUSB_BUTTON_MAP.items() if mask is not None}
 
-    def set_button_map(self, mapping: Dict[str, Any]) -> Dict[str, Any]:
+    def set_button_map(self, mapping: dict[str, Any]) -> dict[str, Any]:
         """Set button mapping (currently just validates and returns OK).
 
         Future: could store custom mappings per target.
         """
         # For now, just validate the mapping keys are valid button names
         valid_buttons = set(XUSB_BUTTON_MAP.keys())
-        for key in mapping.keys():
+        for key in mapping:
             if key.lower() not in valid_buttons:
                 return {"ok": False, "error": f"Invalid button name: {key}"}
         # In a full implementation, we'd store this per target
@@ -496,10 +495,10 @@ class VigemService:
 
 
 # ─── Singleton accessor ─────────────────────────────────────────────────
-_vigem_instance: Optional[VigemService] = None
+_vigem_instance: VigemService | None = None
 
 
-def get_vigem_service(dll_path: Optional[str] = None) -> VigemService:
+def get_vigem_service(dll_path: str | None = None) -> VigemService:
     """Возвращает глобальный экземпляр VigemService (lazy init)."""
     global _vigem_instance
     if _vigem_instance is None:

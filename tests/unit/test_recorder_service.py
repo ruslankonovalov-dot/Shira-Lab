@@ -1,11 +1,12 @@
 # tests/unit/test_recorder_service.py — RecorderService comprehensive tests for Phase 3.6
-import pytest
-from unittest.mock import Mock, patch, MagicMock, mock_open
-import time
 import json
 import os
-import tempfile
 import shutil
+import tempfile
+import time
+from unittest.mock import Mock
+
+import pytest
 
 
 class TestRecorderService:

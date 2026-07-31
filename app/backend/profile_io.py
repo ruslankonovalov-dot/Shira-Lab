@@ -7,14 +7,14 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 PROFILE_FORMAT_VERSION = "1.0"
 
 
-def export_profile(bridge: Any, path: str | Path) -> Dict[str, Any]:
+def export_profile(bridge: Any, path: str | Path) -> dict[str, Any]:
     """Export all settings + service states to JSON file.
 
     Includes:
@@ -36,7 +36,7 @@ def export_profile(bridge: Any, path: str | Path) -> Dict[str, Any]:
         if not isinstance(app_version, str):
             app_version = "0.17.0"
 
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "version": PROFILE_FORMAT_VERSION,
             "app_version": app_version,
             "settings": {
@@ -73,7 +73,7 @@ def export_profile(bridge: Any, path: str | Path) -> Dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 
-def import_profile(bridge: Any, path: str | Path) -> Dict[str, Any]:
+def import_profile(bridge: Any, path: str | Path) -> dict[str, Any]:
     """Import settings from JSON file, applying them to bridge.
 
     WARNING: Overwrites current settings!
@@ -157,7 +157,7 @@ def import_profile(bridge: Any, path: str | Path) -> Dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 
-def _safe_get(obj: Any, method_name: str) -> Dict[str, Any]:
+def _safe_get(obj: Any, method_name: str) -> dict[str, Any]:
     """Safely call obj.method() and return result or empty dict."""
     try:
         method = getattr(obj, method_name)
@@ -169,7 +169,7 @@ def _safe_get(obj: Any, method_name: str) -> Dict[str, Any]:
         return {}
 
 
-def export_profile_dialog(state: Any) -> Dict[str, Any]:
+def export_profile_dialog(state: Any) -> dict[str, Any]:
     """Open file dialog and export profile. Returns result dict."""
     try:
         from PySide6.QtWidgets import QApplication, QFileDialog
@@ -185,7 +185,7 @@ def export_profile_dialog(state: Any) -> Dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 
-def import_profile_dialog(state: Any) -> Dict[str, Any]:
+def import_profile_dialog(state: Any) -> dict[str, Any]:
     """Open file dialog and import profile. Returns result dict."""
     try:
         from PySide6.QtWidgets import QApplication, QFileDialog
@@ -201,7 +201,7 @@ def import_profile_dialog(state: Any) -> Dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 
-def save_profile_to_file(state: Any, name: str) -> Dict[str, Any]:
+def save_profile_to_file(state: Any, name: str) -> dict[str, Any]:
     """Save current state as named profile file."""
     try:
         from pathlib import Path
@@ -214,7 +214,7 @@ def save_profile_to_file(state: Any, name: str) -> Dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 
-def load_profile_from_file(filename: str, state: Any) -> Dict[str, Any]:
+def load_profile_from_file(filename: str, state: Any) -> dict[str, Any]:
     """Load profile from file and apply to state."""
     try:
         from pathlib import Path
@@ -226,7 +226,7 @@ def load_profile_from_file(filename: str, state: Any) -> Dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 
-def delete_profile_file(filename: str) -> Dict[str, Any]:
+def delete_profile_file(filename: str) -> dict[str, Any]:
     """Delete a profile file."""
     try:
         from pathlib import Path
@@ -240,7 +240,7 @@ def delete_profile_file(filename: str) -> Dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 
-def list_profile_files() -> Dict[str, Any]:
+def list_profile_files() -> dict[str, Any]:
     """List available profile files."""
     try:
         from pathlib import Path

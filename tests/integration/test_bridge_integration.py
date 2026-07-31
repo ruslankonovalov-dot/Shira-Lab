@@ -1,8 +1,8 @@
 # tests/integration/test_bridge_integration.py — Integration tests for Phase 3.6
 # Tests QmlBridge + Controllers + Services working together
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 import time
+
+import pytest
 
 
 class TestBridgeIntegration:
@@ -14,8 +14,8 @@ class TestBridgeIntegration:
 
     def test_bridge_creation(self):
         """Test that bridge initializes with all controllers."""
-        from app.backend.qml_bridge import QmlBridge
         from app.backend.models.runtime_state import RuntimeState
+        from app.backend.qml_bridge import QmlBridge
 
         state = RuntimeState()
         bridge = QmlBridge(state)
@@ -37,8 +37,8 @@ class TestBridgeIntegration:
 
     def test_bridge_signals_connected(self):
         """Test that controller signals are connected to bridge."""
-        from app.backend.qml_bridge import QmlBridge
         from app.backend.models.runtime_state import RuntimeState
+        from app.backend.qml_bridge import QmlBridge
 
         state = RuntimeState()
         bridge = QmlBridge(state)
@@ -55,8 +55,8 @@ class TestBridgeIntegration:
 
     def test_bridge_clicker_delegation(self):
         """Test clicker service delegation through bridge."""
-        from app.backend.qml_bridge import QmlBridge
         from app.backend.models.runtime_state import RuntimeState
+        from app.backend.qml_bridge import QmlBridge
 
         state = RuntimeState()
         bridge = QmlBridge(state)
@@ -83,8 +83,8 @@ class TestBridgeIntegration:
 
     def test_bridge_aim_delegation(self):
         """Test aim service delegation through bridge."""
-        from app.backend.qml_bridge import QmlBridge
         from app.backend.models.runtime_state import RuntimeState
+        from app.backend.qml_bridge import QmlBridge
 
         state = RuntimeState()
         bridge = QmlBridge(state)
@@ -119,8 +119,8 @@ class TestBridgeIntegration:
 
     def test_bridge_macro_delegation(self):
         """Test macro service delegation through bridge."""
-        from app.backend.qml_bridge import QmlBridge
         from app.backend.models.runtime_state import RuntimeState
+        from app.backend.qml_bridge import QmlBridge
 
         state = RuntimeState()
         bridge = QmlBridge(state)
@@ -150,8 +150,8 @@ class TestBridgeIntegration:
 
     def test_bridge_recorder_delegation(self):
         """Test recorder service delegation through bridge."""
-        from app.backend.qml_bridge import QmlBridge
         from app.backend.models.runtime_state import RuntimeState
+        from app.backend.qml_bridge import QmlBridge
 
         state = RuntimeState()
         bridge = QmlBridge(state)
@@ -187,8 +187,8 @@ class TestBridgeIntegration:
 
     def test_bridge_hotkey_delegation(self):
         """Test hotkey service delegation through bridge."""
-        from app.backend.qml_bridge import QmlBridge
         from app.backend.models.runtime_state import RuntimeState
+        from app.backend.qml_bridge import QmlBridge
 
         state = RuntimeState()
         bridge = QmlBridge(state)
@@ -218,8 +218,8 @@ class TestBridgeIntegration:
 
     def test_bridge_gamepad_delegation(self):
         """Test gamepad delegation through bridge."""
-        from app.backend.qml_bridge import QmlBridge
         from app.backend.models.runtime_state import RuntimeState
+        from app.backend.qml_bridge import QmlBridge
 
         state = RuntimeState()
         bridge = QmlBridge(state)
@@ -240,8 +240,8 @@ class TestBridgeIntegration:
 
     def test_bridge_profile_delegation(self):
         """Test profile delegation through bridge."""
-        from app.backend.qml_bridge import QmlBridge
         from app.backend.models.runtime_state import RuntimeState
+        from app.backend.qml_bridge import QmlBridge
 
         state = RuntimeState()
         bridge = QmlBridge(state)
@@ -267,8 +267,8 @@ class TestBridgeIntegration:
 
     def test_bridge_invalid_slot_args(self):
         """Test bridge handles invalid arguments gracefully."""
-        from app.backend.qml_bridge import QmlBridge
         from app.backend.models.runtime_state import RuntimeState
+        from app.backend.qml_bridge import QmlBridge
 
         state = RuntimeState()
         bridge = QmlBridge(state)

@@ -1,7 +1,6 @@
 # window_utils.py — Win32 helpers
 import ctypes
 from ctypes import wintypes
-from typing import Tuple, List, Dict, Any, Optional
 
 GWL_EXSTYLE = -20
 WS_EX_APPWINDOW = 0x00040000
@@ -103,7 +102,7 @@ def set_overlay_always_topmost(hwnd: int) -> None:
         pass
 
 
-def get_work_area() -> Tuple[int, int, int, int]:
+def get_work_area() -> tuple[int, int, int, int]:
     """Returns (x, y, width, height) of the work area (excluding taskbar).
 
     Uses SystemParametersInfoW with SPI_GETWORKAREA — this is the most
@@ -139,7 +138,7 @@ except Exception:
     pass
 
 
-def get_work_area_for_window(hwnd: int) -> Tuple[int, int, int, int]:
+def get_work_area_for_window(hwnd: int) -> tuple[int, int, int, int]:
     """Get work area for the monitor that the given window is on.
 
     This is more accurate than SPI_GETWORKAREA for multi-monitor setups.
@@ -160,7 +159,7 @@ def get_work_area_for_window(hwnd: int) -> Tuple[int, int, int, int]:
     return get_work_area()
 
 
-def clamp_to_work_area(hwnd: int, x: int, y: int, w: int, h: int) -> Tuple[int, int]:
+def clamp_to_work_area(hwnd: int, x: int, y: int, w: int, h: int) -> tuple[int, int]:
     """Clamp window position so it stays within the work area (no taskbar overlap).
 
     Returns (clamped_x, clamped_y).
@@ -195,9 +194,9 @@ def get_foreground_hwnd() -> int:
     return 0
 
 
-def get_visible_windows() -> List[Tuple[int, str]]:
+def get_visible_windows() -> list[tuple[int, str]]:
     """Get list of visible windows as (hwnd, title) tuples."""
-    windows: List[Tuple[int, str]] = []
+    windows: list[tuple[int, str]] = []
 
     def enum_handler(hwnd: wintypes.HWND, _: wintypes.LPARAM) -> int:
         if user32.IsWindowVisible(hwnd):
@@ -212,12 +211,12 @@ def get_visible_windows() -> List[Tuple[int, str]]:
     return windows
 
 
-def get_monitors() -> List[Dict[str, int]]:
+def get_monitors() -> list[dict[str, int]]:
     """Get list of monitors with work areas.
 
     Returns list of dicts: [{x, y, width, height, work_x, work_y, work_width, work_height}, ...]
     """
-    monitors: List[Dict[str, int]] = []
+    monitors: list[dict[str, int]] = []
 
     def enum_monitor_proc(hmon: wintypes.HANDLE, _: wintypes.HANDLE, __: wintypes.LPRECT, ___: wintypes.LPARAM) -> int:
         mi = MONITORINFO()

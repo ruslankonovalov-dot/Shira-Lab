@@ -14,10 +14,9 @@ Usage:
 from __future__ import annotations
 
 import json
-import os
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +36,7 @@ class ProfileManager:
         safe = safe.replace(" ", "_")
         return safe
 
-    def save_profile(self, name: str) -> Dict[str, Any]:
+    def save_profile(self, name: str) -> dict[str, Any]:
         """Save current configuration as a named profile."""
         if not name or not name.strip():
             return {"ok": False, "error": "Profile name cannot be empty"}
@@ -72,7 +71,7 @@ class ProfileManager:
             logger.error("Failed to save profile %s: %s", name, e)
             return {"ok": False, "error": str(e)}
 
-    def load_profile(self, name: str) -> Dict[str, Any]:
+    def load_profile(self, name: str) -> dict[str, Any]:
         """Load a named profile and apply its configuration."""
         if not name:
             return {"ok": False, "error": "Profile name required"}
@@ -145,10 +144,10 @@ class ProfileManager:
             logger.error("Failed to load profile %s: %s", name, e)
             return {"ok": False, "error": str(e)}
 
-    def list_profiles(self) -> Dict[str, Any]:
+    def list_profiles(self) -> dict[str, Any]:
         """List all saved profiles."""
         try:
-            profiles: list[Dict[str, str]] = []
+            profiles: list[dict[str, str]] = []
             for f in sorted(PROFILES_DIR.glob("*.json")):
                 try:
                     with open(f, "r", encoding="utf-8") as fh:
@@ -163,7 +162,7 @@ class ProfileManager:
         except Exception as e:
             return {"ok": False, "error": str(e), "profiles": []}
 
-    def delete_profile(self, name: str) -> Dict[str, Any]:
+    def delete_profile(self, name: str) -> dict[str, Any]:
         """Delete a named profile."""
         safe_name = self._sanitize_name(name)
         profile_path = PROFILES_DIR / f"{safe_name}.json"

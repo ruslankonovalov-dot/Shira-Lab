@@ -12,31 +12,49 @@ pico_service.py — Высокоуровневый сервис для Raspberry
 """
 from __future__ import annotations
 
-import struct
-import sys
-import time
-import threading
 import logging
+import struct
+import threading
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import IntEnum
-from pathlib import Path
-from typing import Optional, Callable, List, Tuple, Dict, Any
-from queue import Queue, Empty
+from queue import Empty, Queue
+from typing import Any
 
 import serial
 import serial.tools.list_ports
 
 from app.backend.services.pico_protocol import (
-    build_gamepad_state, build_gamepad_buttons, build_gamepad_triggers,
-    build_gamepad_stick, build_mouse_click, build_mouse_scroll,
-    build_mouse_press, build_mouse_release,
-    build_key_press, build_key_release, build_key_tap,
-    build_set_mode, parse_info, PicoInfo,
-    CMD_SET_MODE, CMD_KB_PRESS, CMD_KB_RELEASE, CMD_KB_TAP,
-    CMD_MS_MOVE, CMD_MS_CLICK, CMD_MS_PRESS, CMD_MS_RELEASE, CMD_MS_SCROLL,
-    CMD_GP_STATE, CMD_GP_BUTTONS, CMD_GP_TRIGGERS, CMD_GP_STICK,
-    CMD_GET_INFO, CMD_PING, CMD_RESET,
-    RESP_OK, RESP_INFO, RESP_PONG, RESP_ERROR,
+    CMD_GET_INFO,
+    CMD_GP_BUTTONS,
+    CMD_GP_STATE,
+    CMD_GP_STICK,
+    CMD_GP_TRIGGERS,
+    CMD_KB_PRESS,
+    CMD_KB_RELEASE,
+    CMD_KB_TAP,
+    CMD_MS_CLICK,
+    CMD_MS_MOVE,
+    CMD_MS_PRESS,
+    CMD_MS_RELEASE,
+    CMD_MS_SCROLL,
+    CMD_PING,
+    CMD_RESET,
+    CMD_SET_MODE,
+    RESP_INFO,
+    RESP_OK,
+    RESP_PONG,
+    PicoInfo,
+    build_gamepad_buttons,
+    build_gamepad_state,
+    build_gamepad_stick,
+    build_gamepad_triggers,
+    build_mouse_click,
+    build_mouse_press,
+    build_mouse_release,
+    build_mouse_scroll,
+    parse_info,
 )
 
 logger = logging.getLogger(__name__)
@@ -125,9 +143,9 @@ class PicoDevice:
     port: str
     vid: int
     pid: int
-    serial_number: Optional[str]
+    serial_number: str | None
     description: str
-    info: Optional[PicoInfo] = None
+    info: PicoInfo | None = None
 
 
 class PicoService:
@@ -148,12 +166,12 @@ class PicoService:
 
     def __init__(
         self,
-        port: Optional[str] = None,
+        port: str | None = None,
         baudrate: int = 115200,
         timeout: float = 0.1,
         auto_reconnect: bool = True,
-        vid_filter: Optional[List[int]] = None,
-        pid_filter: Optional[List[int]] = None,
+        vid_filter: list[int] | None = None,
+        pid_filter: list[int] | None = None,
     ):
         self._port = port
         self._baudrate = baudrate
@@ -162,26 +180,26 @@ class PicoService:
         self._vid_filter = vid_filter or self.DEFAULT_VIDS
         self._pid_filter = pid_filter or self.DEFAULT_PIDS
 
-        self._ser: Optional[serial.Serial] = None
-        self._reader_thread: Optional[threading.Thread] = None
-        self._writer_thread: Optional[threading.Thread] = None
+        self._ser: serial.Serial | None = None
+        self._reader_thread: threading.Thread | None = None
+        self._writer_thread: threading.Thread | None = None
         self._stop_event = threading.Event()
         self._connected = False
         self._lock = threading.RLock()  # Reentrant lock for connect/disconnect
         self._pending_lock = threading.Lock()  # Protects _pending dict
 
         # Командная очередь: (frame, seq)
-        self._cmd_queue: Queue[Tuple[bytes, int]] = Queue()
-        self._pending: Dict[int, Tuple[threading.Event, Optional[bytes]]] = {}  # seq -> (event, response_data)
+        self._cmd_queue: Queue[tuple[bytes, int]] = Queue()
+        self._pending: dict[int, tuple[threading.Event, bytes | None]] = {}  # seq -> (event, response_data)
         self._seq = 0
 
         # Callbacks
-        self._on_connect: Optional[Callable[[PicoInfo], None]] = None
-        self._on_disconnect: Optional[Callable[[], None]] = None
-        self._on_error: Optional[Callable[[Exception], None]] = None
+        self._on_connect: Callable[[PicoInfo], None] | None = None
+        self._on_disconnect: Callable[[], None] | None = None
+        self._on_error: Callable[[Exception], None] | None = None
 
         # Device info
-        self._device_info: Optional[PicoInfo] = None
+        self._device_info: PicoInfo | None = None
         self._current_mode = PicoMode.COMPOSITE
 
         # Bridge reference for logging
@@ -202,7 +220,7 @@ class PicoService:
         return self._connected and self._ser is not None and self._ser.is_open
 
     @property
-    def device_info(self) -> Optional[PicoInfo]:
+    def device_info(self) -> PicoInfo | None:
         return self._device_info
 
     @property
@@ -211,9 +229,9 @@ class PicoService:
 
     def set_callbacks(
         self,
-        on_connect: Optional[Callable[[PicoInfo], None]] = None,
-        on_disconnect: Optional[Callable[[], None]] = None,
-        on_error: Optional[Callable[[Exception], None]] = None,
+        on_connect: Callable[[PicoInfo], None] | None = None,
+        on_disconnect: Callable[[], None] | None = None,
+        on_error: Callable[[Exception], None] | None = None,
     ) -> None:
         self._on_connect = on_connect
         self._on_disconnect = on_disconnect
@@ -221,7 +239,7 @@ class PicoService:
 
     # ─── Connection ────────────────────────────────────────────────────────
 
-    def connect(self, port: Optional[str] = None) -> bool:
+    def connect(self, port: str | None = None) -> bool:
         """Подключиться к Pico. Если port=None — автопоиск."""
         with self._lock:
             if self.is_connected:
@@ -304,7 +322,7 @@ class PicoService:
             if t and t.is_alive():
                 t.join(timeout=1.0)
 
-    def _handshake(self) -> Optional[PicoInfo]:
+    def _handshake(self) -> PicoInfo | None:
         """Ручной handshake после открытия порта."""
         for _ in range(5):
             info = self.get_info(timeout=1.0)
@@ -316,17 +334,17 @@ class PicoService:
     # ─── Device Discovery ──────────────────────────────────────────────────
 
     @classmethod
-    def find_pico(cls, vid_filter: Optional[List[int]] = None, pid_filter: Optional[List[int]] = None) -> Optional[PicoDevice]:
+    def find_pico(cls, vid_filter: list[int] | None = None, pid_filter: list[int] | None = None) -> PicoDevice | None:
         """Найти первый Pico в системе."""
         devices = cls.list_picos(vid_filter, pid_filter)
         return devices[0] if devices else None
 
     @classmethod
-    def list_picos(cls, vid_filter: Optional[List[int]] = None, pid_filter: Optional[List[int]] = None) -> List[PicoDevice]:
+    def list_picos(cls, vid_filter: list[int] | None = None, pid_filter: list[int] | None = None) -> list[PicoDevice]:
         """Список всех Pico устройств."""
         vid_filter = vid_filter or cls.DEFAULT_VIDS
         pid_filter = pid_filter or cls.DEFAULT_PIDS
-        result: List[PicoDevice] = []
+        result: list[PicoDevice] = []
         for p in serial.tools.list_ports.comports():
             if p.vid in vid_filter and (p.pid in pid_filter or not pid_filter):
                 dev = PicoDevice(
@@ -337,7 +355,7 @@ class PicoService:
                     description=p.description or "",
                 )
                 # Popробuем получить инфу
-                ser: Optional[serial.Serial] = None
+                ser: serial.Serial | None = None
                 try:
                     ser = serial.Serial(p.device, 115200, timeout=0.5)
                     time.sleep(0.2)
@@ -359,7 +377,7 @@ class PicoService:
 
     # ─── Low-level send/recv ───────────────────────────────────────────────
 
-    def _send_command(self, cmd: int, payload: bytes = b'', wait_resp: bool = True, timeout: float = 2.0) -> Optional[bytes]:
+    def _send_command(self, cmd: int, payload: bytes = b'', wait_resp: bool = True, timeout: float = 2.0) -> bytes | None:
         """Отправить команду и опционально дождаться ответа."""
         if not self.is_connected:
             return None
@@ -491,7 +509,7 @@ class PicoService:
 
     # ─── High-level Commands ───────────────────────────────────────────────
 
-    def get_info(self, timeout: float = 1.0) -> Optional[PicoInfo]:
+    def get_info(self, timeout: float = 1.0) -> PicoInfo | None:
         """Запросить информацию об устройстве."""
         resp = self._send_command(CMD_GET_INFO, b'', wait_resp=True, timeout=timeout)
         if resp and len(resp) >= 1 and resp[0] == RESP_INFO:
@@ -552,7 +570,7 @@ class PicoService:
                 time.sleep(delay_ms / 1000.0)
         return True
 
-    def _key_to_vk(self, key: str) -> Optional[int]:
+    def _key_to_vk(self, key: str) -> int | None:
         k = key.lower().strip()
         return VK_MAP.get(k)
 
@@ -658,7 +676,7 @@ class PicoService:
 
 # ─── Singleton accessor ────────────────────────────────────────────────────
 
-_pico_instance: Optional[PicoService] = None
+_pico_instance: PicoService | None = None
 
 
 def get_pico_service(**kwargs: Any) -> PicoService:

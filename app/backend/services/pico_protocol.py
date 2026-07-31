@@ -3,10 +3,10 @@ pico_protocol.py — Протокол общения с Raspberry Pi Pico (Seria
 Пакеты: [START=0xAA] [CMD=1B] [LEN=1B] [PAYLOAD...] [CRC8] [END=0x55]
 """
 from __future__ import annotations
+
 import struct
-from enum import IntEnum
 from dataclasses import dataclass
-from typing import Optional, Tuple, List
+from enum import IntEnum
 
 
 # ─── Команды ───────────────────────────────────────────────────────────────
@@ -171,7 +171,7 @@ class PicoPacket:
         return head + self.payload + bytes([crc, END_BYTE])
 
     @staticmethod
-    def decode(buffer: bytes) -> List[Tuple['PicoPacket', int]]:
+    def decode(buffer: bytes) -> list[tuple[PicoPacket, int]]:
         """
         Извлечь пакеты из буфера. Возвращает список (packet, consumed_bytes).
         Неполные пакеты игнорируются (consumed=0).
@@ -290,7 +290,7 @@ class PicoInfo:
     vid: int
     pid: int
 
-def parse_info(payload: bytes) -> Optional[PicoInfo]:
+def parse_info(payload: bytes) -> PicoInfo | None:
     if len(payload) < 6:
         return None
     # fmt: major, minor, patch, caps, vid, pid
@@ -309,31 +309,58 @@ def parse_caps(payload: bytes) -> int:
 
 
 __all__ = [
+    # Builders
+    "build_gamepad_buttons",
+    "build_gamepad_state",
+    "build_gamepad_stick",
+    "build_gamepad_triggers",
+    "build_key_modifiers",
+    "build_key_press",
+    "build_key_release",
+    "build_key_tap",
+    "build_mouse_click",
+    "build_mouse_move",
+    "build_mouse_press",
+    "build_mouse_release",
+    "build_mouse_scroll",
+    "build_set_mode",
     # Commands
-    "PicoCmd",
-    "PicoResp",
-    "PicoCap",
-    # Constants (backward compat)
-    "CMD_GET_INFO", "CMD_RESET", "CMD_SET_MODE",
-    "CMD_KB_PRESS", "CMD_KB_RELEASE", "CMD_KB_TAP", "CMD_KB_MODIFIERS",
-    "CMD_MS_MOVE", "CMD_MS_CLICK", "CMD_MS_PRESS", "CMD_MS_RELEASE", "CMD_MS_SCROLL",
-    "CMD_GP_STATE", "CMD_GP_BUTTONS", "CMD_GP_TRIGGERS", "CMD_GP_STICK",
-    "CMD_PING", "CMD_GET_CAPS",
-    # Mouse buttons
-    "MouseBtn",
-    # Gamepad buttons
-    "GPBtn",
+    "CMD_GET_CAPS",
+    "CMD_GET_INFO",
+    "CMD_GP_BUTTONS",
+    "CMD_GP_STATE",
+    "CMD_GP_STICK",
+    "CMD_GP_TRIGGERS",
+    "CMD_KB_MODIFIERS",
+    "CMD_KB_PRESS",
+    "CMD_KB_RELEASE",
+    "CMD_KB_TAP",
+    "CMD_MS_CLICK",
+    "CMD_MS_MOVE",
+    "CMD_MS_PRESS",
+    "CMD_MS_RELEASE",
+    "CMD_MS_SCROLL",
+    "CMD_PING",
+    "CMD_RESET",
+    "CMD_SET_MODE",
+    # Constants
+    "END_BYTE",
+    "MAX_PAYLOAD",
+    "START_BYTE",
     # CRC
     "crc8",
+    # Gamepad buttons
+    "GPBtn",
+    # Mouse buttons
+    "MouseBtn",
     # Packet
     "PicoPacket",
-    "START_BYTE", "END_BYTE", "MAX_PAYLOAD",
-    # Builders
-    "build_key_press", "build_key_release", "build_key_tap", "build_key_modifiers",
-    "build_mouse_move", "build_mouse_click", "build_mouse_press", "build_mouse_release",
-    "build_mouse_scroll",
-    "build_gamepad_state", "build_gamepad_buttons", "build_gamepad_triggers", "build_gamepad_stick",
-    "build_set_mode",
     # Parsers
-    "PicoInfo", "parse_info", "parse_caps",
+    "PicoInfo",
+    "PicoResp",
+    "PicoCap",
+    "parse_caps",
+    "parse_info",
+    # Types
+    "PicoCmd",
 ]

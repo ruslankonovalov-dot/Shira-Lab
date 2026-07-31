@@ -1,18 +1,26 @@
 from __future__ import annotations
 
-import json
 import logging
 import threading
 import time
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, TypedDict, Union, cast, TypeGuard
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Optional,
+    TypedDict,
+    TypeGuard,
+    Union,
+    cast,
+)
 
+from app.backend.services.pico_service import PicoService
 from app.backend.services.stealth_input import StealthInput
 
-from app.backend.services.pico_service import PicoService, get_pico_service
-
 if TYPE_CHECKING:
-    from app.backend.services.vigem_service import VigemService, VIGEM_TARGET_TYPE, get_vigem_service
     from app.backend.qml_bridge import QmlBridge
+    from app.backend.services.vigem_service import (
+        VigemService,
+    )
 
 from app.backend.services.singleton import singleton
 
@@ -22,25 +30,25 @@ logger = logging.getLogger(__name__)
 # ─── TypedDict for Undo/Redo Stack Entries ───────────────────────────────────
 class AddActionEntry(TypedDict):
     op: str
-    action: Dict[str, object]
+    action: dict[str, object]
     index: int
 
 
 class ClearActionsEntry(TypedDict):
     op: str
-    actions: List[Dict[str, object]]
+    actions: list[dict[str, object]]
 
 
 class MoveActionEntry(TypedDict):
     op: str
-    action: Dict[str, object]
+    action: dict[str, object]
     from_index: int
     to_index: int
 
 
 class DeleteActionEntry(TypedDict):
     op: str
-    action: Dict[str, object]
+    action: dict[str, object]
     index: int
 
 
@@ -66,7 +74,7 @@ def _is_delete_entry(entry: UndoEntry) -> TypeGuard[DeleteActionEntry]:
 
 
 # Type aliases
-KeyAction = Dict[str, object]
+KeyAction = dict[str, object]
 RunMode = str
 BackgroundMethod = str
 VigemServiceRef = Optional["VigemService"]
@@ -79,23 +87,23 @@ class MacroService:
         self._lock = threading.RLock()  # Protects all mutable state
         self._is_running: bool = False
         self._run_mode: str = "SEQUENTIAL"
-        self._actions: List[KeyAction] = []
-        self._threads: List[threading.Thread] = []
+        self._actions: list[KeyAction] = []
+        self._threads: list[threading.Thread] = []
         # Background input method: "sendinput", "postmessage", "vigem", "pico"
         self._background_method: BackgroundMethod = "sendinput"
         # Per-module target window (set by bridge)
-        self._target_hwnd: Optional[int] = None
+        self._target_hwnd: int | None = None
         # Bridge reference for logging
-        self._bridge: Optional["QmlBridge"] = None
+        self._bridge: QmlBridge | None = None
         # Cached service instances (lazy init, like clicker_service)
         self._vigem_service: VigemServiceRef = None
         self._pico_service: PicoServiceRef = None
         # ─── NEW: Undo/Redo stacks ───────────────────────────────
-        self._undo_stack: List[UndoEntry] = []
-        self._redo_stack: List[RedoEntry] = []
+        self._undo_stack: list[UndoEntry] = []
+        self._redo_stack: list[RedoEntry] = []
         self._MAX_UNDO: int = 100  # Limit memory usage
 
-    def set_bridge(self, bridge: Optional["QmlBridge"]) -> None:
+    def set_bridge(self, bridge: QmlBridge | None) -> None:
         """Set bridge reference for logging."""
         self._bridge = bridge
 
@@ -138,21 +146,21 @@ class MacroService:
                 self._background_method = value
 
     @property
-    def target_hwnd(self) -> Optional[int]:
+    def target_hwnd(self) -> int | None:
         with self._lock:
             return self._target_hwnd
 
     @target_hwnd.setter
-    def target_hwnd(self, value: Optional[int]) -> None:
+    def target_hwnd(self, value: int | None) -> None:
         with self._lock:
             self._target_hwnd = value
 
     @property
-    def actions(self) -> List[KeyAction]:
+    def actions(self) -> list[KeyAction]:
         with self._lock:
             return list(self._actions)  # Return copy for thread safety
 
-    def set_run_mode(self, mode: str) -> Dict[str, object]:
+    def set_run_mode(self, mode: str) -> dict[str, object]:
         mode = str(mode or "SEQUENTIAL").upper()
         with self._lock:
             if mode not in ("SEQUENTIAL", "PARALLEL"):
@@ -160,13 +168,13 @@ class MacroService:
             self._run_mode = mode
         return self.get_status()
 
-    def set_background_method(self, method: str) -> Dict[str, object]:
+    def set_background_method(self, method: str) -> dict[str, object]:
         with self._lock:
             if method in ("sendinput", "postmessage", "vigem", "pico"):
                 self._background_method = method
         return self.get_status()
 
-    def add_action(self, key: str, delay: float, hold: float) -> Dict[str, object]:
+    def add_action(self, key: str, delay: float, hold: float) -> dict[str, object]:
         key = str(key).lower().strip()
         delay = max(0.0, float(delay))
         hold = max(0.0, float(hold))
@@ -197,7 +205,7 @@ class MacroService:
         )
         return self.get_status()
 
-    def clear_actions(self) -> Dict[str, object]:
+    def clear_actions(self) -> dict[str, object]:
         with self._lock:
             count = len(self._actions)
             if count > 0:
@@ -214,7 +222,7 @@ class MacroService:
         return self.get_status()
 
     # ─── NEW: Undo/Redo methods ──────────────────────────────────────────
-    def undo(self) -> Dict[str, object]:
+    def undo(self) -> dict[str, object]:
         """Undo the last action (add, clear, move, or delete)."""
         with self._lock:
             if not self._undo_stack:
@@ -264,7 +272,7 @@ class MacroService:
 
             return {"ok": True, **self.get_status()}
 
-    def redo(self) -> Dict[str, object]:
+    def redo(self) -> dict[str, object]:
         """Redo the previously undone action."""
         with self._lock:
             if not self._redo_stack:
@@ -312,7 +320,7 @@ class MacroService:
 
             return {"ok": True, **self.get_status()}
 
-    def delete_action(self, index: int) -> Dict[str, object]:
+    def delete_action(self, index: int) -> dict[str, object]:
         """Delete a specific action by index (1-click delete)."""
         with self._lock:
             if index < 0 or index >= len(self._actions):
@@ -327,7 +335,7 @@ class MacroService:
             self._log("INFO", f"Deleted action #{index + 1}: key='{removed['key']}'")
             return {"ok": True, **self.get_status()}
 
-    def move_action(self, from_index: int, to_index: int) -> Dict[str, object]:
+    def move_action(self, from_index: int, to_index: int) -> dict[str, object]:
         """Move action from one position to another (drag & drop reorder)."""
         with self._lock:
             if (
@@ -354,7 +362,7 @@ class MacroService:
             self._log("INFO", f"Moved action #{from_index + 1} → #{to_index + 1}")
             return {"ok": True, **self.get_status()}
 
-    def get_undo_redo_status(self) -> Dict[str, object]:
+    def get_undo_redo_status(self) -> dict[str, object]:
         """Returns undo/redo availability for UI button state."""
         with self._lock:
             return {
@@ -364,7 +372,7 @@ class MacroService:
                 "redo_count": len(self._redo_stack),
             }
 
-    def start(self, target_hwnd: int | None = None) -> Dict[str, object]:
+    def start(self, target_hwnd: int | None = None) -> dict[str, object]:
         with self._lock:
             if self._is_running or not self._actions:
                 if not self._actions:
@@ -394,7 +402,7 @@ class MacroService:
                 self._threads = threads
         return self.get_status()
 
-    def stop(self) -> Dict[str, object]:
+    def stop(self) -> dict[str, object]:
         with self._lock:
             was_running = self._is_running
             self._is_running = False
@@ -402,7 +410,7 @@ class MacroService:
             self._log("INFO", "Stopped")
         return self.get_status()
 
-    def _press(self, target_hwnd: Optional[int], key: str, hold: float) -> None:
+    def _press(self, target_hwnd: int | None, key: str, hold: float) -> None:
         # Convert hold from seconds to milliseconds
         hold_ms = int(hold * 1000) if hold > 0 else 0
 
@@ -440,7 +448,7 @@ class MacroService:
             time.sleep(hold)
         keyboard.release(key)
 
-    def _sequential_worker(self, target_hwnd: Optional[int], actions: List[Dict[str, Any]]) -> None:
+    def _sequential_worker(self, target_hwnd: int | None, actions: list[dict[str, Any]]) -> None:
         time.sleep(0.2)
         cycle = 0
         while True:
@@ -468,7 +476,7 @@ class MacroService:
                         break
                     time.sleep(0.01)
 
-    def _parallel_worker(self, target_hwnd: Optional[int], action: Dict[str, Any]) -> None:
+    def _parallel_worker(self, target_hwnd: int | None, action: dict[str, Any]) -> None:
         time.sleep(0.2)
         cycle = 0
         while True:
@@ -503,8 +511,13 @@ class MacroService:
                     self._vigem_service = None
                     return False
 
-            from app.backend.services.vigem_service import VigemService, XUSB_REPORT, VIGEM_TARGET_TYPE
             import ctypes
+
+            from app.backend.services.vigem_service import (
+                VIGEM_TARGET_TYPE,
+                XUSB_REPORT,
+                VigemService,
+            )
 
             # Map key name to XUSB button flag
             button_flag = VigemService.button_name_to_mask(key.lower())
@@ -599,10 +612,11 @@ class MacroService:
 
             if not pico.is_connected:
                 # Try to connect using runtime state config
-                from app.backend.persistence import PROFILE_PATH
                 import json
 
-                port: Optional[str] = None
+                from app.backend.persistence import PROFILE_PATH
+
+                port: str | None = None
                 baudrate = 115200
                 try:
                     data = json.loads(PROFILE_PATH.read_text(encoding="utf-8"))
@@ -652,7 +666,7 @@ class MacroService:
             logging.getLogger(__name__).debug(f"Pico key press failed: {e}")
             return False
 
-    def get_status(self) -> Dict[str, object]:
+    def get_status(self) -> dict[str, object]:
         with self._lock:
             return {
                 "is_running": self._is_running,

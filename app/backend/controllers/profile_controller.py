@@ -5,17 +5,24 @@ Extracted from QmlBridge god-object (Phase 2.1).
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Optional
 import threading
+from typing import TYPE_CHECKING, Any
 
-from PySide6.QtCore import QObject, Signal, Slot, Property
+from PySide6.QtCore import Property, QObject, Signal, Slot
 
-from app.backend.models.runtime_state import RuntimeState, TERMINAL_PALETTES
-from app.backend.persistence import load_profile, save_profile
+from app.backend.models.runtime_state import TERMINAL_PALETTES, RuntimeState
 from app.backend.profile_manager import ProfileManager
 from app.backend.services.input_validation import (
-    validate_enum, validate_str, validate_int, validate_bool, make_error_response, make_ok_response,
-    VALID_PALETTES, VALID_LANGUAGES, VALID_BACKGROUND_METHODS, _qvar, _qvar_map, validate_hwnd
+    VALID_BACKGROUND_METHODS,
+    VALID_PALETTES,
+    _qvar,
+    _qvar_map,
+    make_error_response,
+    make_ok_response,
+    validate_bool,
+    validate_enum,
+    validate_hwnd,
+    validate_str,
 )
 
 if TYPE_CHECKING:
@@ -41,7 +48,7 @@ class ProfileController(QObject):
     langChanged = Signal()
     logMessage = Signal(str, str, str)  # level, source, message
 
-    def __init__(self, state: RuntimeState, bridge: Optional[Any] = None, parent: Optional[QObject] = None) -> None:
+    def __init__(self, state: RuntimeState, bridge: Any | None = None, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._state: RuntimeState = state
         self._bridge = bridge
@@ -343,9 +350,10 @@ class ProfileController(QObject):
     @Slot(result="QVariantMap")
     def getPerformanceProfile(self) -> dict[str, Any]:
         """Get current performance profile."""
-        import psutil
         import os
         import time
+
+        import psutil
 
         try:
             process = psutil.Process(os.getpid())
@@ -383,7 +391,6 @@ class ProfileController(QObject):
     @Slot(bool, result="QVariantMap")
     def setCrashReportSending(self, enabled: bool) -> dict[str, Any] | None:
         """Enable/disable automatic crash report sending."""
-        from app.backend.services.input_validation import validate_bool
 
         ok, enabled_val, err = validate_bool(enabled, name="enabled")
         if not ok or enabled_val is None:
@@ -402,7 +409,9 @@ class ProfileController(QObject):
     def listCrashReports(self) -> dict[str, Any]:
         """List all crash reports."""
         try:
-            from app.backend.services.crash_reporter import list_local_crashes as list_reports
+            from app.backend.services.crash_reporter import (
+                list_local_crashes as list_reports,
+            )
             return _qvar_map({"ok": True, "crashes": list_reports()})
         except Exception as e:
             logger.exception("listCrashReports failed")
@@ -412,7 +421,9 @@ class ProfileController(QObject):
     def clearAllCrashReports(self) -> dict[str, Any]:
         """Clear all crash reports."""
         try:
-            from app.backend.services.crash_reporter import clear_all_crashes as clear_reports
+            from app.backend.services.crash_reporter import (
+                clear_all_crashes as clear_reports,
+            )
             count = clear_reports()
             return _qvar_map({"ok": True, "cleared": count})
         except Exception as e:
@@ -448,8 +459,8 @@ class ProfileController(QObject):
     @Slot(result="QVariantMap")
     def getDiagnostics(self) -> dict[str, Any]:
         """Get full diagnostics info."""
-        import sys
         import platform
+        import sys
 
         try:
             info = {
@@ -495,9 +506,9 @@ class ProfileController(QObject):
                 self._bridge._flush_save()
             else:
                 # Fallback: save just the state (no service data)
-                from app.backend.persistence import save_profile, _state_to_dict
                 import json
-                from pathlib import Path
+
+                from app.backend.persistence import _state_to_dict
                 payload = {
                     "version": 5,
                     "state": _state_to_dict(self._state),

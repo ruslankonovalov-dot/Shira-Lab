@@ -10,13 +10,12 @@
 """
 from __future__ import annotations
 
-import json
 import ctypes
-from typing import Any
-
-from PySide6.QtCore import Slot, Signal
+import json
 
 from app.backend.bridges.bridge_base import BridgeBase
+from PySide6.QtCore import Slot
+
 from app.backend.models.runtime_state import TERMINAL_PALETTES
 
 
@@ -40,7 +39,8 @@ class WindowBridge(BridgeBase):
         try:
             # Lazy import: dwm_acrylic может быть не на всех платформах
             from app.backend.services.dwm_acrylic import (
-                enable_acrylic_blur, disable_acrylic_blur
+                disable_acrylic_blur,
+                enable_acrylic_blur,
             )
             if self.state.global_blur_enabled or self.state.global_transparency > 0:
                 enable_acrylic_blur(self._hwnd, tint_color, tint_alpha)

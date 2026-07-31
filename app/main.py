@@ -1,11 +1,11 @@
 """app/main.py — PySide6 entry point с терминальным UI."""
 from __future__ import annotations
 
-import sys
-import os
+import ctypes
 import logging
 import logging.handlers
-import ctypes
+import os
+import sys
 from ctypes import wintypes
 from pathlib import Path
 
@@ -83,15 +83,16 @@ def setup_crash_handler() -> None:
 
     # Install structured crash reporter (saves local JSON, optionally sends to server)
     try:
-        from app.backend.services.crash_reporter import install_crash_handler as install_structured
+        from app.backend.services.crash_reporter import (
+            install_crash_handler as install_structured,
+        )
         install_structured(app_version=APP_VERSION, send_reports=send_reports)
     except Exception:
         logging.exception("Failed to install structured crash reporter")
 
     def excepthook(exc_type: type[BaseException], exc_value: BaseException, exc_tb: object) -> None:
-        import traceback
         # Type narrow the traceback for logging.critical
-        tb: "TracebackType | None" = exc_tb if isinstance(exc_tb, BaseException) else None  # type: ignore[assignment]
+        tb: TracebackType | None = exc_tb if isinstance(exc_tb, BaseException) else None  # type: ignore[assignment]
         logging.critical(
             "Unhandled exception: %s: %s",
             exc_type.__name__,
@@ -145,12 +146,11 @@ if sys.platform == "win32":
 # Принудительно Basic style для консистентного вида
 os.environ["QT_QUICK_CONTROLS_STYLE"] = "Basic"
 
+from PySide6.QtCore import QObject, QTimer, QUrl
 from PySide6.QtGui import QFont, QIcon, QWindow
 from PySide6.QtQml import QQmlApplicationEngine
-from PySide6.QtCore import QUrl, QTimer, QObject
-from PySide6.QtWidgets import QApplication
 from PySide6.QtQuick import QQuickWindow
-
+from PySide6.QtWidgets import QApplication
 
 # ─── Win32 constants for overlay click-through ─────────────────────────
 GWL_EXSTYLE = -20
@@ -215,9 +215,11 @@ def main() -> None:
 
     # Step 1: Try generating palette-colored icon via icon_generator
     try:
+        from app.backend.services.icon_generator import PROJECT_ROOT as ICON_ROOT
         from app.backend.services.icon_generator import (
-            generate_palette_icon, generate_palette_ico,
-            generate_palette_ico_unique, PROJECT_ROOT as ICON_ROOT
+            generate_palette_ico,
+            generate_palette_ico_unique,
+            generate_palette_icon,
         )
         png_path = generate_palette_icon(saved_palette)
         generate_palette_ico(saved_palette)
@@ -253,7 +255,8 @@ def main() -> None:
     # Step 3: Last resort — create solid-color icon from QPixmap (no file needed)
     if not icon_set:
         try:
-            from PySide6.QtGui import QPixmap, QPainter, QColor
+            from PySide6.QtGui import QColor, QPainter, QPixmap
+
             from app.backend.models.runtime_state import TERMINAL_PALETTES
             palette = TERMINAL_PALETTES.get(saved_palette, {})
             color = QColor(palette.get("acc", "#6aa86a"))
@@ -323,7 +326,8 @@ def main() -> None:
     # QML engine.load() may override the app icon when creating the window.
     # Re-apply the icon AFTER the window exists.
     try:
-        from app.backend.services.icon_generator import OUTPUT_PNG, OUTPUT_ICO, PROJECT_ROOT as ICON_ROOT
+        from app.backend.services.icon_generator import OUTPUT_ICO, OUTPUT_PNG
+        from app.backend.services.icon_generator import PROJECT_ROOT as ICON_ROOT
         current_palette = getattr(bridge.state, 'terminal_palette', saved_palette)
         unique_ico = ICON_ROOT / f"shira_{current_palette}.ico"
         icon_path = unique_ico if unique_ico.exists() else (OUTPUT_ICO if OUTPUT_ICO.exists() else OUTPUT_PNG)
@@ -480,7 +484,8 @@ def main() -> None:
     # and emits iconChanged. We reload the icon here.
     def on_icon_changed() -> None:
         try:
-            from app.backend.services.icon_generator import OUTPUT_PNG, OUTPUT_ICO, PROJECT_ROOT as ICON_ROOT
+            from app.backend.services.icon_generator import OUTPUT_ICO, OUTPUT_PNG
+            from app.backend.services.icon_generator import PROJECT_ROOT as ICON_ROOT
             # Get current palette for unique ICO + unique AppUserModelID
             current_palette = getattr(bridge.state, 'terminal_palette', 'matrix')
             unique_ico = ICON_ROOT / f"shira_{current_palette}.ico"

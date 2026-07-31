@@ -7,7 +7,6 @@ get_bindings, reset_binding, reset_all, unregister_all.
 from __future__ import annotations
 
 import threading
-from typing import Any
 
 from app.backend.services.hotkeys.dispatcher import default_hotkeys
 

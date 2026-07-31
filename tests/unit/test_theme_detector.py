@@ -1,10 +1,14 @@
 """Unit tests for app.backend.services.theme_detector module."""
-import pytest
 import sys
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.backend.services.theme_detector import (
-    detect_windows_theme, get_palette_for_theme, DARK_PALETTE, LIGHT_PALETTE,
+    DARK_PALETTE,
+    LIGHT_PALETTE,
+    detect_windows_theme,
+    get_palette_for_theme,
 )
 
 pytestmark = pytest.mark.unit

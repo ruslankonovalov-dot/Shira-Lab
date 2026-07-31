@@ -3,8 +3,9 @@
 NOTE: MacroService is a @singleton, so we need to access the underlying class
 via `MacroService._original_class` to create a fresh instance per test.
 """
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 pytestmark = pytest.mark.unit
 

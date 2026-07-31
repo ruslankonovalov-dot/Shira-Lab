@@ -8,15 +8,15 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Optional, Tuple, List, Union, Dict
+from typing import Any, Union
 
 logger = logging.getLogger(__name__)
 
 
 # Type alias for QVariant-compatible return types
-QVariantMap = Dict[str, Any]
-QVariantList = List[Any]
-QVariant = Union[Dict[str, Any], List[Any], str, int, float, bool, None]
+QVariantMap = dict[str, Any]
+QVariantList = list[Any]
+QVariant = Union[dict[str, Any], list[Any], str, int, float, bool, None]
 
 
 def _qvar(obj: QVariant) -> QVariant:
@@ -117,7 +117,7 @@ VALID_PICO_BUTTONS: set[str] = {
     "up", "down", "left", "right", "dpad_up", "dpad_down", "dpad_left", "dpad_right",
     "mouse_left", "mouse_right", "mouse_middle", "mouse_x1", "mouse_x2",
 }
-VALID_PICO_PORTS_WIN = {"COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "COM10", "COM11", "COM12", "COM13", "COM14", "COM15", "COM16", "COM17", "COM18", "COM18", "COM19", "COM20"}
+VALID_PICO_PORTS_WIN = {"COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "COM10", "COM11", "COM12", "COM13", "COM14", "COM15", "COM16", "COM17", "COM18", "COM19", "COM20"}
 VALID_PICO_PORTS_NIX = {"/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3", "/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyACM2", "/dev/ttyACM3"}
 
 
@@ -125,11 +125,11 @@ VALID_PICO_PORTS_NIX = {"/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/tt
 
 def validate_int(
     value: Any,
-    min_val: Optional[int] = None,
-    max_val: Optional[int] = None,
-    default: Optional[int] = None,
+    min_val: int | None = None,
+    max_val: int | None = None,
+    default: int | None = None,
     name: str = "value"
-) -> Tuple[bool, Optional[int], Optional[str]]:
+) -> tuple[bool, int | None, str | None]:
     """Validate integer value with optional bounds."""
     if value is None or value == "":
         if default is not None:
@@ -148,11 +148,11 @@ def validate_int(
 
 def validate_float(
     value: Any,
-    min_val: Optional[float] = None,
-    max_val: Optional[float] = None,
-    default: Optional[float] = None,
+    min_val: float | None = None,
+    max_val: float | None = None,
+    default: float | None = None,
     name: str = "value"
-) -> Tuple[bool, Optional[float], Optional[str]]:
+) -> tuple[bool, float | None, str | None]:
     """Validate float value with optional bounds."""
     if value is None or value == "":
         if default is not None:
@@ -172,10 +172,10 @@ def validate_float(
 def validate_enum(
     value: Any,
     valid_values: set[str],
-    default: Optional[str] = None,
+    default: str | None = None,
     case_sensitive: bool = False,
     name: str = "value"
-) -> Tuple[bool, Optional[str], Optional[str]]:
+) -> tuple[bool, str | None, str | None]:
     """Validate string value against allowed enum values."""
     if value is None or value == "":
         if default is not None:
@@ -196,10 +196,10 @@ def validate_enum(
 def validate_str(
     value: Any,
     min_len: int = 0,
-    max_len: Optional[int] = None,
-    default: Optional[str] = None,
+    max_len: int | None = None,
+    default: str | None = None,
     name: str = "value"
-) -> Tuple[bool, Optional[str], Optional[str]]:
+) -> tuple[bool, str | None, str | None]:
     """Validate string value with optional length bounds."""
     if value is None:
         if default is not None:
@@ -215,11 +215,11 @@ def validate_str(
 
 def validate_json_array(
     value: Any,
-    item_type: Optional[type] = None,
+    item_type: type | None = None,
     min_items: int = 0,
-    max_items: Optional[int] = None,
+    max_items: int | None = None,
     name: str = "value"
-) -> Tuple[bool, Optional[List[Any]], Optional[str]]:
+) -> tuple[bool, list[Any] | None, str | None]:
     """Validate and parse JSON array string."""
     if value is None or value == "":
         return False, None, f"{name} is required"
@@ -244,7 +244,7 @@ def validate_hwnd(
     value: Any,
     allow_zero: bool = True,
     name: str = "hwnd"
-) -> Tuple[bool, Optional[int], Optional[str]]:
+) -> tuple[bool, int | None, str | None]:
     """Validate window handle (HWND)."""
     if value is None:
         return False, None, f"{name} is required"
@@ -261,9 +261,9 @@ def validate_hwnd(
 
 def validate_bool(
     value: Any,
-    default: Optional[bool] = None,
+    default: bool | None = None,
     name: str = "value"
-) -> Tuple[bool, Optional[bool], Optional[str]]:
+) -> tuple[bool, bool | None, str | None]:
     """Validate boolean value."""
     if value is None or value == "":
         if default is not None:
@@ -286,27 +286,27 @@ def validate_bool(
 
 def validate_pico_mode(
     value: Any,
-    default: Optional[str] = None,
+    default: str | None = None,
     name: str = "mode"
-) -> Tuple[bool, Optional[str], Optional[str]]:
+) -> tuple[bool, str | None, str | None]:
     """Validate Pico operating mode (hid, raw_hid, cdc)."""
     return validate_enum(value, VALID_PICO_MODES, default=default, name=name, case_sensitive=False)
 
 
 def validate_pico_button(
     value: Any,
-    default: Optional[str] = None,
+    default: str | None = None,
     name: str = "button"
-) -> Tuple[bool, Optional[str], Optional[str]]:
+) -> tuple[bool, str | None, str | None]:
     """Validate Pico button name (gamepad or mouse button)."""
     return validate_enum(value, VALID_PICO_BUTTONS, default=default, name=name, case_sensitive=False)
 
 
 def validate_pico_port(
     value: Any,
-    default: Optional[str] = None,
+    default: str | None = None,
     name: str = "port"
-) -> Tuple[bool, Optional[str], Optional[str]]:
+) -> tuple[bool, str | None, str | None]:
     """Validate Pico serial port (Windows COMx or Linux /dev/tty*)."""
     ok, sval, err = validate_str(value, min_len=1, max_len=64, default=default, name=name)
     if not ok:

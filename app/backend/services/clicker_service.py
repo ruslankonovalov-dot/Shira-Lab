@@ -4,20 +4,17 @@ import ctypes
 import logging
 import threading
 import time
-from typing import TYPE_CHECKING, Optional, Literal, Any
+from typing import TYPE_CHECKING, Any
 
-from utils import send_background_click
 from app.backend.services.stealth_input import StealthInput
-
-from app.backend.services.vigem_service import VIGEM_TARGET_TYPE
 
 # Type alias for background method
 BackgroundMethod = str
 
 if TYPE_CHECKING:
-    from app.backend.services.vigem_service import VigemService, get_vigem_service
-    from app.backend.services.pico_service import PicoService, get_pico_service
     from app.backend.qml_bridge import QmlBridge
+    from app.backend.services.pico_service import PicoService
+    from app.backend.services.vigem_service import VigemService
 
 from app.backend.services.singleton import singleton
 
@@ -34,7 +31,7 @@ class ClickerService:
         self._hold_ms: int = 0
         self._button: str = "L"
         self._click_count: int = 0
-        self._worker: Optional[threading.Thread] = None
+        self._worker: threading.Thread | None = None
         self._mouse_event = ctypes.windll.user32.mouse_event
         self._buttons: dict[str, dict[str, int]] = {
             "L": {"down": 0x0002, "up": 0x0004, "data": 0},
@@ -48,18 +45,18 @@ class ClickerService:
         # NOTE: "sendinput_attached" removed — didn't work in browser/Notepad
         self._background_method: str = "sendinput"
         # Per-module target window (set by bridge)
-        self._target_hwnd: Optional[int] = None
+        self._target_hwnd: int | None = None
         # ViGEm service (lazy init)
-        self._vigem_service: Optional["VigemService"] = None
+        self._vigem_service: VigemService | None = None
         # Pico service (lazy init)
-        self._pico_service: Optional["PicoService"] = None
+        self._pico_service: PicoService | None = None
         # CPS tracking
         self._cps: float = 0.0
         self._cps_timestamps: list[float] = []
         # Bridge reference for logging (set by QmlBridge)
-        self._bridge: Optional["QmlBridge"] = None
+        self._bridge: QmlBridge | None = None
 
-    def set_bridge(self, bridge: Optional["QmlBridge"]) -> None:
+    def set_bridge(self, bridge: QmlBridge | None) -> None:
         """Set bridge reference for logging."""
         self._bridge = bridge
 
@@ -130,12 +127,12 @@ class ClickerService:
             self._background_method = value
 
     @property
-    def target_hwnd(self) -> Optional[int]:
+    def target_hwnd(self) -> int | None:
         with self._lock:
             return self._target_hwnd
 
     @target_hwnd.setter
-    def target_hwnd(self, value: Optional[int]) -> None:
+    def target_hwnd(self, value: int | None) -> None:
         with self._lock:
             self._target_hwnd = value
 
@@ -165,7 +162,7 @@ class ClickerService:
         hold_ms: int,
         button: str,
         limit: int,
-        background_method: Optional[BackgroundMethod] = None
+        background_method: BackgroundMethod | None = None
     ) -> dict[str, Any]:
         self.interval_ms = max(1, int(interval_ms))
         self.hold_ms = max(0, int(hold_ms))
@@ -176,7 +173,7 @@ class ClickerService:
             self._log("INFO", f"Config: interval={self.interval_ms}ms button={self.button} method={self.background_method}")
         return self.get_status()
 
-    def start(self, target_hwnd: Optional[int] = None) -> dict[str, Any]:
+    def start(self, target_hwnd: int | None = None) -> dict[str, Any]:
         with self._lock:
             if self._is_running:
                 return self.get_status()
@@ -212,7 +209,7 @@ class ClickerService:
 
     def _loop(
         self,
-        target_hwnd: Optional[int],
+        target_hwnd: int | None,
         interval_ms: int,
         hold_ms: int,
         button: str,
@@ -292,9 +289,10 @@ class ClickerService:
             pico = get_pico_service()
             if not pico.is_connected:
                 # Try to connect using runtime state config
-                from app.backend.persistence import PROFILE_PATH
                 import json
-                port: Optional[str] = None
+
+                from app.backend.persistence import PROFILE_PATH
+                port: str | None = None
                 baudrate = 115200
                 try:
                     data = json.loads(PROFILE_PATH.read_text(encoding="utf-8"))
@@ -327,7 +325,11 @@ class ClickerService:
                 if not self._vigem_service.connect():
                     return False
             # Map button name to XUSB button flag
-            from app.backend.services.vigem_service import VigemService, XUSB_REPORT, VIGEM_TARGET_TYPE
+            from app.backend.services.vigem_service import (
+                VIGEM_TARGET_TYPE,
+                XUSB_REPORT,
+                VigemService,
+            )
             button_flag = VigemService.button_name_to_mask(button_name.lower())
             if not button_flag:
                 return False

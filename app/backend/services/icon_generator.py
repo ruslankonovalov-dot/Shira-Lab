@@ -13,11 +13,12 @@ The icon is created from Ico_Shine.png template:
 """
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
-from PIL import Image, ImageFilter
+
 import numpy as np
-import logging
+from PIL import Image, ImageFilter
 
 logger = logging.getLogger(__name__)
 

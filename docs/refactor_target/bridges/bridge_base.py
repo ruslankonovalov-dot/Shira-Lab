@@ -9,11 +9,10 @@
 """
 from __future__ import annotations
 
-import threading
 import logging
-from typing import Optional
+import threading
 
-from PySide6.QtCore import QObject, Signal, Slot, QTimer
+from PySide6.QtCore import QObject, Signal, Slot
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +62,7 @@ class BridgeBase(QObject):
         self.hotkeys = HotkeyService(self)
 
         # Сохранение профиля (debounced)
-        self._save_timer: Optional[threading.Timer] = None
+        self._save_timer: threading.Timer | None = None
         self._save_lock = threading.Lock()
         self._suppress_save = False
 

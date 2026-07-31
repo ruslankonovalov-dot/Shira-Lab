@@ -6,9 +6,9 @@ from __future__ import annotations
 
 import json
 
+from app.backend.bridges.bridge_base import BridgeBase
 from PySide6.QtCore import Slot
 
-from app.backend.bridges.bridge_base import BridgeBase
 from app.backend.services.hotkey_service import default_hotkeys
 
 

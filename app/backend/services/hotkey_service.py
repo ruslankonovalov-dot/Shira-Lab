@@ -1,17 +1,22 @@
 from __future__ import annotations
 
-import threading
 import logging
+import threading
 import time
-from typing import TYPE_CHECKING, Any, Callable, Optional, Union, Literal, TypedDict, Protocol, cast
+from collections.abc import Callable
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Protocol,
+    TypedDict,
+    Union,
+    cast,
+)
 
 if TYPE_CHECKING:
-    from app.backend.controllers.hotkey_controller import HotkeyController
-    from app.backend.qml_bridge import QmlBridge
     from app.backend.services.input_validation import QVariantMap
 else:
-    from typing import Dict
-    QVariantMap = Dict[str, Any]
+    QVariantMap = dict[str, Any]
 
 
 class _HotkeyApi(Protocol):
@@ -56,7 +61,8 @@ except Exception:  # noqa: BLE001
 
 # Qt signal for thread-safe hotkey action dispatch
 try:
-    from PySide6.QtCore import QObject, Signal as QtSignal
+    from PySide6.QtCore import QObject
+    from PySide6.QtCore import Signal as QtSignal
     _HAS_PYSIDE = True
 except Exception:  # noqa: BLE001
     _HAS_PYSIDE = False
@@ -174,7 +180,7 @@ class HotkeyDispatcher(QObject):
 
     def __init__(self) -> None:
         super().__init__()
-        self._handler: Optional[Callable[[str, bool, bool], None]] = None
+        self._handler: Callable[[str, bool, bool], None] | None = None
 
     def set_handler(self, handler: Callable[[str, bool, bool], None]) -> None:
         """Set the handler to be called on main thread."""
@@ -211,7 +217,7 @@ MODIFIER_NAMES = {
 }
 
 # Кнопки мыши 1 и 2 (left/right) игнорируем при записи — слишком частые в UI
-_IGNORED_MOUSE_BUTTONS: set[Union[int, str]] = {1, 2, "1", "2", "left", "right"}
+_IGNORED_MOUSE_BUTTONS: set[int | str] = {1, 2, "1", "2", "left", "right"}
 
 # Pynput Button name → mouse lib number (для fallback)
 _PYNPUT_BUTTON_TO_NUM: dict[str, int] = {}
@@ -244,12 +250,20 @@ class HotkeyService:
     """
 
     __slots__ = (
-        "_api", "_lock", "_bindings", "_registered",
-        "_mouse_hook", "_mouse_hook_started", "_mouse_hook_last_error",
-        "_pynput_listener", "_pynput_started",
-        "_last_mouse_event", "_last_mouse_event_time",
-        "_mouse_events_count", "_mouse_triggers_count",
+        "_api",
+        "_bindings",
         "_dispatcher",
+        "_last_mouse_event",
+        "_last_mouse_event_time",
+        "_lock",
+        "_mouse_events_count",
+        "_mouse_hook",
+        "_mouse_hook_last_error",
+        "_mouse_hook_started",
+        "_mouse_triggers_count",
+        "_pynput_listener",
+        "_pynput_started",
+        "_registered",
     )
 
     def __init__(self, api: _HotkeyApi) -> None:
@@ -259,16 +273,16 @@ class HotkeyService:
         self._registered: _RegisteredMap = {}
 
         # mouse lib hook
-        self._mouse_hook: Optional[_HookHandle] = None
+        self._mouse_hook: _HookHandle | None = None
         self._mouse_hook_started: bool = False
-        self._mouse_hook_last_error: Optional[str] = None
+        self._mouse_hook_last_error: str | None = None
 
         # pynput listener (для wheel + fallback для кнопок)
-        self._pynput_listener: Optional[Any] = None
+        self._pynput_listener: Any | None = None
         self._pynput_started: bool = False
 
         # Диагностика
-        self._last_mouse_event: Optional[dict[str, Any]] = None  # последнее событие мыши (для отладки)
+        self._last_mouse_event: dict[str, Any] | None = None  # последнее событие мыши (для отладки)
         self._last_mouse_event_time: float = 0.0
         self._mouse_events_count: int = 0
         self._mouse_triggers_count: int = 0
@@ -518,7 +532,7 @@ class HotkeyService:
         return main in ("wheel:up", "wheel:down", "wheel:left", "wheel:right")
 
     @staticmethod
-    def _normalize_button_n(button_n: Union[int, str, None]) -> int | None:
+    def _normalize_button_n(button_n: int | str | None) -> int | None:
         """
         Нормализует button_n к int.
         mouse lib может вернуть int или (в редких версиях) str.
@@ -708,7 +722,7 @@ class HotkeyService:
         """Wheel-событие от pynput."""
         if not _HAS_KEYBOARD:
             return
-        wheel_name: Optional[str] = None
+        wheel_name: str | None = None
         if dy > 0:
             wheel_name = "wheel:up"
         elif dy < 0:
@@ -1012,7 +1026,7 @@ class HotkeyService:
     def is_wheel_available(self) -> bool:
         return _HAS_PYNPUT
 
-    def validate_key(self, key: str, mode: str = "TOGGLE") -> dict[str, Union[bool, str]]:
+    def validate_key(self, key: str, mode: str = "TOGGLE") -> dict[str, bool | str]:
         if not _HAS_KEYBOARD:
             return {"ok": False, "error": "keyboard lib not available"}
         if not key:
@@ -1117,7 +1131,7 @@ class HotkeyService:
                 "all_bindings": self.get_bindings(),
             }
 
-    def debug_test_mouse_listener(self) -> dict[str, Union[int, dict[str, Any], None]]:
+    def debug_test_mouse_listener(self) -> dict[str, int | dict[str, Any] | None]:
         """
         Тест: ожидает 3 секунды, считает mouse events.
         Пользователь должен кликать/скроллить в это время.
@@ -1193,4 +1207,3 @@ def default_hotkeys() -> dict[str, dict[str, str]]:
 
 
 # For typing cast
-from typing import cast

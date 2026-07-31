@@ -1,6 +1,7 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Dict, TypedDict, Any
+from typing import Any, TypedDict
 
 
 class Palette(TypedDict, total=False):
@@ -16,7 +17,7 @@ class Palette(TypedDict, total=False):
     icon_color: str
 
 
-TERMINAL_PALETTES: Dict[str, Palette] = {
+TERMINAL_PALETTES: dict[str, Palette] = {
     "matrix": {
         "name": "Terminal Green",
         "bg": "#0d1b0d", "fg": "#8fbf8f", "acc": "#6aa86a",
@@ -75,7 +76,7 @@ class PicoButtonMap(TypedDict):
     mouse2: str
 
 
-def default_hotkeys() -> Dict[str, Dict[str, str]]:
+def default_hotkeys() -> dict[str, dict[str, str]]:
     from app.backend.services.hotkey_service import default_hotkeys as _dh
     return _dh()
 
@@ -99,7 +100,7 @@ class RuntimeState:
     clicker_background_method: str = "sendinput"
     macro_background_method: str = "sendinput"
     recorder_background_method: str = "sendinput"
-    theme: Dict[str, str] = field(default_factory=lambda: {
+    theme: dict[str, str] = field(default_factory=lambda: {
         "bg": "#437835", "btn": "#2E5F24", "fg": "#DFFFE0",
         "acc": "#A5FF7A", "border": "#6FD36A", "trough": "#6FD36A",
         "danger_text": "#FF6B6B", "danger": "#220000",
@@ -107,7 +108,7 @@ class RuntimeState:
     })
     ui_lang: str = "RU"
     is_pinned: bool = True
-    hotkeys: Dict[str, Dict[str, str]] = field(default_factory=default_hotkeys)
+    hotkeys: dict[str, dict[str, str]] = field(default_factory=default_hotkeys)
     terminal_palette: str = "matrix"
     # Background input method: "sendinput" (global SendInput), "postmessage" (PostMessage to hwnd), "vigem" (ViGEm virtual gamepad), "pico" (Raspberry Pi Pico HID)
     background_method: str = "sendinput"
@@ -116,7 +117,7 @@ class RuntimeState:
     gamepad_controller_type: str = "X360"
     gamepad_target_index: int = 0              # 0-3 (max 4 virtual controllers)
     gamepad_background_method: str = "sendinput"  # "sendinput", "postmessage", "vigem", "pico"
-    gamepad_button_map: Dict[str, str] = field(default_factory=lambda: {
+    gamepad_button_map: dict[str, str] = field(default_factory=lambda: {
         "space": "A", "enter": "A",
         "shift": "LB", "ctrl": "RB",
         "q": "X", "e": "Y", "r": "B",
@@ -129,7 +130,7 @@ class RuntimeState:
     pico_port: str = ""                        # COM port (e.g. "COM3")
     pico_baudrate: int = 115200                # Baudrate (default 115200)
     pico_mode: str = "COMPOSITE"               # "KEYBOARD", "MOUSE", "GAMEPAD", "COMPOSITE"
-    pico_button_map: Dict[str, str] = field(default_factory=lambda: {
+    pico_button_map: dict[str, str] = field(default_factory=lambda: {
         "space": "A", "enter": "A",
         "shift": "LB", "ctrl": "RB",
         "q": "X", "e": "Y", "r": "B",

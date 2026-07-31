@@ -1,7 +1,7 @@
 # tests/unit/test_pico_service.py — PicoService comprehensive tests for Phase 3.6
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-import time
 
 
 class TestPicoProtocol:
@@ -171,7 +171,10 @@ class TestPicoProtocolFrameBuilding:
 
     def test_build_frame_structure(self):
         """Test that frames have correct structure."""
-        from app.backend.services.pico_protocol import PicoPacket, CMD_KB_TAP, CMD_GET_INFO
+        from app.backend.services.pico_protocol import (
+            CMD_KB_TAP,
+            PicoPacket,
+        )
 
         # Keyboard tap frame
         packet = PicoPacket(CMD_KB_TAP, b"space")
@@ -182,7 +185,11 @@ class TestPicoProtocolFrameBuilding:
 
     def test_build_gamepad_frame(self):
         """Test gamepad frame building."""
-        from app.backend.services.pico_protocol import PicoPacket, CMD_GP_BUTTONS, build_gamepad_buttons
+        from app.backend.services.pico_protocol import (
+            CMD_GP_BUTTONS,
+            PicoPacket,
+            build_gamepad_buttons,
+        )
 
         payload = build_gamepad_buttons(0x1000)
         packet = PicoPacket(CMD_GP_BUTTONS, payload)

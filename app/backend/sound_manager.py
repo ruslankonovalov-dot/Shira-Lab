@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 import logging
-import os
 from pathlib import Path
-from typing import Optional, Dict
 
 from PySide6.QtCore import QObject, QUrl
-from PySide6.QtMultimedia import QSoundEffect, QMediaPlayer, QAudioOutput
+from PySide6.QtMultimedia import QSoundEffect
 
 logger = logging.getLogger(__name__)
 
@@ -14,9 +12,9 @@ logger = logging.getLogger(__name__)
 class SoundManager(QObject):
     """Manages sound effects for module state changes."""
 
-    def __init__(self, parent: Optional[QObject] = None) -> None:
+    def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
-        self._effects: Dict[str, Optional[QSoundEffect]] = {}
+        self._effects: dict[str, QSoundEffect | None] = {}
         self._enabled = True
         self._volume = 0.5
         self._load_sounds()
@@ -26,7 +24,7 @@ class SoundManager(QObject):
         # Try to load from assets/sounds directory
         assets_dir = Path(__file__).resolve().parent.parent / "assets" / "sounds"
 
-        sound_files: Dict[str, str] = {
+        sound_files: dict[str, str] = {
             "start": "start.wav",
             "stop": "stop.wav",
             "error": "error.wav",
@@ -67,13 +65,13 @@ class SoundManager(QObject):
 
     def _beep(self, frequency: int, duration: int) -> None:
         """Fallback: system beep using winsound on Windows."""
+        import sys
         try:
-            import sys
             if sys.platform == "win32":
                 import winsound
                 winsound.Beep(frequency, duration)
             else:
-                import sys; sys.stdout.write('\a')  # ASCII bell
+                sys.stdout.write('\a')  # ASCII bell
         except Exception:
             logger.debug("Failed to play system beep fallback")
 

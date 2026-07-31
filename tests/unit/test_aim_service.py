@@ -1,9 +1,9 @@
 # tests/unit/test_aim_service.py — AimService comprehensive tests for Phase 3.6
-import pytest
-from unittest.mock import Mock, patch, MagicMock
-import time
 import threading
+from unittest.mock import Mock, patch
+
 import numpy as np
+import pytest
 
 
 class TestAimService:

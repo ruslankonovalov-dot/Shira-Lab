@@ -7,56 +7,84 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import TYPE_CHECKING, Optional, Any, Dict, List, Union, Literal
+from typing import TYPE_CHECKING, Any
 
-from PySide6.QtCore import QObject, Signal, Slot, Property
+from PySide6.QtCore import Property, QObject, Signal, Slot
 
-from config import LANGUAGES, LOGO_SHIRA
-from app.backend.models.runtime_state import RuntimeState, TERMINAL_PALETTES
+from app.backend.models.runtime_state import RuntimeState
 from app.backend.persistence import load_profile, save_profile
 from app.backend.services.aim_service import AimService
 from app.backend.services.clicker_service import ClickerService
-from app.backend.services.macro_service import MacroService
-from app.backend.services.recorder_service import RecorderService
 from app.backend.services.hotkey_service import HotkeyService
-from app.backend.services.vigem_service import get_vigem_service
-from app.backend.services.pico_service import get_pico_service
-from app.backend.system_tray import SystemTrayManager
-from app.backend.sound_manager import SoundManager
 from app.backend.services.input_validation import (
-    validate_int, validate_float, validate_enum, validate_str, validate_json_array,
-    validate_hwnd, validate_bool, make_error_response, make_ok_response,
-    _qvar, _qvar_map, QVariantMap,
-    VALID_PALETTES, VALID_LANGUAGES, VALID_BACKGROUND_METHODS, VALID_CLICKER_BUTTONS,
-    VALID_GAMEPAD_TYPES, VALID_AIM_DETECTION_MODES, VALID_AIM_TARGET_COLORS,
-    VALID_HOTKEY_MODES, VALID_HOTKEY_ACTIONS,
-    CLICKER_INTERVAL_MIN, CLICKER_INTERVAL_MAX, CLICKER_HOLD_MIN, CLICKER_HOLD_MAX,
-    CLICKER_LIMIT_MIN, CLICKER_LIMIT_MAX,
-    AIM_CONFIDENCE_MIN, AIM_CONFIDENCE_MAX, AIM_SMOOTH_MIN, AIM_SMOOTH_MAX,
-    AIM_RESET_DELAY_MIN, AIM_RESET_DELAY_MAX,
-    AIM_FOV_MIN, AIM_FOV_MAX, AIM_SPEED_MIN, AIM_SPEED_MAX,
-    AIM_MIN_AREA_MIN, AIM_MIN_AREA_MAX, AIM_MAX_AREA_MIN, AIM_MAX_AREA_MAX,
-    AIM_ASPECT_MIN, AIM_ASPECT_MAX, AIM_BRIGHTNESS_MIN, AIM_BRIGHTNESS_MAX,
-    AIM_SATURATION_MIN, AIM_SATURATION_MAX,
-    MACRO_DELAY_MIN, MACRO_DELAY_MAX, MACRO_HOLD_MIN, MACRO_HOLD_MAX,
-    GAMEPAD_TARGET_INDEX_MIN, GAMEPAD_TARGET_INDEX_MAX,
-    GAMEPAD_BUTTONS_MASK_MAX, GAMEPAD_TRIGGER_MIN, GAMEPAD_TRIGGER_MAX,
-    GAMEPAD_STICK_MIN, GAMEPAD_STICK_MAX,
-    RECORDER_REPEATS_MIN, RECORDER_REPEATS_MAX,
-    PICO_BAUDRATE_MIN, PICO_BAUDRATE_MAX, PICO_HOLD_MS_MIN, PICO_HOLD_MS_MAX,
+    AIM_ASPECT_MAX,
+    AIM_ASPECT_MIN,
+    AIM_BRIGHTNESS_MAX,
+    AIM_BRIGHTNESS_MIN,
+    AIM_CONFIDENCE_MAX,
+    AIM_CONFIDENCE_MIN,
+    AIM_FOV_MAX,
+    AIM_FOV_MIN,
+    AIM_MAX_AREA_MAX,
+    AIM_MAX_AREA_MIN,
+    AIM_MIN_AREA_MAX,
+    AIM_MIN_AREA_MIN,
+    AIM_RESET_DELAY_MAX,
+    AIM_RESET_DELAY_MIN,
+    AIM_SATURATION_MAX,
+    AIM_SATURATION_MIN,
+    AIM_SMOOTH_MAX,
+    AIM_SMOOTH_MIN,
+    AIM_SPEED_MAX,
+    AIM_SPEED_MIN,
+    CLICKER_HOLD_MAX,
+    CLICKER_HOLD_MIN,
+    CLICKER_INTERVAL_MAX,
+    CLICKER_INTERVAL_MIN,
+    CLICKER_LIMIT_MAX,
+    CLICKER_LIMIT_MIN,
+    GAMEPAD_BUTTONS_MASK_MAX,
+    GAMEPAD_STICK_MAX,
+    GAMEPAD_STICK_MIN,
+    GAMEPAD_TARGET_INDEX_MAX,
+    GAMEPAD_TARGET_INDEX_MIN,
+    GAMEPAD_TRIGGER_MAX,
+    GAMEPAD_TRIGGER_MIN,
+    MACRO_DELAY_MAX,
+    MACRO_DELAY_MIN,
+    MACRO_HOLD_MAX,
+    MACRO_HOLD_MIN,
+    RECORDER_REPEATS_MAX,
+    RECORDER_REPEATS_MIN,
+    VALID_AIM_DETECTION_MODES,
+    VALID_AIM_TARGET_COLORS,
+    VALID_BACKGROUND_METHODS,
+    VALID_CLICKER_BUTTONS,
+    QVariantMap,
+    _qvar_map,
+    make_error_response,
+    validate_enum,
+    validate_float,
+    validate_int,
+    validate_json_array,
+    validate_str,
 )
+from app.backend.services.macro_service import MacroService
+from app.backend.services.pico_service import get_pico_service
+from app.backend.services.recorder_service import RecorderService
+from app.backend.services.vigem_service import get_vigem_service
+from app.backend.sound_manager import SoundManager
+from app.backend.system_tray import SystemTrayManager
 from window_utils import (
-    get_visible_windows, set_window_topmost, find_app_hwnd,
-    get_work_area, get_work_area_for_window, set_overlay_always_topmost,
-    clamp_to_work_area
+    get_visible_windows,
 )
 
 # Controllers (Phase 2.1: extracted from god-object)
 if TYPE_CHECKING:
-    from app.backend.controllers.window_controller import WindowController
     from app.backend.controllers.gamepad_controller import GamepadController
     from app.backend.controllers.hotkey_controller import HotkeyController
     from app.backend.controllers.profile_controller import ProfileController
+    from app.backend.controllers.window_controller import WindowController
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +111,7 @@ class QmlBridge(QObject):
     updateCheckResult = Signal(object)
     crashReportSaved = Signal(str)
 
-    def __init__(self, parent: Optional[QObject] = None):
+    def __init__(self, parent: QObject | None = None):
         super().__init__(parent)
 
         # Core services
@@ -93,7 +121,7 @@ class QmlBridge(QObject):
         self.aim: AimService = AimService()
         self.hotkeys: HotkeyService = HotkeyService(self)
         self.state: RuntimeState = RuntimeState()
-        self._save_timer: Optional[threading.Timer] = None
+        self._save_timer: threading.Timer | None = None
         self._save_lock = threading.Lock()
         self._suppress_save: bool = False
         self._shutdown: bool = False
@@ -106,24 +134,24 @@ class QmlBridge(QObject):
         self.sounds: SoundManager = SoundManager(self)
 
         # Init controllers (Phase 2.1) - runtime imports needed since TYPE_CHECKING doesn't import at runtime
-        from app.backend.controllers.window_controller import WindowController
         from app.backend.controllers.gamepad_controller import GamepadController
         from app.backend.controllers.hotkey_controller import HotkeyController
         from app.backend.controllers.profile_controller import ProfileController
+        from app.backend.controllers.window_controller import WindowController
 
         # Overlay state - BEFORE controllers/tray so timer sees it
         self._overlayVisible: bool = True
 
-        self._window_controller: "WindowController" = WindowController(
+        self._window_controller: WindowController = WindowController(
             self.state,
             self.clicker, self.macro, self.recorder, self.aim, self.hotkeys,
             self.sounds,
             bridge=self,
             parent=self
         )
-        self._gamepad_controller: "GamepadController" = GamepadController(parent=self)
-        self._hotkey_controller: "HotkeyController" = HotkeyController(self.state, self.hotkeys, parent=self)
-        self._profile_controller: "ProfileController" = ProfileController(self.state, bridge=self, parent=self)
+        self._gamepad_controller: GamepadController = GamepadController(parent=self)
+        self._hotkey_controller: HotkeyController = HotkeyController(self.state, self.hotkeys, parent=self)
+        self._profile_controller: ProfileController = ProfileController(self.state, bridge=self, parent=self)
 
         # System tray - AFTER controllers so timer doesn't fire before init
         self.tray: SystemTrayManager = SystemTrayManager(self)  # type: ignore[arg-type]
@@ -160,7 +188,7 @@ class QmlBridge(QObject):
         self.sounds.set_volume(getattr(self.state, 'sounds_volume', 0.5))
 
         # Start background status poller for OverlayHUD
-        self._status_poller: Optional[threading.Thread] = None
+        self._status_poller: threading.Thread | None = None
         self._start_status_poller()
 
         # Visibility check is handled by WindowController (wait for tray to be set)
@@ -215,19 +243,19 @@ class QmlBridge(QObject):
     # ─── Delegated Properties ──────────────────────────────────────────────
 
     @property
-    def window_controller(self) -> "WindowController":
+    def window_controller(self) -> WindowController:
         return self._window_controller
 
     @property
-    def gamepad_controller(self) -> "GamepadController":
+    def gamepad_controller(self) -> GamepadController:
         return self._gamepad_controller
 
     @property
-    def hotkey_controller(self) -> "HotkeyController":
+    def hotkey_controller(self) -> HotkeyController:
         return self._hotkey_controller
 
     @property
-    def profile_controller(self) -> "ProfileController":
+    def profile_controller(self) -> ProfileController:
         return self._profile_controller
 
     # ─── Background Status Poller (thread-safe for OverlayHUD) ──────────────
@@ -326,7 +354,10 @@ class QmlBridge(QObject):
     def getI18nCoverage(self) -> QVariantMap:
         """Returns translation coverage stats per language."""
         try:
-            from app.backend.i18n import get_translation_coverage, get_available_languages
+            from app.backend.i18n import (
+                get_available_languages,
+                get_translation_coverage,
+            )
             return _qvar_map({
                 "ok": True,
                 "coverage": get_translation_coverage(),
@@ -616,7 +647,6 @@ class QmlBridge(QObject):
         ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, default="sendinput", name="method")
         if not ok or val is None:
             return _qvar_map(make_error_response(err or "Invalid method"))
-        from app.backend.services.aim_service import BackgroundMethod
         out = self.aim.set_background_method(val)
         self._schedule_save()
         return _qvar_map(out)
@@ -626,7 +656,6 @@ class QmlBridge(QObject):
         ok, val, err = validate_enum(color, VALID_AIM_TARGET_COLORS, name="color")
         if not ok or val is None:
             return _qvar_map(make_error_response(err or "Invalid color"))
-        from app.backend.services.aim_service import TargetColor
         out = self.aim.set_target_color(val)
         self._schedule_save()
         return _qvar_map(out)
@@ -654,7 +683,6 @@ class QmlBridge(QObject):
         ok, val, err = validate_enum(mode, VALID_AIM_DETECTION_MODES, name="mode")
         if not ok or val is None:
             return _qvar_map(make_error_response(err or "Invalid mode"))
-        from app.backend.services.aim_service import DetectionMode
         out = self.aim.set_detection_mode(val)
         self._schedule_save()
         return _qvar_map(out)
@@ -857,7 +885,9 @@ class QmlBridge(QObject):
     @Slot(int)
     def set_app_hwnd(self, hwnd: int) -> None:
         """Called from main.py after QML window creation to store app HWND."""
-        from app.backend.services.input_validation import validate_int, make_error_response
+        from app.backend.services.input_validation import (
+            validate_int,
+        )
 
         ok, hwnd_val, err = validate_int(hwnd, 0, None, name="hwnd")
         if not ok or hwnd_val is None:
@@ -868,7 +898,9 @@ class QmlBridge(QObject):
     @Slot(int)
     def set_overlay_hwnd(self, hwnd: int) -> None:
         """Called from main.py when overlay becomes visible to store overlay HWND."""
-        from app.backend.services.input_validation import validate_int, make_error_response
+        from app.backend.services.input_validation import (
+            validate_int,
+        )
 
         ok, hwnd_val, err = validate_int(hwnd, 0, None, name="hwnd")
         if not ok or hwnd_val is None:
@@ -1025,7 +1057,7 @@ class QmlBridge(QObject):
         }))
 
     @Slot(dict, result="QVariantMap")
-    def sendVigemTestState(self, state_map: Dict[str, Any]) -> QVariantMap:
+    def sendVigemTestState(self, state_map: dict[str, Any]) -> QVariantMap:
         """Send test state to virtual gamepad with full input validation."""
         # Validate target_id
         ok, target_id_val, err = validate_int(
@@ -1269,7 +1301,10 @@ class QmlBridge(QObject):
     @Slot(result="QVariantMap")
     def applyAutoTheme(self) -> QVariantMap:
         try:
-            from app.backend.services.theme_detector import detect_windows_theme, get_palette_for_theme
+            from app.backend.services.theme_detector import (
+                detect_windows_theme,
+                get_palette_for_theme,
+            )
             theme = detect_windows_theme()
             palette = get_palette_for_theme(theme, self.state.terminal_palette)
             self.settingsChanged.emit()

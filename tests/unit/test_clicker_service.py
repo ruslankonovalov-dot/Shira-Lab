@@ -1,8 +1,9 @@
 # tests/unit/test_clicker_service.py — ClickerService comprehensive tests for Phase 3.6
-import pytest
-from unittest.mock import Mock, patch, MagicMock
-import time
 import threading
+import time
+from unittest.mock import Mock, patch
+
+import pytest
 
 
 class TestClickerService:
