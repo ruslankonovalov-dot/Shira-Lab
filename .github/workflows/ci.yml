@@ -106,20 +106,27 @@ jobs:
         run: |
           pytest tests/unit/ -v \
             --cov=app \
+            --cov=utils \
+            --cov=config \
             --cov-report=xml:tests/_coverage_unit.xml \
             --cov-report=term \
+            --cov-report= \
             --junitxml=tests/_junit_unit.xml \
-            -m "unit and not windows"
+            -m "unit and not windows" \
+            --cov-fail-under=85 \
+            -o addopts=""
 
       - name: Run integration tests
         shell: bash
         run: |
           pytest tests/integration/ -v \
-            --cov=app --cov-append \
+            --cov=app --cov=utils --cov=config --cov-append \
             --cov-report=xml:tests/_coverage.xml \
             --cov-report=term \
+            --cov-report= \
             --junitxml=tests/_junit_integration.xml \
-            -m "integration and not windows" || true
+            -m "integration and not windows" \
+            -o addopts="" || true
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
