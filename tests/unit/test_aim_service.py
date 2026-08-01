@@ -50,9 +50,7 @@ class TestAimService:
 
     def test_config(self):
         """Test full config update."""
-        result = self.service.update_config(
-            confidence=0.5, smooth_steps=5, reset_delay=0.005
-        )
+        result = self.service.update_config(confidence=0.5, smooth_steps=5, reset_delay=0.005)
         assert result["ok"] is True
 
         # Check individual setters
@@ -206,9 +204,7 @@ class TestAimServiceDetection:
         # Create test contours
         contours = []
         # Large contour (should pass)
-        contour1 = np.array(
-            [[[0, 0]], [[100, 0]], [[100, 100]], [[0, 100]]], dtype=np.int32
-        )
+        contour1 = np.array([[[0, 0]], [[100, 0]], [[100, 100]], [[0, 100]]], dtype=np.int32)
         contours.append(contour1)
 
         # Small contour (should fail min_area)

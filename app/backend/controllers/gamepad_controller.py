@@ -40,9 +40,7 @@ from app.backend.services.pico_service import PicoService as PicoServiceRuntime
 # Type aliases
 BackgroundMethod = str  # "sendinput", "postmessage", "vigem", "pico"
 GamepadType = str  # "X360", "DS4"
-PicoModeStr = (
-    str  # "COMPOSITE", "KEYBOARD", "MOUSE", "GAMEPAD", "hid", "raw_hid", "cdc"
-)
+PicoModeStr = str  # "COMPOSITE", "KEYBOARD", "MOUSE", "GAMEPAD", "hid", "raw_hid", "cdc"
 GamepadStatus = dict[str, Any]
 WindowInfo = dict[str, Any]
 
@@ -114,9 +112,7 @@ class GamepadController(QObject):
             validate_enum,
         )
 
-        ok, val, err = validate_enum(
-            controller_type, VALID_GAMEPAD_TYPES, name="controller_type"
-        )
+        ok, val, err = validate_enum(controller_type, VALID_GAMEPAD_TYPES, name="controller_type")
         if not ok:
             logger.warning(f"setGamepadControllerType: {err}")
             return make_error_response(err or "Invalid controller type")
@@ -164,18 +160,14 @@ class GamepadController(QObject):
             return make_error_response(str(e))
 
     @Slot(str, int, result="QVariantMap")
-    def setGamepadBackgroundMethod(
-        self, method: str, _target_index: int = 0
-    ) -> QVariantMap:
+    def setGamepadBackgroundMethod(self, method: str, _target_index: int = 0) -> QVariantMap:
         """Set background input method for virtual gamepad."""
         from app.backend.services.input_validation import (
             make_error_response,
             validate_enum,
         )
 
-        ok, val, err = validate_enum(
-            method, VALID_BACKGROUND_METHODS, name="background_method"
-        )
+        ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, name="background_method")
         if not ok or val is None:
             logger.warning(f"setGamepadBackgroundMethod: {err}")
             return make_error_response(err or "Invalid background method")
@@ -693,9 +685,7 @@ class GamepadController(QObject):
 
         # Button mapping not yet implemented in firmware/service
         self.picoStatusChanged.emit()
-        return make_ok_response(
-            ok=False, error="Button mapping not yet implemented in firmware"
-        )
+        return make_ok_response(ok=False, error="Button mapping not yet implemented in firmware")
 
     @Slot(result="QVariantMap")
     def picoReset(self) -> QVariantMap:
@@ -727,9 +717,7 @@ class GamepadController(QObject):
         if not ok or key_val is None:
             return make_error_response(err or "Invalid key")
 
-        ok, action_val, err = validate_enum(
-            action, {"press", "release", "tap"}, name="action"
-        )
+        ok, action_val, err = validate_enum(action, {"press", "release", "tap"}, name="action")
         if not ok or action_val is None:
             return make_error_response(err or "Invalid action")
 
@@ -752,9 +740,7 @@ class GamepadController(QObject):
             return make_error_response(str(e))
 
     @Slot(int, int, int, int, result="QVariantMap")
-    def picoSendMouse(
-        self, x: int, y: int, button: int = 0, hold_ms: int = 0
-    ) -> QVariantMap:
+    def picoSendMouse(self, x: int, y: int, button: int = 0, hold_ms: int = 0) -> QVariantMap:
         """Send mouse action via Pico (click or move+click)."""
         from app.backend.services.input_validation import (
             make_error_response,
@@ -798,39 +784,25 @@ class GamepadController(QObject):
             validate_int,
         )
 
-        ok, buttons_val, err = validate_int(
-            buttons, 0, GAMEPAD_BUTTONS_MASK_MAX, name="buttons"
-        )
+        ok, buttons_val, err = validate_int(buttons, 0, GAMEPAD_BUTTONS_MASK_MAX, name="buttons")
         if not ok or buttons_val is None:
             return make_error_response(err or "Invalid buttons")
-        ok, lt_val, err = validate_int(
-            lt, GAMEPAD_TRIGGER_MIN, GAMEPAD_TRIGGER_MAX, name="lt"
-        )
+        ok, lt_val, err = validate_int(lt, GAMEPAD_TRIGGER_MIN, GAMEPAD_TRIGGER_MAX, name="lt")
         if not ok or lt_val is None:
             return make_error_response(err or "Invalid lt")
-        ok, rt_val, err = validate_int(
-            rt, GAMEPAD_TRIGGER_MIN, GAMEPAD_TRIGGER_MAX, name="rt"
-        )
+        ok, rt_val, err = validate_int(rt, GAMEPAD_TRIGGER_MIN, GAMEPAD_TRIGGER_MAX, name="rt")
         if not ok or rt_val is None:
             return make_error_response(err or "Invalid rt")
-        ok, lx_val, err = validate_int(
-            lx, GAMEPAD_STICK_MIN, GAMEPAD_STICK_MAX, name="lx"
-        )
+        ok, lx_val, err = validate_int(lx, GAMEPAD_STICK_MIN, GAMEPAD_STICK_MAX, name="lx")
         if not ok or lx_val is None:
             return make_error_response(err or "Invalid lx")
-        ok, ly_val, err = validate_int(
-            ly, GAMEPAD_STICK_MIN, GAMEPAD_STICK_MAX, name="ly"
-        )
+        ok, ly_val, err = validate_int(ly, GAMEPAD_STICK_MIN, GAMEPAD_STICK_MAX, name="ly")
         if not ok or ly_val is None:
             return make_error_response(err or "Invalid ly")
-        ok, rx_val, err = validate_int(
-            rx, GAMEPAD_STICK_MIN, GAMEPAD_STICK_MAX, name="rx"
-        )
+        ok, rx_val, err = validate_int(rx, GAMEPAD_STICK_MIN, GAMEPAD_STICK_MAX, name="rx")
         if not ok or rx_val is None:
             return make_error_response(err or "Invalid rx")
-        ok, ry_val, err = validate_int(
-            ry, GAMEPAD_STICK_MIN, GAMEPAD_STICK_MAX, name="ry"
-        )
+        ok, ry_val, err = validate_int(ry, GAMEPAD_STICK_MIN, GAMEPAD_STICK_MAX, name="ry")
         if not ok or ry_val is None:
             return make_error_response(err or "Invalid ry")
 

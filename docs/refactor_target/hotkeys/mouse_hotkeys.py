@@ -31,9 +31,9 @@ class MouseHotkeyManager:
         self._dispatcher = dispatcher
         self._mouse_listener = None
         self._mouse_hook = None
-        self._mouse_bindings: dict[
-            str, dict
-        ] = {}  # button_key → {action, mode, on_press, on_release}
+        self._mouse_bindings: dict[str, dict] = (
+            {}
+        )  # button_key → {action, mode, on_press, on_release}
         self._wheel_bindings: dict[str, dict] = {}  # wheel_name → {action, mode}
         self._wheel_cooldown: dict[str, float] = {}  # wheel_name → last_trigger_time
         self._wheel_cooldown_sec = 0.15  # защита от дребезга
@@ -133,9 +133,7 @@ class MouseHotkeyManager:
             def on_scroll(_x, _y, dx, dy):
                 self._handle_scroll(dx, dy)
 
-            self._mouse_listener = mouse.Listener(
-                on_click=on_click, on_scroll=on_scroll
-            )
+            self._mouse_listener = mouse.Listener(on_click=on_click, on_scroll=on_scroll)
             self._mouse_listener.daemon = True
             self._mouse_listener.start()
         except Exception as e:
@@ -164,9 +162,7 @@ class MouseHotkeyManager:
         # Проверяем modifiers
         from app.backend.services.hotkeys.keyboard_hotkeys import KeyboardHotkeyManager
 
-        if not KeyboardHotkeyManager.check_modifiers_pressed(
-            binding.get("modifiers", [])
-        ):
+        if not KeyboardHotkeyManager.check_modifiers_pressed(binding.get("modifiers", [])):
             return
 
         mode = binding["mode"]
@@ -202,9 +198,7 @@ class MouseHotkeyManager:
         # Modifiers check
         from app.backend.services.hotkeys.keyboard_hotkeys import KeyboardHotkeyManager
 
-        if not KeyboardHotkeyManager.check_modifiers_pressed(
-            binding.get("modifiers", [])
-        ):
+        if not KeyboardHotkeyManager.check_modifiers_pressed(binding.get("modifiers", [])):
             return
 
         binding["on_trigger"]()

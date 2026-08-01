@@ -78,9 +78,7 @@ def _build_report(
         "exception_type": exc_type.__name__ if exc_type else "Unknown",
         "exception_message": str(exc_value) if exc_value else "",
         "traceback": (
-            "".join(traceback.format_exception(exc_type, exc_value, tb))
-            if exc_type
-            else ""
+            "".join(traceback.format_exception(exc_type, exc_value, tb)) if exc_type else ""
         ),
         # NOT collected: path to profile.json, record contents, screenshots
         # User may manually attach if needed
@@ -96,9 +94,7 @@ def _save_local(report: dict[str, Any]) -> Path:
     path = CRASH_LOG_DIR / filename
 
     try:
-        path.write_text(
-            json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
+        path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
         logger.error("Crash report saved to %s", path)
     except OSError as e:
         logger.error("Failed to save crash report: %s", e)

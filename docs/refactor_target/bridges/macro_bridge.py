@@ -62,16 +62,12 @@ class MacroBridge(BridgeBase):
     # ─── Undo/Redo (NEW for SSS) ──────────────────────────────────
     @Slot(result=str)
     def macroUndo(self):
-        out = getattr(
-            self.macro, "undo", lambda: {"ok": False, "error": "undo not implemented"}
-        )()
+        out = getattr(self.macro, "undo", lambda: {"ok": False, "error": "undo not implemented"})()
         return json.dumps(out)
 
     @Slot(result=str)
     def macroRedo(self):
-        out = getattr(
-            self.macro, "redo", lambda: {"ok": False, "error": "redo not implemented"}
-        )()
+        out = getattr(self.macro, "redo", lambda: {"ok": False, "error": "redo not implemented"})()
         return json.dumps(out)
 
     @Slot(int, int, result=str)

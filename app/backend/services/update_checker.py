@@ -19,9 +19,7 @@ GITHUB_API_LATEST = "https://api.github.com/repos/shira/shira-lab/releases/lates
 TIMEOUT_SEC = 5
 
 
-def check_for_updates(
-    current_version: str, repo_url: str = GITHUB_API_LATEST
-) -> dict[str, Any]:
+def check_for_updates(current_version: str, repo_url: str = GITHUB_API_LATEST) -> dict[str, Any]:
     """Check for new version on GitHub.
 
     Args:
@@ -121,9 +119,7 @@ def _compare_versions(v1: str, v2: str) -> int:
 # ─── Async wrapper for Qt use ──────────────────────
 
 
-def check_for_updates_async(
-    current_version: str, callback: Callable[[str], None]
-) -> None:
+def check_for_updates_async(current_version: str, callback: Callable[[str], None]) -> None:
     """Run check in background thread, call callback with JSON result.
 
     Usage from QmlBridge:

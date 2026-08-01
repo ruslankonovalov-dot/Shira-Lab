@@ -180,9 +180,7 @@ def export_profile_dialog(state: Any) -> dict[str, Any]:
         app = QApplication.instance()
         if app is None:
             return {"ok": False, "error": "QApplication not available"}
-        path, _ = QFileDialog.getSaveFileName(
-            None, "Export Profile", "", "JSON Files (*.json)"
-        )
+        path, _ = QFileDialog.getSaveFileName(None, "Export Profile", "", "JSON Files (*.json)")
         if not path:
             return {"ok": False, "error": "Cancelled"}
         return export_profile(state, path)
@@ -199,9 +197,7 @@ def import_profile_dialog(state: Any) -> dict[str, Any]:
         app = QApplication.instance()
         if app is None:
             return {"ok": False, "error": "QApplication not available"}
-        path, _ = QFileDialog.getOpenFileName(
-            None, "Import Profile", "", "JSON Files (*.json)"
-        )
+        path, _ = QFileDialog.getOpenFileName(None, "Import Profile", "", "JSON Files (*.json)")
         if not path:
             return {"ok": False, "error": "Cancelled"}
         return import_profile(state, path)
@@ -215,9 +211,7 @@ def save_profile_to_file(state: Any, name: str) -> dict[str, Any]:
     try:
         from pathlib import Path
 
-        profile_dir = (
-            Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
-        )
+        profile_dir = Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
         profile_dir.mkdir(parents=True, exist_ok=True)
         path = profile_dir / f"{name}.json"
         return export_profile(state, path)
@@ -231,9 +225,7 @@ def load_profile_from_file(filename: str, state: Any) -> dict[str, Any]:
     try:
         from pathlib import Path
 
-        profile_dir = (
-            Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
-        )
+        profile_dir = Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
         path = profile_dir / filename
         return import_profile(state, path)
     except (OSError, ImportError, RuntimeError) as e:
@@ -246,9 +238,7 @@ def delete_profile_file(filename: str) -> dict[str, Any]:
     try:
         from pathlib import Path
 
-        profile_dir = (
-            Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
-        )
+        profile_dir = Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
         path = profile_dir / filename
         if path.exists():
             path.unlink()
@@ -263,9 +253,7 @@ def list_profile_files() -> dict[str, Any]:
     try:
         from pathlib import Path
 
-        profile_dir = (
-            Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
-        )
+        profile_dir = Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
         if not profile_dir.exists():
             return {"ok": True, "profiles": []}
         files = [f.name for f in profile_dir.glob("*.json")]

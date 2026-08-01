@@ -169,9 +169,7 @@ class ProfileController(QObject):
     @Slot(str, result="QVariantMap")
     def loadProfile(self, filename: str) -> dict[str, Any]:
         """Load profile from file."""
-        ok, filename_val, err = validate_str(
-            filename, min_len=1, max_len=512, name="filename"
-        )
+        ok, filename_val, err = validate_str(filename, min_len=1, max_len=512, name="filename")
         if not ok or filename_val is None:
             logger.warning(f"loadProfile: {err}")
             return _qvar_map(make_error_response(err or "Invalid filename"))
@@ -189,9 +187,7 @@ class ProfileController(QObject):
     @Slot(str, result="QVariantMap")
     def deleteProfile(self, filename: str) -> dict[str, Any]:
         """Delete a profile file."""
-        ok, filename_val, err = validate_str(
-            filename, min_len=1, max_len=512, name="filename"
-        )
+        ok, filename_val, err = validate_str(filename, min_len=1, max_len=512, name="filename")
         if not ok or filename_val is None:
             logger.warning(f"deleteProfile: {err}")
             return _qvar_map(make_error_response(err or "Invalid filename"))
@@ -280,9 +276,7 @@ class ProfileController(QObject):
         """Set clicker background method."""
         from app.backend.services.input_validation import validate_enum
 
-        ok, val, err = validate_enum(
-            method, VALID_BACKGROUND_METHODS, name="background_method"
-        )
+        ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, name="background_method")
         if not ok or val is None:
             logger.warning(f"setClickerBackgroundMethod: {err}")
             return _qvar(make_error_response(err or "Invalid method"))  # type: ignore[return-value]
@@ -294,9 +288,7 @@ class ProfileController(QObject):
     @Slot(str, result="QVariantMap")
     def setMacroBackgroundMethod(self, method: str) -> dict[str, Any]:
         """Set macro background method."""
-        ok, val, err = validate_enum(
-            method, VALID_BACKGROUND_METHODS, name="background_method"
-        )
+        ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, name="background_method")
         if not ok or val is None:
             logger.warning(f"setMacroBackgroundMethod: {err}")
             return _qvar_map(make_error_response(err or "Invalid method"))
@@ -308,9 +300,7 @@ class ProfileController(QObject):
     @Slot(str, result="QVariantMap")
     def setRecorderBackgroundMethod(self, method: str) -> dict[str, Any]:
         """Set recorder background method."""
-        ok, val, err = validate_enum(
-            method, VALID_BACKGROUND_METHODS, name="background_method"
-        )
+        ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, name="background_method")
         if not ok or val is None:
             logger.warning(f"setRecorderBackgroundMethod: {err}")
             return _qvar_map(make_error_response(err or "Invalid method"))
@@ -322,9 +312,7 @@ class ProfileController(QObject):
     @Slot(str, result="QVariantMap")
     def setGamepadBackgroundMethod(self, method: str) -> dict[str, Any]:
         """Set gamepad background method."""
-        ok, val, err = validate_enum(
-            method, VALID_BACKGROUND_METHODS, name="background_method"
-        )
+        ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, name="background_method")
         if not ok or val is None:
             logger.warning(f"setGamepadBackgroundMethod: {err}")
             return _qvar_map(make_error_response(err or "Invalid method"))
@@ -340,20 +328,14 @@ class ProfileController(QObject):
     def setModuleTargetWindow(self, module: str, hwnd: int) -> dict[str, Any]:
         """Set target window for a module."""
         try:
-            ok, module_val, err = validate_str(
-                module, min_len=1, max_len=50, name="module"
-            )
+            ok, module_val, err = validate_str(module, min_len=1, max_len=50, name="module")
             if not ok or module_val is None:
                 logger.warning(f"setModuleTargetWindow: {err}")
                 return _qvar_map(make_error_response(err or "Invalid module"))
             # Validate module is supported
             if module_val not in self.VALID_TARGET_MODULES:
-                logger.warning(
-                    f"setModuleTargetWindow: Unsupported module: {module_val}"
-                )
-                return _qvar_map(
-                    make_error_response(f"Unsupported module: {module_val}")
-                )
+                logger.warning(f"setModuleTargetWindow: Unsupported module: {module_val}")
+                return _qvar_map(make_error_response(f"Unsupported module: {module_val}"))
             ok, val, err = validate_hwnd(hwnd)
             if not ok or val is None:
                 logger.warning(f"setModuleTargetWindow: {err}")
@@ -508,9 +490,7 @@ class ProfileController(QObject):
             info = {
                 "ok": True,
                 "app_version": (
-                    self._state.app_version
-                    if hasattr(self._state, "app_version")
-                    else "1.0.0"
+                    self._state.app_version if hasattr(self._state, "app_version") else "1.0.0"
                 ),
                 "python_version": sys.version,
                 "platform": platform.platform(),
@@ -522,9 +502,7 @@ class ProfileController(QObject):
                     "clicker_bg_method": getattr(
                         self._state, "clicker_background_method", "sendinput"
                     ),
-                    "macro_bg_method": getattr(
-                        self._state, "macro_background_method", "sendinput"
-                    ),
+                    "macro_bg_method": getattr(self._state, "macro_background_method", "sendinput"),
                     "recorder_bg_method": getattr(
                         self._state, "recorder_background_method", "sendinput"
                     ),
@@ -581,9 +559,7 @@ class ProfileController(QObject):
         except Exception:
             import logging
 
-            logging.getLogger(__name__).exception(
-                "Failed to save profile from ProfileController"
-            )
+            logging.getLogger(__name__).exception("Failed to save profile from ProfileController")
 
     # ─── Logging Bridge ──────────────────────────────────────────────────
 

@@ -42,9 +42,7 @@ class TestCompareVersions:
 
 class TestCheckForUpdates:
     def test_returns_error_on_network_failure(self):
-        with patch(
-            "urllib.request.urlopen", side_effect=urllib.error.URLError("Network error")
-        ):
+        with patch("urllib.request.urlopen", side_effect=urllib.error.URLError("Network error")):
             result = check_for_updates("0.16.0")
             assert result["ok"] is False
             assert "error" in result

@@ -119,9 +119,7 @@ def hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
         return (100, 200, 100)
 
 
-def generate_palette_icon(
-    palette_id: str, output_path: Path | None = None
-) -> Path | None:
+def generate_palette_icon(palette_id: str, output_path: Path | None = None) -> Path | None:
     """Generate a palette-colored icon PNG.
 
     Args:
@@ -162,9 +160,9 @@ def generate_palette_icon(
         alpha_dilated = alpha.filter(ImageFilter.MaxFilter(5))
         arr_dilated = np.array(alpha_dilated)
         arr_orig = np.array(alpha)
-        arr_outline = np.clip(
-            arr_dilated.astype(int) - arr_orig.astype(int), 0, 255
-        ).astype(np.uint8)
+        arr_outline = np.clip(arr_dilated.astype(int) - arr_orig.astype(int), 0, 255).astype(
+            np.uint8
+        )
         outline_mask = Image.fromarray(arr_outline, mode="L")
 
         outline = Image.new("RGBA", orig.size, outline_color)
@@ -201,9 +199,7 @@ def generate_palette_icon(
         return None
 
 
-def generate_palette_ico(
-    palette_id: str, output_path: Path | None = None
-) -> Path | None:
+def generate_palette_ico(palette_id: str, output_path: Path | None = None) -> Path | None:
     """Generate a palette-colored ICO file (multi-resolution).
 
     Args:

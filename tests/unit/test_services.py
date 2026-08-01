@@ -180,9 +180,7 @@ class TestAimService:
         service = AimService()
 
         # update_config returns status dict without "ok" field
-        result = service.update_config(
-            confidence=0.5, smooth_steps=5, reset_delay=0.005
-        )
+        result = service.update_config(confidence=0.5, smooth_steps=5, reset_delay=0.005)
         assert result["confidence"] == 0.5
         assert result["smooth_steps"] == 5
         assert result["reset_delay"] == 0.005
@@ -444,22 +442,12 @@ class TestVigemService:
         assert VigemService.button_name_to_mask("y") == XUSB_BUTTON_MAP.get("y", 0)
         assert VigemService.button_name_to_mask("lb") == XUSB_BUTTON_MAP.get("lb", 0)
         assert VigemService.button_name_to_mask("rb") == XUSB_BUTTON_MAP.get("rb", 0)
-        assert VigemService.button_name_to_mask("back") == XUSB_BUTTON_MAP.get(
-            "back", 0
-        )
-        assert VigemService.button_name_to_mask("start") == XUSB_BUTTON_MAP.get(
-            "start", 0
-        )
+        assert VigemService.button_name_to_mask("back") == XUSB_BUTTON_MAP.get("back", 0)
+        assert VigemService.button_name_to_mask("start") == XUSB_BUTTON_MAP.get("start", 0)
         assert VigemService.button_name_to_mask("up") == XUSB_BUTTON_MAP.get("up", 0)
-        assert VigemService.button_name_to_mask("down") == XUSB_BUTTON_MAP.get(
-            "down", 0
-        )
-        assert VigemService.button_name_to_mask("left") == XUSB_BUTTON_MAP.get(
-            "left", 0
-        )
-        assert VigemService.button_name_to_mask("right") == XUSB_BUTTON_MAP.get(
-            "right", 0
-        )
+        assert VigemService.button_name_to_mask("down") == XUSB_BUTTON_MAP.get("down", 0)
+        assert VigemService.button_name_to_mask("left") == XUSB_BUTTON_MAP.get("left", 0)
+        assert VigemService.button_name_to_mask("right") == XUSB_BUTTON_MAP.get("right", 0)
 
         # Invalid button
         assert VigemService.button_name_to_mask("invalid") == 0
@@ -709,9 +697,7 @@ class TestBridgeControllers:
         from app.backend.models.runtime_state import RuntimeState
 
         state = RuntimeState()
-        controller = WindowController(
-            state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock()
-        )
+        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
 
         # Test setTerminalPalette
         result = controller.setTerminalPalette("matrix")

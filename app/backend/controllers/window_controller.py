@@ -134,11 +134,7 @@ class WindowController(QObject):
             # Delay start until tray is set (2 seconds)
             QTimer.singleShot(
                 2000,
-                lambda: (
-                    self._visibility_timer.start(1000)
-                    if self._visibility_timer
-                    else None
-                ),
+                lambda: (self._visibility_timer.start(1000) if self._visibility_timer else None),
             )
 
     def _check_visibility(self) -> None:
@@ -310,9 +306,7 @@ class WindowController(QObject):
         else:
             self._recorder.start_recording()
         self._sounds.play(
-            "start"
-            if not self._recorder.is_recording and not self._recorder.is_playing
-            else "stop"
+            "start" if not self._recorder.is_recording and not self._recorder.is_playing else "stop"
         )
 
     def on_tray_show_window(self) -> None:
@@ -420,9 +414,7 @@ class WindowController(QObject):
         if self._icon_regen_timer:
             self._icon_regen_timer.cancel()
 
-        self._icon_regen_timer = threading.Timer(
-            0.5, lambda: self._do_regen_icon(palette_id)
-        )
+        self._icon_regen_timer = threading.Timer(0.5, lambda: self._do_regen_icon(palette_id))
         self._icon_regen_timer.daemon = True
         self._icon_regen_timer.start()
 
@@ -474,9 +466,7 @@ class WindowController(QObject):
                 lnk_locations.append(Path(desktop) / "Shira Lab.lnk")
 
             try:
-                public_desktop = (
-                    Path(os.environ.get("PUBLIC", "C:\\Users\\Public")) / "Desktop"
-                )
+                public_desktop = Path(os.environ.get("PUBLIC", "C:\\Users\\Public")) / "Desktop"
                 lnk_locations.append(public_desktop / "Shira Lab.lnk")
             except (KeyError, OSError):
                 logger.exception("Failed to resolve public desktop path")
@@ -586,14 +576,8 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             uptime_sec = int(time.time() - create_time)
 
             # Module-specific metrics
-            clicker_cps = (
-                getattr(self._clicker, "cps", 0) if hasattr(self._clicker, "cps") else 0
-            )
-            aim_fps = (
-                getattr(self._aim, "last_fps", 0)
-                if hasattr(self._aim, "last_fps")
-                else 0
-            )
+            clicker_cps = getattr(self._clicker, "cps", 0) if hasattr(self._clicker, "cps") else 0
+            aim_fps = getattr(self._aim, "last_fps", 0) if hasattr(self._aim, "last_fps") else 0
 
             return {
                 "ok": True,
@@ -957,9 +941,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         """Get clicker status for tray."""
         return {
             "is_running": (
-                self._clicker.is_running
-                if hasattr(self._clicker, "is_running")
-                else False
+                self._clicker.is_running if hasattr(self._clicker, "is_running") else False
             ),
             "cps": getattr(self._clicker, "cps", 0),
         }
@@ -967,32 +949,24 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
     def aimStatus(self) -> dict[str, Any]:
         """Get aim status for tray."""
         return {
-            "is_running": (
-                self._aim.is_running if hasattr(self._aim, "is_running") else False
-            ),
+            "is_running": (self._aim.is_running if hasattr(self._aim, "is_running") else False),
             "fps": getattr(self._aim, "last_fps", 0),
         }
 
     def getMacroStatus(self) -> dict[str, Any]:
         """Get macro status for tray."""
         return {
-            "is_running": (
-                self._macro.is_running if hasattr(self._macro, "is_running") else False
-            ),
+            "is_running": (self._macro.is_running if hasattr(self._macro, "is_running") else False),
         }
 
     def recorderStatus(self) -> dict[str, Any]:
         """Get recorder status for tray."""
         return {
             "is_recording": (
-                self._recorder.is_recording
-                if hasattr(self._recorder, "is_recording")
-                else False
+                self._recorder.is_recording if hasattr(self._recorder, "is_recording") else False
             ),
             "is_playing": (
-                self._recorder.is_playing
-                if hasattr(self._recorder, "is_playing")
-                else False
+                self._recorder.is_playing if hasattr(self._recorder, "is_playing") else False
             ),
         }
 

@@ -191,18 +191,14 @@ class SystemTrayManager(QObject):
             current = "default"
 
         # Default profile action
-        act = self._profiles_menu.addAction(
-            f"{'●' if current == 'default' else '○'} Default"
-        )
+        act = self._profiles_menu.addAction(f"{'●' if current == 'default' else '○'} Default")
         act.setData("default")
         act.triggered.connect(lambda _checked, p="default": self._switch_profile(p))
 
         if profiles:
             self._profiles_menu.addSeparator()
             for name in sorted(profiles.keys()):
-                act = self._profiles_menu.addAction(
-                    f"{'●' if current == name else '○'} {name}"
-                )
+                act = self._profiles_menu.addAction(f"{'●' if current == name else '○'} {name}")
                 act.setData(name)
                 act.triggered.connect(lambda _checked, p=name: self._switch_profile(p))
 
@@ -223,9 +219,7 @@ class SystemTrayManager(QObject):
             if profile_name == "default":
                 # Reset to defaults (reload default hotkeys etc)
                 self._bridge.resetAllHotkeys()
-                self._bridge.setTerminalPalette(
-                    settings.get("terminal_palette", "matrix")
-                )
+                self._bridge.setTerminalPalette(settings.get("terminal_palette", "matrix"))
                 self._bridge.saveProfile("")
             elif profile_name in profiles:
                 profile = profiles[profile_name]

@@ -36,9 +36,7 @@ class ActionHandlers:
             "app_show": self._app_show,
             "panic_stop": self._panic_stop,
         }
-        return handlers.get(
-            action, lambda: logger.warning("Unknown action: %s", action)
-        )
+        return handlers.get(action, lambda: logger.warning("Unknown action: %s", action))
 
     def get_start_handler(self, action: str) -> Callable[[], None]:
         """Возвращает start-обработчик (для HOLD режима)."""

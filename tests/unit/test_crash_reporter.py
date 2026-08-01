@@ -149,8 +149,6 @@ class TestInstallCrashHandler:
         """Server sending should fail gracefully when no network."""
         import urllib.error
 
-        with patch(
-            "urllib.request.urlopen", side_effect=urllib.error.URLError("No network")
-        ):
+        with patch("urllib.request.urlopen", side_effect=urllib.error.URLError("No network")):
             result = crash_reporter._send_to_server({"test": "data"})
             assert result is False

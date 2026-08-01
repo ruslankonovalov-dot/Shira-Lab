@@ -33,18 +33,13 @@ class WindowBridge(BridgeBase):
         """Перерисовывает acrylic tint на основе текущей палитры/прозрачности."""
         if not self._hwnd:
             return
-        palette = TERMINAL_PALETTES.get(
-            self.state.terminal_palette, TERMINAL_PALETTES["matrix"]
-        )
+        palette = TERMINAL_PALETTES.get(self.state.terminal_palette, TERMINAL_PALETTES["matrix"])
         tint_color = palette["bg"]
         tint_alpha = int(200 - self.state.global_transparency * 180)
         tint_alpha = max(20, min(255, tint_alpha))
         try:
             # Lazy import: dwm_acrylic может быть не на всех платформах
-            from app.backend.services.dwm_acrylic import (
-                disable_acrylic_blur,
-                enable_acrylic_blur,
-            )
+            from app.backend.services.dwm_acrylic import disable_acrylic_blur, enable_acrylic_blur
 
             if self.state.global_blur_enabled or self.state.global_transparency > 0:
                 enable_acrylic_blur(self._hwnd, tint_color, tint_alpha)

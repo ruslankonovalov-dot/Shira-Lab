@@ -242,9 +242,7 @@ class ClickerService:
                     break
 
             if target_hwnd:
-                self._send_background_click(
-                    target_hwnd, button, hold_ms, background_method
-                )
+                self._send_background_click(target_hwnd, button, hold_ms, background_method)
             else:
                 info = buttons.get(button, buttons["L"])
                 mouse_event(info["down"], 0, 0, info["data"], 0)
@@ -265,9 +263,7 @@ class ClickerService:
             with self._lock:
                 self._cps_timestamps.append(now)
                 # Keep only last 2 seconds
-                self._cps_timestamps = [
-                    t for t in self._cps_timestamps if now - t < 2.0
-                ]
+                self._cps_timestamps = [t for t in self._cps_timestamps if now - t < 2.0]
                 if len(self._cps_timestamps) >= 2:
                     time_span = self._cps_timestamps[-1] - self._cps_timestamps[0]
                     if time_span > 0:
@@ -284,9 +280,7 @@ class ClickerService:
             self._cps = 0.0
             self._cps_timestamps.clear()
 
-    def _send_background_click(
-        self, hwnd: int, button: str, hold_ms: int, method: str
-    ) -> None:
+    def _send_background_click(self, hwnd: int, button: str, hold_ms: int, method: str) -> None:
         """Send click using configured background_method."""
         if method == "postmessage":
             send_background_click(hwnd, button=button)

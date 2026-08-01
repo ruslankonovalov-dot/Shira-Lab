@@ -58,13 +58,9 @@ class ProfileManager:
                 "recorder": self._bridge.recorder.status() if self._bridge else {},
                 "state": {
                     "terminal_palette": (
-                        self._bridge.state.terminal_palette
-                        if self._bridge
-                        else "matrix"
+                        self._bridge.state.terminal_palette if self._bridge else "matrix"
                     ),
-                    "is_pinned": (
-                        self._bridge.state.is_pinned if self._bridge else False
-                    ),
+                    "is_pinned": (self._bridge.state.is_pinned if self._bridge else False),
                     "hotkeys": self._bridge.state.hotkeys if self._bridge else {},
                 },
             }
@@ -125,9 +121,7 @@ class ProfileManager:
             m = data.get("macro", {})
             if m and self._bridge:
                 self._bridge.macro.set_run_mode(m.get("run_mode", "SEQUENTIAL"))
-                self._bridge.macro.set_background_method(
-                    m.get("background_method", "sendinput")
-                )
+                self._bridge.macro.set_background_method(m.get("background_method", "sendinput"))
                 self._bridge.macro.clear_actions()
                 for action in m.get("actions", []):
                     self._bridge.macro.add_action(
@@ -139,9 +133,7 @@ class ProfileManager:
             # Apply recorder config
             r = data.get("recorder", {})
             if r and self._bridge:
-                self._bridge.recorder.set_background_method(
-                    r.get("background_method", "sendinput")
-                )
+                self._bridge.recorder.set_background_method(r.get("background_method", "sendinput"))
 
             # Apply state
             s = data.get("state", {})

@@ -106,9 +106,7 @@ def _state_from_dict(data: dict[str, Any]) -> RuntimeState:
         bg_method = d0.background_method
     # Gamepad settings
     gp_enabled = bool(data.get("gamepad_enabled", d0.gamepad_enabled))
-    gp_type = str(
-        data.get("gamepad_controller_type", d0.gamepad_controller_type)
-    ).upper()
+    gp_type = str(data.get("gamepad_controller_type", d0.gamepad_controller_type)).upper()
     if gp_type not in ("X360", "DS4"):
         gp_type = d0.gamepad_controller_type
     gp_index = int(data.get("gamepad_target_index", d0.gamepad_target_index))
@@ -121,15 +119,11 @@ def _state_from_dict(data: dict[str, Any]) -> RuntimeState:
     pico_enabled = bool(data.get("pico_enabled", getattr(d0, "pico_enabled", False)))
     pico_port = data.get("pico_port", getattr(d0, "pico_port", None))
     pico_baudrate = int(data.get("pico_baudrate", getattr(d0, "pico_baudrate", 115200)))
-    pico_mode = str(
-        data.get("pico_mode", getattr(d0, "pico_mode", "COMPOSITE"))
-    ).upper()
+    pico_mode = str(data.get("pico_mode", getattr(d0, "pico_mode", "COMPOSITE"))).upper()
     if pico_mode not in ("KEYBOARD", "MOUSE", "GAMEPAD", "COMPOSITE"):
         pico_mode = "COMPOSITE"
     # Gamepad background method
-    gp_bg_method = str(
-        data.get("gamepad_background_method", d0.gamepad_background_method)
-    ).lower()
+    gp_bg_method = str(data.get("gamepad_background_method", d0.gamepad_background_method)).lower()
     if gp_bg_method not in ("sendinput", "postmessage", "vigem", "pico"):
         gp_bg_method = d0.gamepad_background_method
     pico_map_raw = data.get("pico_button_map", {})
@@ -141,22 +135,14 @@ def _state_from_dict(data: dict[str, Any]) -> RuntimeState:
     return RuntimeState(
         target_hwnd=th,
         target_name=str(data.get("target_name", d0.target_name)),
-        clicker_target_hwnd=load_target_hwnd(
-            "clicker_target_hwnd", d0.clicker_target_hwnd
-        ),
-        clicker_target_name=load_target_name(
-            "clicker_target_name", d0.clicker_target_name
-        ),
+        clicker_target_hwnd=load_target_hwnd("clicker_target_hwnd", d0.clicker_target_hwnd),
+        clicker_target_name=load_target_name("clicker_target_name", d0.clicker_target_name),
         macro_target_hwnd=load_target_hwnd("macro_target_hwnd", d0.macro_target_hwnd),
         macro_target_name=load_target_name("macro_target_name", d0.macro_target_name),
         aim_target_hwnd=load_target_hwnd("aim_target_hwnd", d0.aim_target_hwnd),
         aim_target_name=load_target_name("aim_target_name", d0.aim_target_name),
-        recorder_target_hwnd=load_target_hwnd(
-            "recorder_target_hwnd", d0.recorder_target_hwnd
-        ),
-        recorder_target_name=load_target_name(
-            "recorder_target_name", d0.recorder_target_name
-        ),
+        recorder_target_hwnd=load_target_hwnd("recorder_target_hwnd", d0.recorder_target_hwnd),
+        recorder_target_name=load_target_name("recorder_target_name", d0.recorder_target_name),
         theme=t,
         ui_lang=(
             str(data.get("ui_lang", d0.ui_lang)).upper()
@@ -224,9 +210,7 @@ def save_profile(api: Any) -> None:
                 ),
             },
         }
-        PROFILE_PATH.write_text(
-            json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
+        PROFILE_PATH.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def load_profile(api: Any) -> bool:
@@ -280,15 +264,11 @@ def load_profile(api: Any) -> bool:
                         int(sr.get("width", 300)),
                         int(sr.get("height", 300)),
                     )
-                api.aim.set_background_method(
-                    str(a.get("background_method", "sendinput"))
-                )
+                api.aim.set_background_method(str(a.get("background_method", "sendinput")))
             m = raw.get("macro") or {}
             if m and hasattr(api, "macro"):
                 api.macro.set_run_mode(str(m.get("run_mode", "SEQUENTIAL")))
-                api.macro.set_background_method(
-                    str(m.get("background_method", "sendinput"))
-                )
+                api.macro.set_background_method(str(m.get("background_method", "sendinput")))
                 api.macro.clear_actions()
                 for act in m.get("actions") or []:
                     api.macro.add_action(
@@ -298,9 +278,7 @@ def load_profile(api: Any) -> bool:
                     )
             r = raw.get("recorder") or {}
             if r and hasattr(api, "recorder"):
-                api.recorder.set_background_method(
-                    str(r.get("background_method", "sendinput"))
-                )
+                api.recorder.set_background_method(str(r.get("background_method", "sendinput")))
             g = raw.get("gamepad") or {}
             if g and hasattr(api.state, "gamepad_background_method"):
                 # state is already loaded from _state_from_dict, but we need to set it on the service

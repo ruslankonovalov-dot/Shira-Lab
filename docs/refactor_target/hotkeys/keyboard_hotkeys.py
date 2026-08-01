@@ -24,9 +24,7 @@ class KeyboardHotkeyManager:
     def __init__(self, dispatcher):
         self._dispatcher = dispatcher
         self._listener = None
-        self._registered: dict[
-            str, dict
-        ] = {}  # action → {modifiers, main, mode, callback}
+        self._registered: dict[str, dict] = {}  # action → {modifiers, main, mode, callback}
         self._available = False
         self._check_pynput()
 

@@ -131,18 +131,12 @@ class RecorderService:
             self.is_recording = True
             self.recorded_events = []
             self.start_time = time.time()
-            self._m_listener = mouse.Listener(
-                on_click=self._on_click, on_move=self._on_move
-            )
+            self._m_listener = mouse.Listener(on_click=self._on_click, on_move=self._on_move)
             self._k_listener = pynput_key.Listener(
                 on_press=self._on_key_down, on_release=self._on_key_up
             )
-            self._m_listener_thread = threading.Thread(
-                target=self._m_listener.run, daemon=True
-            )
-            self._k_listener_thread = threading.Thread(
-                target=self._k_listener.run, daemon=True
-            )
+            self._m_listener_thread = threading.Thread(target=self._m_listener.run, daemon=True)
+            self._k_listener_thread = threading.Thread(target=self._k_listener.run, daemon=True)
             self._m_listener_thread.start()
             self._k_listener_thread.start()
             self._log("OK", "Recording started")
@@ -244,9 +238,7 @@ class RecorderService:
             # Press
             report = XUSB_REPORT()
             report.wButtons = mask
-            err = vigem._dll.vigem_target_x360_update(
-                vigem._client, target, ctypes.byref(report)
-            )
+            err = vigem._dll.vigem_target_x360_update(vigem._client, target, ctypes.byref(report))
             return bool(err == 0)
         except (OSError, ValueError, RuntimeError, AttributeError, ImportError):
             logger.exception("ViGEm press button failed")
@@ -274,9 +266,7 @@ class RecorderService:
             # Release
             report = XUSB_REPORT()
             report.wButtons = 0
-            err = vigem._dll.vigem_target_x360_update(
-                vigem._client, target, ctypes.byref(report)
-            )
+            err = vigem._dll.vigem_target_x360_update(vigem._client, target, ctypes.byref(report))
             return bool(err == 0)
         except (OSError, ValueError, RuntimeError, AttributeError, ImportError):
             logger.exception("ViGEm release failed")
@@ -463,9 +453,7 @@ class RecorderService:
         m_ctrl: MouseController = mouse.Controller()
         k_ctrl: KeyboardController = pynput_key.Controller()
         try:
-            events: list[list[Any]] = (
-                data.get("events", []) if isinstance(data, dict) else data
-            )
+            events: list[list[Any]] = data.get("events", []) if isinstance(data, dict) else data
             for _ in range(repeats):
                 if not self.is_playing:
                     break
@@ -481,10 +469,7 @@ class RecorderService:
                     try:
                         if ev[0] == "m":
                             # Mouse move
-                            if (
-                                self.target_hwnd
-                                and self.background_method != "sendinput"
-                            ):
+                            if self.target_hwnd and self.background_method != "sendinput":
                                 # For background, we'd need PostMessage for moves
                                 # For now, use global move
                                 m_ctrl.position = (int(ev[1]), int(ev[2]))
@@ -494,19 +479,13 @@ class RecorderService:
                             # Mouse click
                             btn = ev[3].split(".")[-1].upper()
                             if ev[4]:  # press
-                                if (
-                                    self.target_hwnd
-                                    and self.background_method != "sendinput"
-                                ):
+                                if self.target_hwnd and self.background_method != "sendinput":
                                     self._send_click(btn, 0)  # hold=0 for press
                                 else:
                                     m_ctrl.position = (int(ev[1]), int(ev[2]))
                                     m_ctrl.press(getattr(mouse.Button, btn))
                             else:  # release
-                                if (
-                                    self.target_hwnd
-                                    and self.background_method != "sendinput"
-                                ):
+                                if self.target_hwnd and self.background_method != "sendinput":
                                     # Use PostMessage for background release
                                     from utils import send_background_click_up
 
@@ -517,27 +496,17 @@ class RecorderService:
                                     m_ctrl.release(getattr(mouse.Button, btn))
                         elif ev[0] in ("kd", "ku"):
                             # Key down/up
-                            key_str = (
-                                str(ev[1]).replace("Key.", "").replace("'", "").lower()
-                            )
+                            key_str = str(ev[1]).replace("Key.", "").replace("'", "").lower()
                             k_obj = self._resolve_key_obj(ev[1])
                             if k_obj is None:
                                 continue
                             if ev[0] == "kd":
-                                if (
-                                    self.target_hwnd
-                                    and self.background_method != "sendinput"
-                                ):
-                                    self._press_key(
-                                        key_str, 50
-                                    )  # small hold for background
+                                if self.target_hwnd and self.background_method != "sendinput":
+                                    self._press_key(key_str, 50)  # small hold for background
                                 else:
                                     k_ctrl.press(k_obj)
                             else:
-                                if (
-                                    self.target_hwnd
-                                    and self.background_method != "sendinput"
-                                ):
+                                if self.target_hwnd and self.background_method != "sendinput":
                                     # Key up - use PostMessage for background release
                                     from utils import send_background_key_up
 
@@ -588,9 +557,7 @@ class RecorderService:
             return
         try:
             filename = (
-                "REC_"
-                + datetime.datetime.now(datetime.UTC).strftime("%Y%m%d_%H%M%S")
-                + ".json"
+                "REC_" + datetime.datetime.now(datetime.UTC).strftime("%Y%m%d_%H%M%S") + ".json"
             )
             path = os.path.join(self.records_dir, filename)
             data = {

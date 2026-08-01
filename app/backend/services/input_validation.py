@@ -395,9 +395,7 @@ def validate_pico_port(
     value: Any, default: str | None = None, name: str = "port"
 ) -> tuple[bool, str | None, str | None]:
     """Validate Pico serial port (Windows COMx or Linux /dev/tty*)."""
-    ok, sval, err = validate_str(
-        value, min_len=1, max_len=64, default=default, name=name
-    )
+    ok, sval, err = validate_str(value, min_len=1, max_len=64, default=default, name=name)
     if not ok:
         return False, None, err
     if sval is None:
@@ -439,9 +437,7 @@ def make_ok_response(**kwargs: Any) -> QVariantMap:
 
 def validate_interval_ms(value: Any) -> tuple[bool, str]:
     """Validate clicker interval in milliseconds."""
-    ok, _, err = validate_int(
-        value, CLICKER_INTERVAL_MIN, CLICKER_INTERVAL_MAX, name="interval_ms"
-    )
+    ok, _, err = validate_int(value, CLICKER_INTERVAL_MIN, CLICKER_INTERVAL_MAX, name="interval_ms")
     return (ok, err or "")
 
 
@@ -453,9 +449,7 @@ def validate_hold_ms(value: Any) -> tuple[bool, str]:
 
 def validate_button(value: Any) -> tuple[bool, str]:
     """Validate mouse button."""
-    ok, _, err = validate_enum(
-        value, VALID_CLICKER_BUTTONS, case_sensitive=False, name="button"
-    )
+    ok, _, err = validate_enum(value, VALID_CLICKER_BUTTONS, case_sensitive=False, name="button")
     return (ok, err or "")
 
 

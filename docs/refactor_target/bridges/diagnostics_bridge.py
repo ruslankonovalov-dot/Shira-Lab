@@ -86,9 +86,7 @@ class DiagnosticsBridge(BridgeBase):
                     "uptime_sec": time.time() - process.create_time(),
                     "clicker_cps": getattr(self.clicker, "get_cps", lambda: 0)(),
                     "aim_fps": getattr(self.aim, "get_fps", lambda: 0)(),
-                    "hotkey_latency_ms": getattr(
-                        self.hotkeys, "get_latency_ms", lambda: 0
-                    )(),
+                    "hotkey_latency_ms": getattr(self.hotkeys, "get_latency_ms", lambda: 0)(),
                 }
             )
         except Exception as e:

@@ -77,9 +77,7 @@ class GamepadBridge(BridgeBase):
     def vigemSetGamepadState(self, target_id, buttons, lt, rt, lx, ly, rx, ry):
         if not self.vigem:
             return json.dumps({"ok": False, "error": "ViGEm not available"})
-        return json.dumps(
-            self.vigem.set_gamepad_state(target_id, buttons, lt, rt, lx, ly, rx, ry)
-        )
+        return json.dumps(self.vigem.set_gamepad_state(target_id, buttons, lt, rt, lx, ly, rx, ry))
 
     @Slot(int, int, result=str)
     def vigemSetButtons(self, target_id, button_mask):

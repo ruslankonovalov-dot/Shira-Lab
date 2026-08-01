@@ -246,9 +246,9 @@ class PicoService:
 
         # Командная очередь: (frame, seq)
         self._cmd_queue: Queue[tuple[bytes, int]] = Queue()
-        self._pending: dict[
-            int, tuple[threading.Event, bytes | None]
-        ] = {}  # seq -> (event, response_data)
+        self._pending: dict[int, tuple[threading.Event, bytes | None]] = (
+            {}
+        )  # seq -> (event, response_data)
         self._seq = 0
 
         # Callbacks
@@ -331,12 +331,8 @@ class PicoService:
                 self._ser.reset_output_buffer()
 
                 self._stop_event.clear()
-                self._reader_thread = threading.Thread(
-                    target=self._reader_loop, daemon=True
-                )
-                self._writer_thread = threading.Thread(
-                    target=self._writer_loop, daemon=True
-                )
+                self._reader_thread = threading.Thread(target=self._reader_loop, daemon=True)
+                self._writer_thread = threading.Thread(target=self._writer_loop, daemon=True)
                 self._reader_thread.start()
                 self._writer_thread.start()
 
@@ -348,9 +344,7 @@ class PicoService:
 
                 self._device_info = info
                 self._connected = True
-                logger.info(
-                    f"Pico подключен: {info.fw_version}, caps=0x{info.capabilities:04X}"
-                )
+                logger.info(f"Pico подключен: {info.fw_version}, caps=0x{info.capabilities:04X}")
                 self._log("OK", f"Connected — fw={info.fw_version} port={self._port}")
                 if self._on_connect:
                     self._on_connect(info)
@@ -469,10 +463,7 @@ class PicoService:
 
         seq = self._next_seq()
         # Frame: [CMD][SEQ][LEN_H][LEN_L][PAYLOAD...]
-        frame = (
-            bytes([cmd, seq & 0xFF, (len(payload) >> 8) & 0xFF, len(payload) & 0xFF])
-            + payload
-        )
+        frame = bytes([cmd, seq & 0xFF, (len(payload) >> 8) & 0xFF, len(payload) & 0xFF]) + payload
 
         if wait_resp:
             event = threading.Event()

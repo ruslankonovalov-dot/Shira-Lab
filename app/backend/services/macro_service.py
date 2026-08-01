@@ -206,9 +206,7 @@ class MacroService:
             count = len(self._actions)
             if count > 0:
                 # ─── NEW: Save snapshot for undo ──────────────────
-                self._undo_stack.append(
-                    ClearActionsEntry(op="clear", actions=list(self._actions))
-                )
+                self._undo_stack.append(ClearActionsEntry(op="clear", actions=list(self._actions)))
                 self._redo_stack.clear()
             self._actions = []
         if count > 0:
@@ -264,9 +262,7 @@ class MacroService:
                         },
                     )
                 )
-                self._log(
-                    "INFO", f"Undo: moved action back to #{entry['from_index'] + 1}"
-                )
+                self._log("INFO", f"Undo: moved action back to #{entry['from_index'] + 1}")
             elif _is_delete_entry(entry):
                 # Restore deleted action
                 self._actions.insert(entry["index"], entry["action"])
@@ -488,9 +484,7 @@ class MacroService:
             time.sleep(hold)
         keyboard.release(key)
 
-    def _sequential_worker(
-        self, target_hwnd: int | None, actions: list[dict[str, Any]]
-    ) -> None:
+    def _sequential_worker(self, target_hwnd: int | None, actions: list[dict[str, Any]]) -> None:
         time.sleep(0.2)
         cycle = 0
         while True:

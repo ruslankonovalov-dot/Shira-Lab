@@ -140,9 +140,7 @@ class VigemService:
                 "System32",
                 "ViGEmClient.dll",
             ),
-            os.path.join(
-                os.path.dirname(__file__), "..", "..", "..", "bin", "ViGEmClient.dll"
-            ),
+            os.path.join(os.path.dirname(__file__), "..", "..", "..", "bin", "ViGEmClient.dll"),
         ]
         for path in candidates:
             if os.path.exists(path):
@@ -329,9 +327,7 @@ class VigemService:
             return {
                 "ok": True,
                 "connected": self._client is not None,
-                "targets": {
-                    tid: ttype.name for tid, (_, ttype) in self._targets.items()
-                },
+                "targets": {tid: ttype.name for tid, (_, ttype) in self._targets.items()},
                 "target_count": len(self._targets),
             }
 
@@ -381,9 +377,7 @@ class VigemService:
             report.sThumbRX = max(-32768, min(32767, rx))
             report.sThumbRY = max(-32768, min(32767, ry))
 
-            err = self._dll.vigem_target_x360_update(
-                self._client, target, ctypes.byref(report)
-            )
+            err = self._dll.vigem_target_x360_update(self._client, target, ctypes.byref(report))
             return int(err) == 0
 
     def x360_press_button(self, target_id: int, button: str) -> bool:
@@ -472,9 +466,7 @@ class VigemService:
             if ttype != VIGEM_TARGET_TYPE.DS4:
                 return False
             assert self._dll is not None  # target exists so dll must be loaded
-            err = self._dll.vigem_target_ds4_update(
-                self._client, target, ctypes.byref(report)
-            )
+            err = self._dll.vigem_target_ds4_update(self._client, target, ctypes.byref(report))
             return int(err) == 0
 
     # ─── Helpers for button mapping ─────────────────────────────────────
@@ -513,11 +505,7 @@ class VigemService:
         Returns mapping of button names to their mask values as strings.
         """
         with self._lock:
-            return {
-                name: str(mask)
-                for name, mask in XUSB_BUTTON_MAP.items()
-                if mask is not None
-            }
+            return {name: str(mask) for name, mask in XUSB_BUTTON_MAP.items() if mask is not None}
 
     def set_button_map(self, mapping: dict[str, Any]) -> dict[str, Any]:
         """Set button mapping (currently just validates and returns OK).

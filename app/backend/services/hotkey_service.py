@@ -120,11 +120,7 @@ class ParsedKeyKeyboard(TypedDict):
 
 
 _ParsedKey = (
-    ParsedKeyEmpty
-    | ParsedKeySequence
-    | ParsedKeyMouse
-    | ParsedKeyWheel
-    | ParsedKeyKeyboard
+    ParsedKeyEmpty | ParsedKeySequence | ParsedKeyMouse | ParsedKeyWheel | ParsedKeyKeyboard
 )
 
 
@@ -161,9 +157,7 @@ class EmptyBinding(BindingBase):
     key: str
 
 
-_BindingDict = (
-    KeyboardBinding | MouseBinding | WheelBinding | SequenceBinding | EmptyBinding
-)
+_BindingDict = KeyboardBinding | MouseBinding | WheelBinding | SequenceBinding | EmptyBinding
 
 _BindingMap = dict[str, _BindingDict | dict[str, str]]
 _RegisteredMap = dict[str, list[Any]]
@@ -298,9 +292,7 @@ class HotkeyService:
         self._pynput_started: bool = False
 
         # Диагностика
-        self._last_mouse_event: dict[str, Any] | None = (
-            None  # последнее событие мыши (для отладки)
-        )
+        self._last_mouse_event: dict[str, Any] | None = None  # последнее событие мыши (для отладки)
         self._last_mouse_event_time: float = 0.0
         self._mouse_events_count: int = 0
         self._mouse_triggers_count: int = 0
@@ -312,9 +304,7 @@ class HotkeyService:
         # Запускаем listeners сразу при инициализации
         self._ensure_all_listeners()
 
-    def _on_action_dispatched(
-        self, action: str, pressed: bool, hold_mode: bool
-    ) -> None:
+    def _on_action_dispatched(self, action: str, pressed: bool, hold_mode: bool) -> None:
         """Called on Qt main thread via HotkeyDispatcher signal."""
         try:
             if hold_mode:
@@ -737,9 +727,7 @@ class HotkeyService:
                 for action, binding in self._bindings.items()
                 if binding.get("type") == "mouse"
                 and binding.get("button") == button_key
-                and self._check_modifiers_pressed(
-                    cast(list[str], binding.get("modifiers", []))
-                )
+                and self._check_modifiers_pressed(cast(list[str], binding.get("modifiers", [])))
             ]
 
         for action, mode in matching:
@@ -747,9 +735,7 @@ class HotkeyService:
                 if pressed:
                     with self._lock:
                         self._mouse_triggers_count += 1
-                    logger.info(
-                        "mouse hotkey triggered: %s (button=%s)", action, button_key
-                    )
+                    logger.info("mouse hotkey triggered: %s (button=%s)", action, button_key)
                     self._dispatcher.trigger(action, pressed=True, hold_mode=False)
             else:
                 # HOLD mode
@@ -796,9 +782,7 @@ class HotkeyService:
                 for action, binding in self._bindings.items()
                 if binding.get("type") == "wheel"
                 and binding.get("wheel") == wheel_name
-                and self._check_modifiers_pressed(
-                    cast(list[str], binding.get("modifiers", []))
-                )
+                and self._check_modifiers_pressed(cast(list[str], binding.get("modifiers", [])))
             ]
 
         for action in matching:
@@ -844,9 +828,7 @@ class HotkeyService:
             except (KeyError, ValueError, OSError, RuntimeError, AttributeError):
                 pass
 
-    def _register_action(
-        self, action: str, key: str, mode: str
-    ) -> tuple[bool, str | None]:
+    def _register_action(self, action: str, key: str, mode: str) -> tuple[bool, str | None]:
         if not _HAS_KEYBOARD:
             return False, "keyboard lib not available"
         if not key:
@@ -861,17 +843,11 @@ class HotkeyService:
             if parsed["type"] == "sequence":
                 return self._register_sequence(action, parsed["sequence"], mode)
             elif parsed["type"] == "mouse":
-                return self._register_mouse(
-                    action, parsed["modifiers"], parsed["main"], mode
-                )
+                return self._register_mouse(action, parsed["modifiers"], parsed["main"], mode)
             elif parsed["type"] == "wheel":
-                return self._register_wheel(
-                    action, parsed["modifiers"], parsed["main"], mode
-                )
+                return self._register_wheel(action, parsed["modifiers"], parsed["main"], mode)
             else:
-                return self._register_keyboard(
-                    action, parsed["modifiers"], parsed["main"], mode
-                )
+                return self._register_keyboard(action, parsed["modifiers"], parsed["main"], mode)
         except (OSError, RuntimeError, ValueError, AttributeError, ImportError) as e:
             logger.error("Failed to register hotkey %s=%s: %s", action, key, e)
             return False, str(e)
@@ -956,9 +932,7 @@ class HotkeyService:
                     "button_n": button_n,
                     "mode": mode,
                 }
-            logger.info(
-                "Registered mouse hotkey: %s = %s [%s]", action, button_key, mode
-            )
+            logger.info("Registered mouse hotkey: %s = %s [%s]", action, button_key, mode)
             return True, None
         except (OSError, RuntimeError, ValueError, AttributeError) as e:
             return False, str(e)
@@ -1047,9 +1021,7 @@ class HotkeyService:
                                 str(prev_binding["mode"]),
                             )
                         except (OSError, RuntimeError, ValueError, AttributeError):
-                            logger.exception(
-                                "Failed to restore previous hotkey binding"
-                            )
+                            logger.exception("Failed to restore previous hotkey binding")
                     return {
                         "ok": False,
                         "error": err or "Failed to register hotkey",
@@ -1058,9 +1030,7 @@ class HotkeyService:
             else:
                 self._unregister_action(action)
                 if action in self._bindings:
-                    self._bindings[action] = cast(
-                        _BindingDict, {"key": "", "mode": mode}
-                    )
+                    self._bindings[action] = cast(_BindingDict, {"key": "", "mode": mode})
             return {"ok": True, "bindings": self.get_bindings()}
 
     def get_bindings(self) -> dict[str, dict[str, str]]:
@@ -1113,9 +1083,7 @@ class HotkeyService:
             for action in list(self._bindings.keys()):
                 b = self._bindings[action]
                 if b.get("type") in ("mouse", "wheel"):
-                    self._bindings[action] = cast(
-                        _BindingDict, {"key": "", "mode": "TOGGLE"}
-                    )
+                    self._bindings[action] = cast(_BindingDict, {"key": "", "mode": "TOGGLE"})
 
     def is_available(self) -> bool:
         return _HAS_KEYBOARD
@@ -1271,9 +1239,7 @@ class HotkeyService:
         """Get debug status of the hotkey dispatcher."""
         return {
             "dispatcher_connected": self._dispatcher is not None,
-            "handler_set": (
-                self._dispatcher._handler is not None if self._dispatcher else False
-            ),
+            "handler_set": (self._dispatcher._handler is not None if self._dispatcher else False),
         }
 
     def debug_dispatcher_thread(self) -> dict[str, Any]:

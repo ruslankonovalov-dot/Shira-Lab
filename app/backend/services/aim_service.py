@@ -39,9 +39,7 @@ class AimService:
     5. Multi-mode detection with visual feedback
     """
 
-    HSV_PRESETS: ClassVar[
-        dict[str, list[tuple[tuple[int, int, int], tuple[int, int, int]]]]
-    ] = {
+    HSV_PRESETS: ClassVar[dict[str, list[tuple[tuple[int, int, int], tuple[int, int, int]]]]] = {
         "red": [((0, 50, 50), (15, 255, 255)), ((165, 50, 50), (180, 255, 255))],
         "blue": [((85, 50, 50), (135, 255, 255))],
         "green": [((35, 50, 50), (85, 255, 255))],
@@ -81,9 +79,7 @@ class AimService:
 
         # Predictive aim — compensate for latency
         self.prediction_factor: float = 0.15  # 0 = off, 0.15 = light prediction
-        self.last_target_pos: tuple[int, int, float] | None = (
-            None  # (tx, ty, timestamp)
-        )
+        self.last_target_pos: tuple[int, int, float] | None = None  # (tx, ty, timestamp)
         self.last_mouse_delta: tuple[int, int] = (0, 0)  # for smoothing
 
         # Debug
@@ -91,9 +87,9 @@ class AimService:
         self.debug_frame_count: int = 0
 
         # Performance: pre-built HSV arrays
-        self._hsv_cache: dict[
-            str, list[tuple[npt.NDArray[np.uint8], npt.NDArray[np.uint8]]]
-        ] = {}  # color_name → list of (lower_arr, upper_arr)
+        self._hsv_cache: dict[str, list[tuple[npt.NDArray[np.uint8], npt.NDArray[np.uint8]]]] = (
+            {}
+        )  # color_name → list of (lower_arr, upper_arr)
         self._kernel_3x3: npt.NDArray[np.uint8] = np.ones((3, 3), np.uint8)
 
         self._bridge: object | None = None
@@ -218,9 +214,7 @@ class AimService:
             self.saturation_threshold = max(0, min(255, int(saturation)))
         return {"ok": True}
 
-    def set_scan_region(
-        self, top: int, left: int, width: int, height: int
-    ) -> dict[str, Any]:
+    def set_scan_region(self, top: int, left: int, width: int, height: int) -> dict[str, Any]:
         """Set custom scan region. Pass all zeros to reset to full screen."""
         if top == 0 and left == 0 and width == 0 and height == 0:
             with self._lock:
@@ -315,17 +309,13 @@ class AimService:
             self._log("ERROR", f"Pipette failed: {e}")
             return {"ok": False, "error": str(e)}
 
-    def _circular_mean(
-        self, hue_array: np.ndarray[Any, Any], max_val: int
-    ) -> tuple[int, int]:
+    def _circular_mean(self, hue_array: np.ndarray[Any, Any], max_val: int) -> tuple[int, int]:
         """Compute circular mean for hue (which wraps around)."""
         radians = hue_array.astype(float) * (2 * np.pi / max_val)
         mean_rad = np.arctan2(np.sin(radians).mean(), np.cos(radians).mean())
         mean_hue = int((mean_rad * max_val / (2 * np.pi)) % max_val)
         # Std as circular distance
-        diffs = np.minimum(
-            np.abs(hue_array - mean_hue), max_val - np.abs(hue_array - mean_hue)
-        )
+        diffs = np.minimum(np.abs(hue_array - mean_hue), max_val - np.abs(hue_array - mean_hue))
         std_hue = int(diffs.std())
         return mean_hue, std_hue
 
@@ -361,9 +351,7 @@ class AimService:
 
             StealthInput.send_mouse_move(int(dx), int(dy))
         except (OSError, ValueError, AttributeError):
-            logger.debug(
-                "StealthInput send_mouse_move failed, falling back to mouse_event"
-            )
+            logger.debug("StealthInput send_mouse_move failed, falling back to mouse_event")
             # Fallback to mouse_event
             user32 = ctypes.windll.user32
             user32.mouse_event(0x0001, int(dx), int(dy), 0, 0)
@@ -394,9 +382,7 @@ class AimService:
         ).astype(np.uint8)
         _mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, self._kernel_3x3)
         _mask = cv2.morphologyEx(_mask, cv2.MORPH_CLOSE, self._kernel_3x3)
-        contours, _ = cv2.findContours(
-            _mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-        )
+        contours, _ = cv2.findContours(_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         return self._filter_contours(
             cast(Sequence[cv2.Mat], contours),
             frame_hsv,
@@ -451,9 +437,7 @@ class AimService:
 
         _mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, self._kernel_3x3)
         _mask = cv2.morphologyEx(_mask, cv2.MORPH_CLOSE, self._kernel_3x3)
-        contours, _ = cv2.findContours(
-            _mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-        )
+        contours, _ = cv2.findContours(_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         return self._filter_contours(
             cast(Sequence[cv2.Mat], contours),
             frame_hsv,
@@ -479,9 +463,7 @@ class AimService:
         for color_name in multi_colors:
             arrays = self._get_hsv_arrays(color_name)
             for lower_arr, upper_arr in arrays:
-                mask = cv2.bitwise_or(
-                    mask, cv2.inRange(frame_hsv, lower_arr, upper_arr)
-                )
+                mask = cv2.bitwise_or(mask, cv2.inRange(frame_hsv, lower_arr, upper_arr))
 
         # Adaptive V threshold if bg matches too
         total_pixels = frame_hsv.shape[0] * frame_hsv.shape[1]
@@ -501,9 +483,7 @@ class AimService:
 
         _mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, self._kernel_3x3)
         _mask = cv2.morphologyEx(_mask, cv2.MORPH_CLOSE, self._kernel_3x3)
-        contours, _ = cv2.findContours(
-            _mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-        )
+        contours, _ = cv2.findContours(_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         return self._filter_contours(
             cast(Sequence[cv2.Mat], contours),
             frame_hsv,
@@ -528,9 +508,7 @@ class AimService:
             return []
         mask: np.ndarray[Any, Any] = np.zeros(frame_hsv.shape[:2], dtype=np.uint8)
         for lower, upper in calibrated_hsv_ranges:
-            mask = cv2.bitwise_or(
-                mask, cv2.inRange(frame_hsv, np.array(lower), np.array(upper))
-            )
+            mask = cv2.bitwise_or(mask, cv2.inRange(frame_hsv, np.array(lower), np.array(upper)))
 
         # Adaptive V threshold if bg matches too
         total_pixels = frame_hsv.shape[0] * frame_hsv.shape[1]
@@ -550,9 +528,7 @@ class AimService:
 
         _mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, self._kernel_3x3)
         _mask = cv2.morphologyEx(_mask, cv2.MORPH_CLOSE, self._kernel_3x3)
-        contours, _ = cv2.findContours(
-            _mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-        )
+        contours, _ = cv2.findContours(_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         return self._filter_contours(
             cast(Sequence[cv2.Mat], contours),
             frame_hsv,
@@ -684,9 +660,7 @@ class AimService:
             )
             # Save (keep only last 10)
             self.debug_frame_count += 1
-            path = os.path.join(
-                debug_dir, f"aim_debug_{self.debug_frame_count:04d}.png"
-            )
+            path = os.path.join(debug_dir, f"aim_debug_{self.debug_frame_count:04d}.png")
             cv2.imwrite(path, debug_img)
             # Cleanup old files
             files = sorted(os.listdir(debug_dir))
@@ -710,9 +684,7 @@ class AimService:
         # - If scan_region is set (custom), use it
         # - Otherwise, capture FOV box around screen center
         with self._lock:
-            scan_region = (
-                dict(self.scan_region) if self.scan_region is not None else None
-            )
+            scan_region = dict(self.scan_region) if self.scan_region is not None else None
             fov_radius = self.fov_radius
 
         if scan_region is not None:

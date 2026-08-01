@@ -157,9 +157,7 @@ class StealthInput:
     # SendInput для мыши использует MOUSEINPUT, не KEYBDINPUT
 
     @staticmethod
-    def _make_keyboard_input(
-        scancode: int, key_up: bool = False, extended: bool = False
-    ) -> INPUT:
+    def _make_keyboard_input(scancode: int, key_up: bool = False, extended: bool = False) -> INPUT:
         """Создаёт INPUT структуру для клавиши по scancode."""
         flags = KEYEVENTF_SCANCODE
         if extended:
@@ -189,9 +187,7 @@ class StealthInput:
         return inp
 
     @staticmethod
-    def send_key_scancode(
-        scancode: int, hold_ms: int = 0, extended: bool = False
-    ) -> bool:
+    def send_key_scancode(scancode: int, hold_ms: int = 0, extended: bool = False) -> bool:
         """
         Отправляет keydown + keyup для клавиши по scancode.
 
@@ -205,12 +201,8 @@ class StealthInput:
         import time
 
         try:
-            down = StealthInput._make_keyboard_input(
-                scancode, key_up=False, extended=extended
-            )
-            up = StealthInput._make_keyboard_input(
-                scancode, key_up=True, extended=extended
-            )
+            down = StealthInput._make_keyboard_input(scancode, key_up=False, extended=extended)
+            up = StealthInput._make_keyboard_input(scancode, key_up=True, extended=extended)
 
             inputs = (INPUT * 1)(down)
             sent: int = _user32.SendInput(1, inputs, ctypes.sizeof(INPUT))
@@ -409,12 +401,8 @@ class StealthInput:
         if not StealthInput._attach_thread_input(hwnd, True):
             return False
         try:
-            down = StealthInput._make_keyboard_input(
-                scancode, key_up=False, extended=extended
-            )
-            up = StealthInput._make_keyboard_input(
-                scancode, key_up=True, extended=extended
-            )
+            down = StealthInput._make_keyboard_input(scancode, key_up=False, extended=extended)
+            up = StealthInput._make_keyboard_input(scancode, key_up=True, extended=extended)
 
             inputs = (INPUT * 1)(down)
             sent: int = _user32.SendInput(1, inputs, ctypes.sizeof(INPUT))
@@ -441,17 +429,13 @@ class StealthInput:
             if not scancode:
                 return False
             extended = vk in (0xA3, 0xA5)  # RCONTROL, RMENU
-            return StealthInput.send_key_scancode_attached(
-                hwnd, scancode, hold_ms, extended
-            )
+            return StealthInput.send_key_scancode_attached(hwnd, scancode, hold_ms, extended)
         except (OSError, RuntimeError, ValueError, AttributeError):
             logger.debug("Failed to send key VK attached")
             return False
 
     @staticmethod
-    def send_mouse_click_attached(
-        hwnd: int, button: str = "L", hold_ms: int = 0
-    ) -> bool:
+    def send_mouse_click_attached(hwnd: int, button: str = "L", hold_ms: int = 0) -> bool:
         """
         Send mouse click to specific window using AttachThreadInput + SendInput.
         Works for background/inactive windows in many games without anticheat.

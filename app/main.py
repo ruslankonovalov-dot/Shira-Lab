@@ -98,9 +98,7 @@ def make_window_click_through(hwnd: int) -> None:
         _user32.SetWindowLongW(
             hwnd,
             GWL_EXSTYLE,
-            ctypes.c_long(
-                ex_style | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE
-            ),
+            ctypes.c_long(ex_style | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE),
         )
         # Set color key to transparent (pure black corner pixel becomes click-through)
         _user32.SetLayeredWindowAttributes(hwnd, 0, 0, LWA_COLORKEY)
@@ -275,9 +273,7 @@ def main() -> None:
 
                 hwnd = int(main_window.winId())
                 if hwnd:
-                    hicon = ctypes.windll.user32.LoadImageW(
-                        0, str(icon_path), 1, 0, 0, 0x00000010
-                    )
+                    hicon = ctypes.windll.user32.LoadImageW(0, str(icon_path), 1, 0, 0, 0x00000010)
                     if hicon:
                         ctypes.windll.user32.SendMessageW(hwnd, 0x0080, 1, hicon)
                         ctypes.windll.user32.SendMessageW(hwnd, 0x0080, 0, hicon)
@@ -410,9 +406,7 @@ def main() -> None:
                     if overlay_hwnd:
                         bridge.set_overlay_hwnd(overlay_hwnd)
                 except Exception:
-                    logger.exception(
-                        "Failed to store overlay hwnd on visibility change"
-                    )
+                    logger.exception("Failed to store overlay hwnd on visibility change")
 
     sync_timer = QTimer()
     sync_timer.timeout.connect(sync_overlay)
@@ -464,12 +458,7 @@ def main() -> None:
                 main_window.setIcon(new_icon)
 
             # Update tray icon
-            if (
-                hasattr(bridge, "tray")
-                and bridge.tray
-                and icon_path
-                and icon_path.exists()
-            ):
+            if hasattr(bridge, "tray") and bridge.tray and icon_path and icon_path.exists():
                 bridge.tray.update_base_icon(Path(str(icon_path)))
 
             # Force Windows taskbar to refresh icon via Win32 API

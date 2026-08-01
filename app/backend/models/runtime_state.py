@@ -158,9 +158,7 @@ class RuntimeState:
     gamepad_enabled: bool = False
     gamepad_controller_type: str = "X360"
     gamepad_target_index: int = 0  # 0-3 (max 4 virtual controllers)
-    gamepad_background_method: str = (
-        "sendinput"  # "sendinput", "postmessage", "vigem", "pico"
-    )
+    gamepad_background_method: str = "sendinput"  # "sendinput", "postmessage", "vigem", "pico"
     gamepad_button_map: dict[str, str] = field(
         default_factory=lambda: {
             "space": "A",

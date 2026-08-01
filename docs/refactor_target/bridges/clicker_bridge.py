@@ -29,9 +29,7 @@ class ClickerBridge(BridgeBase):
 
     @Slot(int, int, str, int, str, result=str)
     def setClickerConfig(self, interval_ms, hold_ms, button, limit, background_method):
-        status = self.clicker.update_config(
-            interval_ms, hold_ms, button, limit, background_method
-        )
+        status = self.clicker.update_config(interval_ms, hold_ms, button, limit, background_method)
         self._schedule_save()
         return json.dumps(status)
 

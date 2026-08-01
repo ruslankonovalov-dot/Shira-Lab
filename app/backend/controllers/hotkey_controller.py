@@ -76,9 +76,7 @@ class HotkeyController(QObject):
         validation_result = self._hotkeys.validate_key(key)
         if not validation_result.get("ok", False):
             error_val = validation_result.get("error")
-            return _qvar_map(
-                make_error_response(str(error_val) if error_val else "Invalid key")
-            )
+            return _qvar_map(make_error_response(str(error_val) if error_val else "Invalid key"))
 
         ok, val_mode, err = validate_enum(mode, VALID_HOTKEY_MODES, name="mode")
         if not ok or val_mode is None:

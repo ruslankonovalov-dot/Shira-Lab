@@ -111,9 +111,7 @@ class QmlBridge(QObject):
     updateCheckResult = Signal(object)
     crashReportSaved = Signal(str)
 
-    def __init__(
-        self, state: RuntimeState | None = None, parent: QObject | None = None
-    ):
+    def __init__(self, state: RuntimeState | None = None, parent: QObject | None = None):
         # Handle both old signature (state as parent) and new signature (state as first arg)
         if state is not None and isinstance(state, QObject):
             # Called as QmlBridge(state) where state is actually a QObject (old usage)
@@ -251,9 +249,7 @@ class QmlBridge(QObject):
         self._window_controller.overlayVisibilityChanged.connect(
             self._on_overlay_visibility_changed
         )
-        self._window_controller.appVisibilityChanged.connect(
-            self._on_app_visibility_changed
-        )
+        self._window_controller.appVisibilityChanged.connect(self._on_app_visibility_changed)
         self._window_controller.iconChanged.connect(self.iconChanged.emit)
         self._window_controller.iconReady.connect(self._on_icon_generated)
         self._window_controller.crashReportSaved.connect(self.crashReportSaved.emit)
@@ -267,9 +263,7 @@ class QmlBridge(QObject):
         self._gamepad_controller.vigemStatusChanged.connect(
             lambda: self.statusChanged.emit("vigem")
         )
-        self._gamepad_controller.picoStatusChanged.connect(
-            lambda: self.statusChanged.emit("pico")
-        )
+        self._gamepad_controller.picoStatusChanged.connect(lambda: self.statusChanged.emit("pico"))
         self._gamepad_controller.physicalGamepadsChanged.connect(
             lambda: self.statusChanged.emit("physical")
         )
@@ -311,24 +305,14 @@ class QmlBridge(QObject):
                 try:
                     status = {
                         "clicker": (
-                            self.clicker.get_status()
-                            if hasattr(self.clicker, "get_status")
-                            else {}
+                            self.clicker.get_status() if hasattr(self.clicker, "get_status") else {}
                         ),
-                        "aim": (
-                            self.aim.get_status()
-                            if hasattr(self.aim, "get_status")
-                            else {}
-                        ),
+                        "aim": (self.aim.get_status() if hasattr(self.aim, "get_status") else {}),
                         "macro": (
-                            self.macro.get_status()
-                            if hasattr(self.macro, "get_status")
-                            else {}
+                            self.macro.get_status() if hasattr(self.macro, "get_status") else {}
                         ),
                         "recorder": (
-                            self.recorder.status()
-                            if hasattr(self.recorder, "status")
-                            else {}
+                            self.recorder.status() if hasattr(self.recorder, "status") else {}
                         ),
                     }
                     self.overlayStatusUpdate.emit(status)
@@ -476,9 +460,7 @@ class QmlBridge(QObject):
         )
         if not ok or button_val is None:
             return _qvar_map(make_error_response(err or "Invalid button"))
-        ok, limit_val, err = validate_int(
-            limit, CLICKER_LIMIT_MIN, CLICKER_LIMIT_MAX, name="limit"
-        )
+        ok, limit_val, err = validate_int(limit, CLICKER_LIMIT_MIN, CLICKER_LIMIT_MAX, name="limit")
         if not ok or limit_val is None:
             return _qvar_map(make_error_response(err or "Invalid limit"))
         ok, method_val, err = validate_enum(
@@ -491,9 +473,7 @@ class QmlBridge(QObject):
             return _qvar_map(make_error_response(err or "Invalid background_method"))
 
         self.clicker.background_method = method_val
-        status = self.clicker.update_config(
-            interval_val, hold_val, button_val, limit_val
-        )
+        status = self.clicker.update_config(interval_val, hold_val, button_val, limit_val)
         self._schedule_save()
         return _qvar_map(status)
 
@@ -544,14 +524,10 @@ class QmlBridge(QObject):
         ok, key_val, err = validate_str(key, min_len=1, max_len=50, name="key")
         if not ok or key_val is None:
             return _qvar_map(make_error_response(err or "Invalid key"))
-        ok, delay_val, err = validate_float(
-            delay, MACRO_DELAY_MIN, MACRO_DELAY_MAX, name="delay"
-        )
+        ok, delay_val, err = validate_float(delay, MACRO_DELAY_MIN, MACRO_DELAY_MAX, name="delay")
         if not ok or delay_val is None:
             return _qvar_map(make_error_response(err or "Invalid delay"))
-        ok, hold_val, err = validate_float(
-            hold, MACRO_HOLD_MIN, MACRO_HOLD_MAX, name="hold"
-        )
+        ok, hold_val, err = validate_float(hold, MACRO_HOLD_MIN, MACRO_HOLD_MAX, name="hold")
         if not ok or hold_val is None:
             return _qvar_map(make_error_response(err or "Invalid hold"))
         out = self.macro.add_action(key_val, delay_val, hold_val)
@@ -649,9 +625,7 @@ class QmlBridge(QObject):
 
     @Slot(str, int, result="QVariantMap")
     def recorderPlay(self, name: str, repeats: int = 1) -> QVariantMap:
-        ok, name_val, err = validate_str(
-            name, min_len=1, max_len=255, name="record_name"
-        )
+        ok, name_val, err = validate_str(name, min_len=1, max_len=255, name="record_name")
         if not ok or name_val is None:
             return _qvar_map(make_error_response(err or "Invalid name"))
         ok, repeats_val, err = validate_int(
@@ -686,9 +660,7 @@ class QmlBridge(QObject):
 
     @Slot(str)
     def recorderDelete(self, name: str) -> None:
-        ok, name_val, err = validate_str(
-            name, min_len=1, max_len=255, name="record_name"
-        )
+        ok, name_val, err = validate_str(name, min_len=1, max_len=255, name="record_name")
         if not ok or name_val is None:
             logger.warning("recorderDelete: %s", err or "Invalid name")
             return
@@ -701,9 +673,7 @@ class QmlBridge(QObject):
         return _qvar_map(self.aim.get_status())
 
     @Slot(float, int, float, result="QVariantMap")
-    def aimSetConfig(
-        self, confidence: float, smooth_steps: int, reset_delay: float
-    ) -> QVariantMap:
+    def aimSetConfig(self, confidence: float, smooth_steps: int, reset_delay: float) -> QVariantMap:
         ok, conf_val, err = validate_float(
             confidence, AIM_CONFIDENCE_MIN, AIM_CONFIDENCE_MAX, name="confidence"
         )
@@ -1002,9 +972,7 @@ class QmlBridge(QObject):
 
     def start_clicker(self) -> QVariantMap:
         if not self.is_app_visible():
-            logger.warning(
-                "Clicker start blocked: app not visible (no window, no tray)"
-            )
+            logger.warning("Clicker start blocked: app not visible (no window, no tray)")
             return _qvar_map({"ok": False, "error": "App not visible"})
         return self.startClicker()
 
@@ -1031,9 +999,7 @@ class QmlBridge(QObject):
 
     def recorder_start(self) -> QVariantMap:
         if not self.is_app_visible():
-            logger.warning(
-                "Recorder start blocked: app not visible (no window, no tray)"
-            )
+            logger.warning("Recorder start blocked: app not visible (no window, no tray)")
             return _qvar_map({"ok": False, "error": "App not visible"})
         return self.recorderStart()
 
@@ -1195,9 +1161,7 @@ class QmlBridge(QObject):
 
     @Slot(str, result="QVariantMap")
     def setVigemControllerType(self, controller_type: str) -> QVariantMap:
-        return _qvar_map(
-            self.gamepad_controller.setGamepadControllerType(controller_type)
-        )
+        return _qvar_map(self.gamepad_controller.setGamepadControllerType(controller_type))
 
     @Slot(int, result="QVariantMap")
     def setVigemTargetIndex(self, index: int) -> QVariantMap:
@@ -1367,24 +1331,18 @@ class QmlBridge(QObject):
     @Slot(int, int, int, result="QVariantMap")
     def vigemSetLeftStick(self, target_id: int, x: int, y: int) -> QVariantMap:
         return _qvar_map(
-            self.gamepad_controller.sendVigemTestState(
-                {"target_id": target_id, "lx": x, "ly": y}
-            )
+            self.gamepad_controller.sendVigemTestState({"target_id": target_id, "lx": x, "ly": y})
         )
 
     @Slot(int, int, int, result="QVariantMap")
     def vigemSetRightStick(self, target_id: int, x: int, y: int) -> QVariantMap:
         return _qvar_map(
-            self.gamepad_controller.sendVigemTestState(
-                {"target_id": target_id, "rx": x, "ry": y}
-            )
+            self.gamepad_controller.sendVigemTestState({"target_id": target_id, "rx": x, "ry": y})
         )
 
     @Slot(int, result="QVariantMap")
     def vigemReset(self, target_id: int) -> QVariantMap:
-        return _qvar_map(
-            self.gamepad_controller.sendVigemTestState({"target_id": target_id})
-        )
+        return _qvar_map(self.gamepad_controller.sendVigemTestState({"target_id": target_id}))
 
     @Slot(str, result="QVariantMap")
     def setGamepadBackgroundMethod(self, method: str) -> QVariantMap:
@@ -1424,9 +1382,7 @@ class QmlBridge(QObject):
         return _qvar_map(self.gamepad_controller.picoSendKey(key, action, hold_ms))
 
     @Slot(int, int, int, int, result="QVariantMap")
-    def picoSendMouse(
-        self, dx: int, dy: int, button: int = 0, hold_ms: int = 0
-    ) -> QVariantMap:
+    def picoSendMouse(self, dx: int, dy: int, button: int = 0, hold_ms: int = 0) -> QVariantMap:
         return _qvar_map(self.gamepad_controller.picoSendMouse(dx, dy, button, hold_ms))
 
     @Slot(int, int, int, int, int, int, int, int, result="QVariantMap")
@@ -1441,9 +1397,7 @@ class QmlBridge(QObject):
         ry: int,
         _mask: int = 65535,
     ) -> QVariantMap:
-        return _qvar_map(
-            self.gamepad_controller.picoSendGamepad(buttons, lt, rt, lx, ly, rx, ry)
-        )
+        return _qvar_map(self.gamepad_controller.picoSendGamepad(buttons, lt, rt, lx, ly, rx, ry))
 
     @Slot(int, int, int, result="QVariantMap")
     def picoSetStick(self, stick: int, x: int, y: int) -> QVariantMap:
@@ -1452,9 +1406,7 @@ class QmlBridge(QObject):
     @Slot(int, int, result="QVariantMap")
     def picoSetTriggers(self, lt: int, rt: int) -> QVariantMap:
         # Delegate to sendVigemTestState for triggers
-        return _qvar_map(
-            self.gamepad_controller.sendVigemTestState({"lt": lt, "rt": rt})
-        )
+        return _qvar_map(self.gamepad_controller.sendVigemTestState({"lt": lt, "rt": rt}))
 
     @Slot(result="QVariantMap")
     def picoReset(self) -> QVariantMap:
