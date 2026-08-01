@@ -30,9 +30,7 @@ def macro_service():
 
     if original_cls is None:
         # Last resort: import the class directly from the module (bypassing decorator)
-        from app.backend.services.macro_service import (
-            MacroService as DirectMacroService,
-        )
+        from app.backend.services.macro_service import MacroService as DirectMacroService
 
         original_cls = DirectMacroService
 

@@ -107,10 +107,7 @@ class GamepadController(QObject):
     @Slot(str, result="QVariantMap")
     def setGamepadControllerType(self, controller_type: str) -> QVariantMap:
         """Set controller type (X360 or DS4)."""
-        from app.backend.services.input_validation import (
-            make_error_response,
-            validate_enum,
-        )
+        from app.backend.services.input_validation import make_error_response, validate_enum
 
         ok, val, err = validate_enum(controller_type, VALID_GAMEPAD_TYPES, name="controller_type")
         if not ok:
@@ -131,10 +128,7 @@ class GamepadController(QObject):
     @Slot(str, result="QVariantMap")
     def setGamepadTargetIndex(self, index_str: str) -> QVariantMap:
         """Set target virtual gamepad index (0-3)."""
-        from app.backend.services.input_validation import (
-            make_error_response,
-            validate_int,
-        )
+        from app.backend.services.input_validation import make_error_response, validate_int
 
         try:
             index = int(index_str)
@@ -162,10 +156,7 @@ class GamepadController(QObject):
     @Slot(str, int, result="QVariantMap")
     def setGamepadBackgroundMethod(self, method: str, _target_index: int = 0) -> QVariantMap:
         """Set background input method for virtual gamepad."""
-        from app.backend.services.input_validation import (
-            make_error_response,
-            validate_enum,
-        )
+        from app.backend.services.input_validation import make_error_response, validate_enum
 
         ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, name="background_method")
         if not ok or val is None:
@@ -594,10 +585,7 @@ class GamepadController(QObject):
     @Slot(str, result="QVariantMap")
     def startPico(self, port: str = "") -> QVariantMap:
         """Connect to Pico device."""
-        from app.backend.services.input_validation import (
-            make_error_response,
-            make_ok_response,
-        )
+        from app.backend.services.input_validation import make_error_response, make_ok_response
 
         try:
             result = self._pico.connect(port if port else None)
@@ -610,10 +598,7 @@ class GamepadController(QObject):
     @Slot(result="QVariantMap")
     def stopPico(self) -> QVariantMap:
         """Disconnect from Pico device."""
-        from app.backend.services.input_validation import (
-            make_error_response,
-            make_ok_response,
-        )
+        from app.backend.services.input_validation import make_error_response, make_ok_response
 
         try:
             self._pico.disconnect()
@@ -690,10 +675,7 @@ class GamepadController(QObject):
     @Slot(result="QVariantMap")
     def picoReset(self) -> QVariantMap:
         """Reset Pico to neutral state."""
-        from app.backend.services.input_validation import (
-            make_error_response,
-            make_ok_response,
-        )
+        from app.backend.services.input_validation import make_error_response, make_ok_response
 
         try:
             result = self._pico.reset()

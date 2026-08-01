@@ -671,11 +671,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         """Called from main.py after the QML window is created.
         Stores the main window's Win32 HWND so we never confuse it with
         the overlay window."""
-        from app.backend.services.input_validation import (
-            _qvar,
-            make_error_response,
-            validate_int,
-        )
+        from app.backend.services.input_validation import _qvar, make_error_response, validate_int
 
         ok, hwnd_val, err = validate_int(hwnd, 0, None, name="hwnd")
         if not ok or err is not None or hwnd_val is None:
@@ -688,11 +684,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         """Called from main.py after the overlay window becomes visible.
         Stores the overlay's Win32 HWND so we can re-assert its topmost
         priority after any app pin operation."""
-        from app.backend.services.input_validation import (
-            _qvar,
-            make_error_response,
-            validate_int,
-        )
+        from app.backend.services.input_validation import _qvar, make_error_response, validate_int
 
         ok, hwnd_val, err = validate_int(hwnd, 0, None, name="hwnd")
         if not ok or err is not None or hwnd_val is None:
@@ -926,11 +918,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         if self._bridge:
             return self._bridge.setHotkey(action, key, mode)
         # Fallback - set in hotkey service
-        from app.backend.services.input_validation import (
-            _qvar,
-            make_error_response,
-            validate_enum,
-        )
+        from app.backend.services.input_validation import _qvar, make_error_response, validate_enum
 
         ok, val, err = validate_enum(mode, {"TOGGLE", "HOLD"}, name="mode")
         if not ok or val is None:

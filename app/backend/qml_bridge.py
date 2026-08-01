@@ -399,10 +399,7 @@ class QmlBridge(QObject):
     def getI18nCoverage(self) -> QVariantMap:
         """Returns translation coverage stats per language."""
         try:
-            from app.backend.i18n import (
-                get_available_languages,
-                get_translation_coverage,
-            )
+            from app.backend.i18n import get_available_languages, get_translation_coverage
 
             return _qvar_map(
                 {

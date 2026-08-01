@@ -431,9 +431,7 @@ class ProfileController(QObject):
     def listCrashReports(self) -> dict[str, Any]:
         """List all crash reports."""
         try:
-            from app.backend.services.crash_reporter import (
-                list_local_crashes as list_reports,
-            )
+            from app.backend.services.crash_reporter import list_local_crashes as list_reports
 
             return _qvar_map({"ok": True, "crashes": list_reports()})
         except (OSError, ImportError, RuntimeError) as e:
@@ -444,9 +442,7 @@ class ProfileController(QObject):
     def clearAllCrashReports(self) -> dict[str, Any]:
         """Clear all crash reports."""
         try:
-            from app.backend.services.crash_reporter import (
-                clear_all_crashes as clear_reports,
-            )
+            from app.backend.services.crash_reporter import clear_all_crashes as clear_reports
 
             count = clear_reports()
             return _qvar_map({"ok": True, "cleared": count})
