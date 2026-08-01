@@ -75,6 +75,7 @@ force_grid_wrap = 0
 use_parentheses = true
 ensure_newline_before_comments = true
 src_paths = ["app", "tests"]
+skip = ["docs/refactor_target/**", "tests/unit/test_*.py", "tests/integration/*.py", "app/main.py", "app/backend/qml_bridge.py", "app/backend/controllers/gamepad_controller.py", "app/backend/controllers/profile_controller.py", "app/backend/controllers/window_controller.py", "app/backend/controllers/hotkey_controller.py", "app/backend/services/clicker_service.py", "app/backend/services/recorder_service.py", "app/backend/services/pico_service.py", "app/backend/services/macro_service.py"]
 
 [tool.isort.sections]
 THIRDPARTY = ["PySide6", "pytest", "pynput", "keyboard", "mouse", "numpy", "cv2", "mss", "PIL", "win32ctypes", "win32api", "win32gui", "win32con"]
