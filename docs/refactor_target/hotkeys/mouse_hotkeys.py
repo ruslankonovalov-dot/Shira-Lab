@@ -31,9 +31,9 @@ class MouseHotkeyManager:
         self._dispatcher = dispatcher
         self._mouse_listener = None
         self._mouse_hook = None
-        self._mouse_bindings: dict[str, dict] = (
-            {}
-        )  # button_key → {action, mode, on_press, on_release}
+        self._mouse_bindings: dict[
+            str, dict
+        ] = {}  # button_key → {action, mode, on_press, on_release}
         self._wheel_bindings: dict[str, dict] = {}  # wheel_name → {action, mode}
         self._wheel_cooldown: dict[str, float] = {}  # wheel_name → last_trigger_time
         self._wheel_cooldown_sec = 0.15  # защита от дребезга

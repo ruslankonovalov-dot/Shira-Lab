@@ -60,7 +60,10 @@ def setup_logging() -> logging.Logger:
 
     # File handler (rotating, max 5MB per file, 3 files)
     file_handler = logging.handlers.RotatingFileHandler(
-        str(log_file), maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8"  # 5 MB
+        str(log_file),
+        maxBytes=5 * 1024 * 1024,
+        backupCount=3,
+        encoding="utf-8",  # 5 MB
     )
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(formatter)
@@ -476,7 +479,12 @@ def main() -> None:
                 hwnd = int(main_window.winId())
                 if hwnd and icon_path and icon_path.exists():
                     hicon = ctypes.windll.user32.LoadImageW(
-                        0, str(icon_path), 1, 0, 0, 0x00000010  # LR_LOADFROMFILE
+                        0,
+                        str(icon_path),
+                        1,
+                        0,
+                        0,
+                        0x00000010,  # LR_LOADFROMFILE
                     )
                     if hicon:
                         ctypes.windll.user32.SendMessageW(

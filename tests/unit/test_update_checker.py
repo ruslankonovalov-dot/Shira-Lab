@@ -15,7 +15,6 @@ pytestmark = pytest.mark.unit
 
 
 class TestCompareVersions:
-
     def test_equal_versions(self):
         assert _compare_versions("1.0.0", "1.0.0") == 0
 
@@ -42,7 +41,6 @@ class TestCompareVersions:
 
 
 class TestCheckForUpdates:
-
     def test_returns_error_on_network_failure(self):
         with patch(
             "urllib.request.urlopen", side_effect=urllib.error.URLError("Network error")
@@ -114,7 +112,6 @@ class TestCheckForUpdates:
 
 
 class TestAsyncUpdateChecker:
-
     def test_async_calls_callback(self):
         """Async checker should call callback with JSON result."""
         mock_response = MagicMock()

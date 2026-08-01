@@ -109,7 +109,13 @@ class TestVigemService:
             target_id = list(targets.keys())[0]
             # Should clamp
             result = self.service.x360_set_state(
-                target_id, lx=40000, ly=-40000, rx=0, ry=0, lt=0, rt=0  # Over limit
+                target_id,
+                lx=40000,
+                ly=-40000,
+                rx=0,
+                ry=0,
+                lt=0,
+                rt=0,  # Over limit
             )
             assert isinstance(result, bool)
 

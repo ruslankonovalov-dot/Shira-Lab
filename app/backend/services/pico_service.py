@@ -246,9 +246,9 @@ class PicoService:
 
         # Командная очередь: (frame, seq)
         self._cmd_queue: Queue[tuple[bytes, int]] = Queue()
-        self._pending: dict[int, tuple[threading.Event, bytes | None]] = (
-            {}
-        )  # seq -> (event, response_data)
+        self._pending: dict[
+            int, tuple[threading.Event, bytes | None]
+        ] = {}  # seq -> (event, response_data)
         self._seq = 0
 
         # Callbacks

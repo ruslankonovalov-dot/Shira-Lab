@@ -11,7 +11,6 @@ pytestmark = pytest.mark.unit
 
 
 class TestCrashReportBuilding:
-
     def test_build_report_contains_required_fields(self):
         try:
             raise ValueError("Test exception")
@@ -36,7 +35,6 @@ class TestCrashReportBuilding:
 
 
 class TestLocalCrashStorage:
-
     def test_save_local_creates_file(self, tmp_path, monkeypatch):
         # Patch CRASH_LOG_DIR to tmp_path
         monkeypatch.setattr(crash_reporter, "CRASH_LOG_DIR", tmp_path)
@@ -133,7 +131,6 @@ class TestLocalCrashStorage:
 
 
 class TestInstallCrashHandler:
-
     def test_install_doesnt_raise(self, tmp_path, monkeypatch):
         """install_crash_handler should not raise even on weird environments."""
         monkeypatch.setattr(crash_reporter, "CRASH_LOG_DIR", tmp_path)

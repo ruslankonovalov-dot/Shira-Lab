@@ -20,7 +20,6 @@ winreg = pytest.importorskip("winreg") if sys.platform == "win32" else None
 
 
 class TestDetectWindowsTheme:
-
     def test_returns_dark_on_non_windows(self):
         with patch("platform.system", return_value="Linux"):
             assert detect_windows_theme() == "dark"
@@ -55,7 +54,6 @@ class TestDetectWindowsTheme:
 
 
 class TestPalettes:
-
     def test_dark_palette_has_matrix(self):
         assert "matrix" in DARK_PALETTE
         assert "bg" in DARK_PALETTE["matrix"]

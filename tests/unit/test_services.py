@@ -675,7 +675,7 @@ class TestPicoService:
         from app.backend.services.pico_protocol import calculate_crc8
 
         # Test CRC8-Dallas/Maxim (init=0xFF, poly=0x31)
-        assert calculate_crc8(b"\xAA\x01\x00") == 0xCD
+        assert calculate_crc8(b"\xaa\x01\x00") == 0xCD
         assert calculate_crc8(b"") == 0xFF
         assert calculate_crc8(b"\x01\x02\x03") == 0x87
 

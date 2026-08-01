@@ -10,12 +10,10 @@ Usage:
 
 import threading
 from collections.abc import Callable
-from typing import Any, TypeVar
-
-T = TypeVar("T")
+from typing import Any
 
 
-def singleton(cls: type[T]) -> Callable[..., T]:
+def singleton[T](cls: type[T]) -> Callable[..., T]:
     """Decorator that makes a class singleton (only one instance).
 
     Thread-safe: uses a lock to prevent race conditions during first instantiation.

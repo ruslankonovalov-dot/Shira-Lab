@@ -14,7 +14,6 @@ pytestmark = pytest.mark.unit
 
 
 class TestTranslations:
-
     def test_tr_returns_russian_by_default(self):
         assert tr("common.start") == "Запустить"
 
@@ -59,7 +58,6 @@ class TestTranslations:
 
 
 class TestTranslationKeys:
-
     def test_nav_keys_exist(self):
         for key in [
             "nav.home",

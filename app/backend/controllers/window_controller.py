@@ -868,7 +868,14 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             monitors = get_monitors()
             if 0 <= idx_val < len(monitors):
                 m = monitors[idx_val]
-                return _qvar(make_ok_response(x=m["work_x"], y=m["work_y"], width=m["work_width"], height=m["work_height"]))  # type: ignore[return-value]
+                return _qvar(
+                    make_ok_response(
+                        x=m["work_x"],
+                        y=m["work_y"],
+                        width=m["work_width"],
+                        height=m["work_height"],
+                    )
+                )  # type: ignore[return-value]
             return _qvar(make_error_response("Invalid monitor index"))  # type: ignore[return-value]
         except Exception as e:
             logger.exception("getWorkAreaForMonitor failed")

@@ -13,7 +13,7 @@ class TestPicoProtocol:
 
         # Test known values for CRC8-Maxim/1-Wire (init=0xFF, poly=0x31, no reflection)
         assert crc8(b"\x00") == 0xAC
-        assert crc8(b"\xAA\x01\x00") == 0xCD
+        assert crc8(b"\xaa\x01\x00") == 0xCD
         assert crc8(b"") == 0xFF
         assert crc8(b"\x01\x02\x03") == 0x87
 
@@ -148,7 +148,7 @@ class TestPicoServiceIntegration:
         # Mock the read response for GET_INFO handshake
         # The reader loop reads frames, we need to simulate proper frame responses
         mock_instance.read.side_effect = [
-            b"\xAA\x10\x00\x00\xFF\x55",  # dummy frame
+            b"\xaa\x10\x00\x00\xff\x55",  # dummy frame
         ]
 
         service = PicoService()

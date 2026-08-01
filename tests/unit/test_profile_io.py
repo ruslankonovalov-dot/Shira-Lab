@@ -61,7 +61,6 @@ def mock_bridge():
 
 
 class TestExportProfile:
-
     def test_export_creates_json_file(self, mock_bridge, tmp_path):
         out = tmp_path / "profile.json"
         result = export_profile(mock_bridge, out)
@@ -96,7 +95,6 @@ class TestExportProfile:
 
 
 class TestImportProfile:
-
     def test_import_applies_settings(self, mock_bridge, tmp_path):
         # First export
         out = tmp_path / "profile.json"
@@ -145,7 +143,6 @@ class TestImportProfile:
 
 
 class TestSafeGet:
-
     def test_returns_method_result(self):
         obj = MagicMock()
         obj.get_status.return_value = {"running": True}

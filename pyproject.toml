@@ -94,7 +94,10 @@ select = [
 ignore = [
     "E501",  # line too long (handled by black)
 ]
-per-file-ignores = { "docs/refactor_target/**" = ["F401"], "tests/**" = ["T201"] }
+[tool.ruff.lint.per-file-ignores]
+"docs/refactor_target/**" = ["F401", "I001"]
+"tests/**" = ["T201", "ARG001", "ARG002", "ARG005"]
+"app/backend/services/crash_reporter.py" = ["UP017"]
 
 [tool.mypy]
 python_version = "3.12"

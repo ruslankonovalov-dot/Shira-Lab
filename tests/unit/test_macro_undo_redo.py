@@ -43,7 +43,6 @@ def macro_service():
 
 
 class TestUndoRedoBasics:
-
     def test_initial_state_no_undo_no_redo(self, macro_service):
         status = macro_service.get_undo_redo_status()
         assert status["can_undo"] is False
@@ -90,7 +89,6 @@ class TestUndoRedoBasics:
 
 
 class TestUndoRedoMultipleActions:
-
     def test_multiple_undoes(self, macro_service):
         macro_service.add_action("a", 0.1, 0.05)
         macro_service.add_action("b", 0.2, 0.1)
@@ -134,7 +132,6 @@ class TestUndoRedoMultipleActions:
 
 
 class TestClearWithUndo:
-
     def test_clear_enables_undo(self, macro_service):
         macro_service.add_action("a", 0.1, 0.05)
         macro_service.add_action("b", 0.2, 0.1)
@@ -155,7 +152,6 @@ class TestClearWithUndo:
 
 
 class TestDeleteAction:
-
     def test_delete_action_by_index(self, macro_service):
         macro_service.add_action("a", 0.1, 0.05)
         macro_service.add_action("b", 0.2, 0.1)
@@ -190,7 +186,6 @@ class TestDeleteAction:
 
 
 class TestMoveAction:
-
     def test_move_action_forward(self, macro_service):
         macro_service.add_action("a", 0.1, 0.05)
         macro_service.add_action("b", 0.2, 0.1)
@@ -240,7 +235,6 @@ class TestMoveAction:
 
 
 class TestUndoStackLimit:
-
     def test_undo_stack_is_trimmed(self, macro_service):
         macro_service._MAX_UNDO = 5
         for i in range(10):
@@ -249,7 +243,6 @@ class TestUndoStackLimit:
 
 
 class TestStatusIncludesUndoRedo:
-
     def test_status_has_undo_redo_fields(self, macro_service):
         status = macro_service.get_status()
         assert "can_undo" in status
