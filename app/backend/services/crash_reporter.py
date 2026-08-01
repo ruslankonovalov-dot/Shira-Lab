@@ -69,7 +69,7 @@ def _build_report(
 ) -> dict[str, Any]:
     """Build structured crash report."""
     return {
-        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "app_version": app_version,
         "python_version": platform.python_version(),
         "platform": platform.platform(),
@@ -90,7 +90,7 @@ def _build_report(
 def _save_local(report: dict[str, Any]) -> Path:
     """Save report locally to data/crash_logs/."""
     CRASH_LOG_DIR.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.datetime.now(datetime.UTC).strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M%S")
     exc_type = report.get("exception_type", "Unknown")
     filename = f"crash_{timestamp}_{exc_type}.json"
     path = CRASH_LOG_DIR / filename
