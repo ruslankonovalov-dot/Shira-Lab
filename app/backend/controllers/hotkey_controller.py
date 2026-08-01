@@ -11,14 +11,11 @@ from typing import TYPE_CHECKING, Any, cast
 from PySide6.QtCore import QObject, Signal, Slot
 
 from app.backend.services.hotkey_service import HotkeyService
-from app.backend.services.input_validation import (
-    VALID_HOTKEY_ACTIONS,
-    VALID_HOTKEY_MODES,
-    QVariantMap,
-    _qvar_map,
-    make_error_response,
-    validate_enum,
-)
+from app.backend.services.input_validation import (VALID_HOTKEY_ACTIONS,
+                                                   VALID_HOTKEY_MODES,
+                                                   QVariantMap, _qvar_map,
+                                                   make_error_response,
+                                                   validate_enum)
 
 if TYPE_CHECKING:
     from app.backend.models.runtime_state import RuntimeState

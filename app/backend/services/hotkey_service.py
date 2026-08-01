@@ -874,8 +874,8 @@ class HotkeyService:
 
                 combo = "+".join(modifiers + [main]) if modifiers else main
                 if not modifiers:
-                    h1 = keyboard.on_press_key(main, lambda _e: start_handler())  # type: ignore[no-untyped-call]
-                    h2 = keyboard.on_release_key(main, lambda _e: stop_handler())  # type: ignore[no-untyped-call]
+                    h1 = keyboard.on_press_key(main, lambda _e: start_handler())
+                    h2 = keyboard.on_release_key(main, lambda _e: stop_handler())
                     self._registered[action] = [h1, h2]
                 else:
                     logger.warning(

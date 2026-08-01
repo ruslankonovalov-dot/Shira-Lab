@@ -100,7 +100,6 @@ ignore = [
 "docs/refactor_target/**" = ["F401", "I001"]
 "tests/**" = ["T201", "ARG001", "ARG002", "ARG005"]
 "app/backend/services/crash_reporter.py" = ["UP017"]
-"app/backend/services/singleton.py" = ["UP047"]
 "app/backend/controllers/gamepad_controller.py" = ["I001"]
 "app/backend/controllers/profile_controller.py" = ["I001"]
 "app/backend/controllers/window_controller.py" = ["I001"]

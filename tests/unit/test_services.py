@@ -312,7 +312,8 @@ class TestProfileIO:
         assert loaded["ui"]["terminal_palette"] == "matrix"
 
     def test_version_migration(self, tmp_path):
-        from app.backend.profile_io import CURRENT_PROFILE_VERSION, load_profile
+        from app.backend.profile_io import (CURRENT_PROFILE_VERSION,
+                                            load_profile)
 
         old_profile = {
             "version": 1,  # Old version
@@ -433,7 +434,8 @@ class TestVigemService:
         assert isinstance(result, int | type(None))
 
     def test_button_name_to_mask(self):
-        from app.backend.services.vigem_service import XUSB_BUTTON_MAP, VigemService
+        from app.backend.services.vigem_service import (XUSB_BUTTON_MAP,
+                                                        VigemService)
 
         # Test known button mappings
         assert VigemService.button_name_to_mask("a") == XUSB_BUTTON_MAP.get("a", 0)
@@ -708,7 +710,8 @@ class TestBridgeControllers:
         assert isinstance(result, bool)
 
     def test_gamepad_controller_slots(self):
-        from app.backend.controllers.gamepad_controller import GamepadController
+        from app.backend.controllers.gamepad_controller import \
+            GamepadController
 
         controller = GamepadController()
 
@@ -743,7 +746,8 @@ class TestBridgeControllers:
         assert "keyboard_lib" in result
 
     def test_profile_controller_slots(self):
-        from app.backend.controllers.profile_controller import ProfileController
+        from app.backend.controllers.profile_controller import \
+            ProfileController
         from app.backend.models.runtime_state import RuntimeState
 
         state = RuntimeState()

@@ -335,17 +335,16 @@ class ClickerService:
         """Press a button on the ViGEm virtual controller."""
         try:
             if self._vigem_service is None:
-                from app.backend.services.vigem_service import get_vigem_service
+                from app.backend.services.vigem_service import \
+                    get_vigem_service
 
                 self._vigem_service = get_vigem_service()
                 if not self._vigem_service.connect():
                     return False
             # Map button name to XUSB button flag
-            from app.backend.services.vigem_service import (
-                VIGEM_TARGET_TYPE,
-                XUSB_REPORT,
-                VigemService,
-            )
+            from app.backend.services.vigem_service import (VIGEM_TARGET_TYPE,
+                                                            XUSB_REPORT,
+                                                            VigemService)
 
             button_flag = VigemService.button_name_to_mask(button_name.lower())
             if not button_flag:

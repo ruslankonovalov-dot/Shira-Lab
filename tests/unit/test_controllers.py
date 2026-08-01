@@ -217,7 +217,8 @@ class TestGamepadController:
     """Tests for GamepadController slots and signals."""
 
     def setup_method(self):
-        from app.backend.controllers.gamepad_controller import GamepadController
+        from app.backend.controllers.gamepad_controller import \
+            GamepadController
 
         self.controller = GamepadController()
 
@@ -414,7 +415,8 @@ class TestProfileController:
     """Tests for ProfileController slots and signals."""
 
     def setup_method(self):
-        from app.backend.controllers.profile_controller import ProfileController
+        from app.backend.controllers.profile_controller import \
+            ProfileController
         from app.backend.models.runtime_state import RuntimeState
 
         self.state = RuntimeState()

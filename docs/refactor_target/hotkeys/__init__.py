@@ -18,7 +18,8 @@
 from __future__ import annotations
 
 from app.backend.services.hotkeys.bindings import BindingStore
-from app.backend.services.hotkeys.dispatcher import HotkeyDispatcher, default_hotkeys
+from app.backend.services.hotkeys.dispatcher import (HotkeyDispatcher,
+                                                     default_hotkeys)
 from app.backend.services.hotkeys.handlers import ActionHandlers
 from app.backend.services.hotkeys.keyboard_hotkeys import KeyboardHotkeyManager
 from app.backend.services.hotkeys.mouse_hotkeys import MouseHotkeyManager

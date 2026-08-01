@@ -16,14 +16,9 @@ from PySide6.QtCore import QObject, QTimer, Signal, Slot
 from app.backend.models.runtime_state import RuntimeState
 from app.backend.sound_manager import SoundManager
 from app.backend.system_tray import SystemTrayManager
-from window_utils import (
-    clamp_to_work_area,
-    find_app_hwnd,
-    get_monitors,
-    get_work_area,
-    get_work_area_for_window,
-    set_overlay_always_topmost,
-)
+from window_utils import (clamp_to_work_area, find_app_hwnd, get_monitors,
+                          get_work_area, get_work_area_for_window,
+                          set_overlay_always_topmost)
 
 if TYPE_CHECKING:
     from app.backend.qml_bridge import QmlBridge
@@ -425,10 +420,8 @@ class WindowController(QObject):
         def _generate_async() -> None:
             try:
                 from app.backend.services.icon_generator import (
-                    generate_palette_ico,
-                    generate_palette_ico_unique,
-                    generate_palette_icon,
-                )
+                    generate_palette_ico, generate_palette_ico_unique,
+                    generate_palette_icon)
 
                 png_path = generate_palette_icon(palette_id)
                 generate_palette_ico(palette_id)
@@ -596,7 +589,8 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
     def detectSystemTheme(self) -> dict[str, Any]:
         """Detect Windows system theme (light/dark)."""
         try:
-            from app.backend.services.theme_detector import detect_windows_theme
+            from app.backend.services.theme_detector import \
+                detect_windows_theme
 
             theme = detect_windows_theme()
             result = {"ok": True, "theme": theme}
@@ -671,7 +665,9 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         """Called from main.py after the QML window is created.
         Stores the main window's Win32 HWND so we never confuse it with
         the overlay window."""
-        from app.backend.services.input_validation import _qvar, make_error_response, validate_int
+        from app.backend.services.input_validation import (_qvar,
+                                                           make_error_response,
+                                                           validate_int)
 
         ok, hwnd_val, err = validate_int(hwnd, 0, None, name="hwnd")
         if not ok or err is not None or hwnd_val is None:
@@ -684,7 +680,9 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         """Called from main.py after the overlay window becomes visible.
         Stores the overlay's Win32 HWND so we can re-assert its topmost
         priority after any app pin operation."""
-        from app.backend.services.input_validation import _qvar, make_error_response, validate_int
+        from app.backend.services.input_validation import (_qvar,
+                                                           make_error_response,
+                                                           validate_int)
 
         ok, hwnd_val, err = validate_int(hwnd, 0, None, name="hwnd")
         if not ok or err is not None or hwnd_val is None:
@@ -718,11 +716,9 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
     @Slot(result="QVariantMap")
     def getMonitors(self) -> dict[str, Any]:
         """Get list of monitors with work areas."""
-        from app.backend.services.input_validation import (
-            _qvar,
-            make_error_response,
-            make_ok_response,
-        )
+        from app.backend.services.input_validation import (_qvar,
+                                                           make_error_response,
+                                                           make_ok_response)
 
         try:
             return _qvar(make_ok_response(monitors=get_monitors()))  # type: ignore[return-value]
@@ -733,12 +729,10 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
     @Slot(int, result="QVariantMap")
     def getMonitorForWindow(self, hwnd: int) -> dict[str, Any]:
         """Get monitor info for a specific window handle."""
-        from app.backend.services.input_validation import (
-            _qvar,
-            make_error_response,
-            make_ok_response,
-            validate_int,
-        )
+        from app.backend.services.input_validation import (_qvar,
+                                                           make_error_response,
+                                                           make_ok_response,
+                                                           validate_int)
 
         ok, hwnd_val, err = validate_int(hwnd, 0, None, name="hwnd")
         if not ok or hwnd_val is None:
@@ -781,11 +775,9 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         """Returns {x, y, width, height} of the work area for the monitor
         the overlay is on (excludes taskbar). Used by OverlayHUD to position
         itself at bottom-left without overlapping taskbar."""
-        from app.backend.services.input_validation import (
-            _qvar,
-            make_error_response,
-            make_ok_response,
-        )
+        from app.backend.services.input_validation import (_qvar,
+                                                           make_error_response,
+                                                           make_ok_response)
 
         try:
             overlay_hwnd = self._get_overlay_hwnd()
@@ -802,12 +794,10 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
     def clampOverlayPosition(self, x: int, y: int, w: int, h: int) -> dict[str, Any]:
         """Clamp overlay position to stay within work area (no taskbar overlap).
         Called from QML after drag. Returns {x, y} with clamped position."""
-        from app.backend.services.input_validation import (
-            _qvar,
-            make_error_response,
-            make_ok_response,
-            validate_int,
-        )
+        from app.backend.services.input_validation import (_qvar,
+                                                           make_error_response,
+                                                           make_ok_response,
+                                                           validate_int)
 
         ok, x_val, err = validate_int(x, -10000, 10000, name="x")
         if not ok or x_val is None:
@@ -829,12 +819,10 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
     @Slot(int, result="QVariantMap")
     def getWorkAreaForMonitor(self, monitor_index: int) -> dict[str, Any]:
         """Get work area for specific monitor."""
-        from app.backend.services.input_validation import (
-            _qvar,
-            make_error_response,
-            make_ok_response,
-            validate_int,
-        )
+        from app.backend.services.input_validation import (_qvar,
+                                                           make_error_response,
+                                                           make_ok_response,
+                                                           validate_int)
 
         ok, idx_val, err = validate_int(monitor_index, 0, 10, name="monitor_index")
         if not ok or idx_val is None:
@@ -891,7 +879,8 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         if self._bridge:
             return self._bridge.resetAllHotkeys()
         # Fallback - reset in hotkey service
-        from app.backend.services.input_validation import _qvar, make_ok_response
+        from app.backend.services.input_validation import (_qvar,
+                                                           make_ok_response)
 
         self._hotkeys.reset_all()
         return _qvar(make_ok_response())  # type: ignore[return-value]
@@ -909,7 +898,8 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         if self._bridge:
             return self._bridge.saveProfile(name)
         # Fallback -TODO: implement profile saving
-        from app.backend.services.input_validation import _qvar, make_error_response
+        from app.backend.services.input_validation import (_qvar,
+                                                           make_error_response)
 
         return _qvar(make_error_response("Bridge not available"))  # type: ignore[return-value]
 
@@ -918,7 +908,9 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         if self._bridge:
             return self._bridge.setHotkey(action, key, mode)
         # Fallback - set in hotkey service
-        from app.backend.services.input_validation import _qvar, make_error_response, validate_enum
+        from app.backend.services.input_validation import (_qvar,
+                                                           make_error_response,
+                                                           validate_enum)
 
         ok, val, err = validate_enum(mode, {"TOGGLE", "HOLD"}, name="mode")
         if not ok or val is None:
