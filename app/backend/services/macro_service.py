@@ -540,8 +540,7 @@ class MacroService:
         # Cache ViGEm service (lazy init) like clicker_service
         try:
             if self._vigem_service is None:
-                from app.backend.services.vigem_service import \
-                    get_vigem_service
+                from app.backend.services.vigem_service import get_vigem_service
 
                 self._vigem_service = get_vigem_service()
                 if not self._vigem_service.connect():
@@ -550,9 +549,11 @@ class MacroService:
 
             import ctypes
 
-            from app.backend.services.vigem_service import (VIGEM_TARGET_TYPE,
-                                                            XUSB_REPORT,
-                                                            VigemService)
+            from app.backend.services.vigem_service import (
+                VIGEM_TARGET_TYPE,
+                XUSB_REPORT,
+                VigemService,
+            )
 
             # Map key name to XUSB button flag
             button_flag = VigemService.button_name_to_mask(key.lower())

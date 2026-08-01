@@ -5,9 +5,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.backend.services.theme_detector import (DARK_PALETTE, LIGHT_PALETTE,
-                                                 detect_windows_theme,
-                                                 get_palette_for_theme)
+from app.backend.services.theme_detector import (
+    DARK_PALETTE,
+    LIGHT_PALETTE,
+    detect_windows_theme,
+    get_palette_for_theme,
+)
 
 pytestmark = pytest.mark.unit
 

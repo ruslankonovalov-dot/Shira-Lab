@@ -385,8 +385,7 @@ class TestInputValidation:
         assert ok is False
 
     def test_validate_detection_mode(self):
-        from app.backend.services.input_validation import \
-            validate_detection_mode
+        from app.backend.services.input_validation import validate_detection_mode
 
         for mode in ["auto", "multi", "circles", "color", "calibrate"]:
             ok, err = validate_detection_mode(mode)
@@ -415,8 +414,7 @@ class TestInputValidation:
         assert ok is False
 
     def test_validate_background_method(self):
-        from app.backend.services.input_validation import \
-            validate_background_method
+        from app.backend.services.input_validation import validate_background_method
 
         for method in ["sendinput", "postmessage", "vigem", "pico"]:
             ok, err = validate_background_method(method)
@@ -469,8 +467,7 @@ class TestInputValidation:
         assert ok is False
 
     def test_validate_vigem_target_type(self):
-        from app.backend.services.input_validation import \
-            validate_vigem_target_type
+        from app.backend.services.input_validation import validate_vigem_target_type
 
         for ttype in ["X360", "DS4"]:
             ok, err = validate_vigem_target_type(ttype)

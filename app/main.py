@@ -139,11 +139,12 @@ def main() -> None:
 
     # Step 1: Try generating palette-colored icon via icon_generator
     try:
-        from app.backend.services.icon_generator import \
-            PROJECT_ROOT as ICON_ROOT
+        from app.backend.services.icon_generator import PROJECT_ROOT as ICON_ROOT
         from app.backend.services.icon_generator import (
-            generate_palette_ico, generate_palette_ico_unique,
-            generate_palette_icon)
+            generate_palette_ico,
+            generate_palette_ico_unique,
+            generate_palette_icon,
+        )
 
         png_path = generate_palette_icon(saved_palette)
         generate_palette_ico(saved_palette)
@@ -254,8 +255,7 @@ def main() -> None:
     # Re-apply the icon AFTER the window exists.
     try:
         from app.backend.services.icon_generator import OUTPUT_ICO, OUTPUT_PNG
-        from app.backend.services.icon_generator import \
-            PROJECT_ROOT as ICON_ROOT
+        from app.backend.services.icon_generator import PROJECT_ROOT as ICON_ROOT
 
         current_palette = getattr(bridge.state, "terminal_palette", saved_palette)
         unique_ico = ICON_ROOT / f"shira_{current_palette}.ico"
@@ -430,10 +430,8 @@ def main() -> None:
     # and emits iconChanged. We reload the icon here.
     def on_icon_changed() -> None:
         try:
-            from app.backend.services.icon_generator import (OUTPUT_ICO,
-                                                             OUTPUT_PNG)
-            from app.backend.services.icon_generator import \
-                PROJECT_ROOT as ICON_ROOT
+            from app.backend.services.icon_generator import OUTPUT_ICO, OUTPUT_PNG
+            from app.backend.services.icon_generator import PROJECT_ROOT as ICON_ROOT
 
             # Get current palette for unique ICO + unique AppUserModelID
             current_palette = getattr(bridge.state, "terminal_palette", "matrix")

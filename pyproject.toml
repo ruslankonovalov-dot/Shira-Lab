@@ -103,8 +103,13 @@ ignore = [
 "app/backend/controllers/gamepad_controller.py" = ["I001"]
 "app/backend/controllers/profile_controller.py" = ["I001"]
 "app/backend/controllers/window_controller.py" = ["I001"]
+"app/backend/controllers/hotkey_controller.py" = ["I001"]
 "app/backend/qml_bridge.py" = ["I001"]
+"app/backend/services/clicker_service.py" = ["I001"]
 "app/backend/services/recorder_service.py" = ["I001"]
+"app/backend/services/pico_service.py" = ["I001"]
+"app/backend/services/macro_service.py" = ["I001"]
+"app/main.py" = ["I001"]
 "tests/unit/test_macro_undo_redo.py" = ["I001"]
 "tests/unit/test_profile_io.py" = ["I001"]
 

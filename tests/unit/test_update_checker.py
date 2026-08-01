@@ -5,9 +5,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.backend.services.update_checker import (_compare_versions,
-                                                 check_for_updates,
-                                                 check_for_updates_async)
+from app.backend.services.update_checker import (
+    _compare_versions,
+    check_for_updates,
+    check_for_updates_async,
+)
 
 pytestmark = pytest.mark.unit
 

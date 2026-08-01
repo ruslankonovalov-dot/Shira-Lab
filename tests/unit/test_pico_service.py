@@ -186,9 +186,11 @@ class TestPicoProtocolFrameBuilding:
 
     def test_build_gamepad_frame(self):
         """Test gamepad frame building."""
-        from app.backend.services.pico_protocol import (CMD_GP_BUTTONS,
-                                                        PicoPacket,
-                                                        build_gamepad_buttons)
+        from app.backend.services.pico_protocol import (
+            CMD_GP_BUTTONS,
+            PicoPacket,
+            build_gamepad_buttons,
+        )
 
         payload = build_gamepad_buttons(0x1000)
         packet = PicoPacket(CMD_GP_BUTTONS, payload)
