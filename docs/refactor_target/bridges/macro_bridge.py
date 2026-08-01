@@ -4,12 +4,14 @@
 
 Включает undo/redo (новое, для SSS-уровня).
 """
+
 from __future__ import annotations
 
 import json
 
-from app.backend.bridges.bridge_base import BridgeBase
 from PySide6.QtCore import Slot
+
+from app.backend.bridges.bridge_base import BridgeBase
 
 
 class MacroBridge(BridgeBase):
@@ -60,20 +62,25 @@ class MacroBridge(BridgeBase):
     # ─── Undo/Redo (NEW for SSS) ──────────────────────────────────
     @Slot(result=str)
     def macroUndo(self):
-        out = getattr(self.macro, "undo", lambda: {"ok": False, "error": "undo not implemented"})()
+        out = getattr(
+            self.macro, "undo", lambda: {"ok": False, "error": "undo not implemented"}
+        )()
         return json.dumps(out)
 
     @Slot(result=str)
     def macroRedo(self):
-        out = getattr(self.macro, "redo", lambda: {"ok": False, "error": "redo not implemented"})()
+        out = getattr(
+            self.macro, "redo", lambda: {"ok": False, "error": "redo not implemented"}
+        )()
         return json.dumps(out)
 
     @Slot(int, int, result=str)
     def macroMoveAction(self, from_index, to_index):
         """Drag & Drop: переместить action в списке."""
         out = getattr(
-            self.macro, "move_action",
-            lambda *a: {"ok": False, "error": "move_action not implemented"}
+            self.macro,
+            "move_action",
+            lambda *_a: {"ok": False, "error": "move_action not implemented"},
         )(from_index, to_index)
         self._schedule_save()
         return json.dumps(out)
@@ -82,8 +89,9 @@ class MacroBridge(BridgeBase):
     def macroDeleteAction(self, index):
         """Удалить конкретный action по индексу."""
         out = getattr(
-            self.macro, "delete_action",
-            lambda *a: {"ok": False, "error": "delete_action not implemented"}
+            self.macro,
+            "delete_action",
+            lambda *_a: {"ok": False, "error": "delete_action not implemented"},
         )(index)
         self._schedule_save()
         return json.dumps(out)

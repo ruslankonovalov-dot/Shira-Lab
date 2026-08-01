@@ -7,6 +7,7 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from app.backend.services.input_validation import VALID_BACKGROUND_METHODS
+from app.backend.services.singleton import singleton
 from app.backend.services.stealth_input import StealthInput
 from utils import send_background_click
 
@@ -17,8 +18,6 @@ if TYPE_CHECKING:
     from app.backend.qml_bridge import QmlBridge
     from app.backend.services.pico_service import PicoService
     from app.backend.services.vigem_service import VigemService
-
-from app.backend.services.singleton import singleton
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +128,10 @@ class ClickerService:
             if value in VALID_BACKGROUND_METHODS:
                 self._background_method = value
             else:
-                self._log("WARN", f"Invalid background method '{value}', keeping current: {self._background_method}")
+                self._log(
+                    "WARN",
+                    f"Invalid background method '{value}', keeping current: {self._background_method}",
+                )
 
     @property
     def target_hwnd(self) -> int | None:
@@ -167,7 +169,7 @@ class ClickerService:
         hold_ms: int,
         button: str,
         limit: int,
-        background_method: BackgroundMethod | None = None
+        background_method: BackgroundMethod | None = None,
     ) -> dict[str, Any]:
         self.interval_ms = max(1, int(interval_ms))
         self.hold_ms = max(0, int(hold_ms))
@@ -175,7 +177,10 @@ class ClickerService:
         self.limit = max(0, int(limit))
         if background_method:
             self.background_method = background_method
-            self._log("INFO", f"Config: interval={self.interval_ms}ms button={self.button} method={self.background_method}")
+            self._log(
+                "INFO",
+                f"Config: interval={self.interval_ms}ms button={self.button} method={self.background_method}",
+            )
         return self.get_status()
 
     def start(self, target_hwnd: int | None = None) -> dict[str, Any]:
@@ -193,11 +198,14 @@ class ClickerService:
             button = self._button
             limit = self._limit
             background_method = self._background_method
-        self._log("OK", f"Started — method={background_method} target_hwnd={target_hwnd or 'None (global)'}")
+        self._log(
+            "OK",
+            f"Started — method={background_method} target_hwnd={target_hwnd or 'None (global)'}",
+        )
         self._worker = threading.Thread(
             target=self._loop,
             args=(target_hwnd, interval_ms, hold_ms, button, limit, background_method),
-            daemon=True
+            daemon=True,
         )
         self._worker.start()
         return self.get_status()
@@ -219,7 +227,7 @@ class ClickerService:
         hold_ms: int,
         button: str,
         limit: int,
-        background_method: str
+        background_method: str,
     ) -> None:
         buttons = self._buttons  # constant
         mouse_event = self._mouse_event  # constant
@@ -234,7 +242,9 @@ class ClickerService:
                     break
 
             if target_hwnd:
-                self._send_background_click(target_hwnd, button, hold_ms, background_method)
+                self._send_background_click(
+                    target_hwnd, button, hold_ms, background_method
+                )
             else:
                 info = buttons.get(button, buttons["L"])
                 mouse_event(info["down"], 0, 0, info["data"], 0)
@@ -255,7 +265,9 @@ class ClickerService:
             with self._lock:
                 self._cps_timestamps.append(now)
                 # Keep only last 2 seconds
-                self._cps_timestamps = [t for t in self._cps_timestamps if now - t < 2.0]
+                self._cps_timestamps = [
+                    t for t in self._cps_timestamps if now - t < 2.0
+                ]
                 if len(self._cps_timestamps) >= 2:
                     time_span = self._cps_timestamps[-1] - self._cps_timestamps[0]
                     if time_span > 0:
@@ -272,7 +284,9 @@ class ClickerService:
             self._cps = 0.0
             self._cps_timestamps.clear()
 
-    def _send_background_click(self, hwnd: int, button: str, hold_ms: int, method: str) -> None:
+    def _send_background_click(
+        self, hwnd: int, button: str, hold_ms: int, method: str
+    ) -> None:
         """Send click using configured background_method."""
         if method == "postmessage":
             send_background_click(hwnd, button=button)
@@ -290,12 +304,14 @@ class ClickerService:
         """Send mouse click via Pico HID device."""
         try:
             from app.backend.services.pico_service import get_pico_service
+
             pico = get_pico_service()
             if not pico.is_connected:
                 # Try to connect using runtime state config
                 import json
 
                 from app.backend.persistence import PROFILE_PATH
+
                 port: str | None = None
                 baudrate = 115200
                 try:
@@ -317,6 +333,7 @@ class ClickerService:
             return pico.ms_click(btn_mask, hold_ms)
         except (OSError, ValueError, RuntimeError, AttributeError, ImportError) as e:
             import logging
+
             logging.getLogger(__name__).debug(f"Pico click failed: {e}")
             return False
 
@@ -325,6 +342,7 @@ class ClickerService:
         try:
             if self._vigem_service is None:
                 from app.backend.services.vigem_service import get_vigem_service
+
                 self._vigem_service = get_vigem_service()
                 if not self._vigem_service.connect():
                     return False
@@ -334,6 +352,7 @@ class ClickerService:
                 XUSB_REPORT,
                 VigemService,
             )
+
             button_flag = VigemService.button_name_to_mask(button_name.lower())
             if not button_flag:
                 return False
@@ -361,7 +380,9 @@ class ClickerService:
             report.sThumbRY = 0
             if self._vigem_service._dll is None or self._vigem_service._client is None:
                 return False
-            err: int = self._vigem_service._dll.vigem_target_x360_update(self._vigem_service._client, target, ctypes.byref(report))
+            err: int = self._vigem_service._dll.vigem_target_x360_update(
+                self._vigem_service._client, target, ctypes.byref(report)
+            )
             if err != 0:
                 return False
 
@@ -371,10 +392,13 @@ class ClickerService:
 
             # Release
             report.wButtons = 0
-            err = self._vigem_service._dll.vigem_target_x360_update(self._vigem_service._client, target, ctypes.byref(report))
+            err = self._vigem_service._dll.vigem_target_x360_update(
+                self._vigem_service._client, target, ctypes.byref(report)
+            )
             return err == 0
         except (OSError, ValueError, RuntimeError, AttributeError) as e:
             import logging
+
             logging.getLogger(__name__).debug(f"ViGEm button press failed: {e}")
             return False
 

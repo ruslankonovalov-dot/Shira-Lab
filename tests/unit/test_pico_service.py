@@ -40,6 +40,7 @@ class TestPicoService:
 
     def setup_method(self):
         from app.backend.services.pico_service import PicoService
+
         self.service = PicoService()
 
     def test_connect_disconnect_structure(self):
@@ -107,6 +108,7 @@ class TestPicoService:
     def test_set_mode_structure(self):
         """Test set_mode returns bool."""
         from app.backend.services.pico_service import PicoMode
+
         for mode in PicoMode:
             result = self.service.set_mode(mode)
             assert isinstance(result, bool)
@@ -114,17 +116,19 @@ class TestPicoService:
     def test_get_info_structure(self):
         """Test get_info returns PicoInfo or None."""
         result = self.service.get_info()
-        assert result is None or hasattr(result, 'fw_version')
+        assert result is None or hasattr(result, "fw_version")
 
     def test_find_pico_static(self):
         """Test static find_pico method."""
         from app.backend.services.pico_service import PicoService
+
         result = PicoService.find_pico()
-        assert result is None or hasattr(result, 'port')
+        assert result is None or hasattr(result, "port")
 
     def test_list_picos_static(self):
         """Test static list_picos method."""
         from app.backend.services.pico_service import PicoService
+
         result = PicoService.list_picos()
         assert isinstance(result, list)
 
@@ -132,7 +136,7 @@ class TestPicoService:
 class TestPicoServiceIntegration:
     """Integration tests for PicoService with mocked serial."""
 
-    @patch('app.backend.services.pico_service.serial.Serial')
+    @patch("app.backend.services.pico_service.serial.Serial")
     def test_connect_success(self, mock_serial):
         """Test successful Pico connection."""
         from app.backend.services.pico_service import PicoService
@@ -144,7 +148,7 @@ class TestPicoServiceIntegration:
         # Mock the read response for GET_INFO handshake
         # The reader loop reads frames, we need to simulate proper frame responses
         mock_instance.read.side_effect = [
-            b'\xAA\x10\x00\x00\xFF\x55',  # dummy frame
+            b"\xAA\x10\x00\x00\xFF\x55",  # dummy frame
         ]
 
         service = PicoService()
@@ -152,7 +156,7 @@ class TestPicoServiceIntegration:
         # Just verify service initializes
         assert service.is_connected is False
 
-    @patch('app.backend.services.pico_service.serial.Serial')
+    @patch("app.backend.services.pico_service.serial.Serial")
     def test_connect_failure(self, mock_serial):
         """Test Pico connection failure."""
         from app.backend.services.pico_service import PicoService
@@ -171,10 +175,7 @@ class TestPicoProtocolFrameBuilding:
 
     def test_build_frame_structure(self):
         """Test that frames have correct structure."""
-        from app.backend.services.pico_protocol import (
-            CMD_KB_TAP,
-            PicoPacket,
-        )
+        from app.backend.services.pico_protocol import CMD_KB_TAP, PicoPacket
 
         # Keyboard tap frame
         packet = PicoPacket(CMD_KB_TAP, b"space")

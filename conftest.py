@@ -6,6 +6,7 @@
 - Авто-мок Windows API для запуска на Linux/macOS CI
 - Конфигурация логирования для тестов
 """
+
 from __future__ import annotations
 
 import json
@@ -37,6 +38,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 try:
     from pytestqt.plugin import QApplication, QtBot  # noqa: F401
+
     HAS_PYTEST_QT = True
 except ImportError:
     HAS_PYTEST_QT = False
@@ -45,6 +47,7 @@ except ImportError:
 # ============================================================
 # 3. WINDOWS API MOCKS (для запуска на Linux/macOS)
 # ============================================================
+
 
 @pytest.fixture(autouse=True)
 def _mock_win32_on_non_windows():
@@ -72,6 +75,7 @@ def _mock_win32_on_non_windows():
             return MagicMock(name=f"windll.{name}")
 
     import ctypes
+
     original_windll = getattr(ctypes, "windll", None)
     ctypes.windll = _FakeWinDLL()
     try:
@@ -89,6 +93,7 @@ def _mock_win32_on_non_windows():
 # ============================================================
 # 4. TEMP PROFILE FIXTURE
 # ============================================================
+
 
 @pytest.fixture
 def tmp_profile(tmp_path: Path) -> Path:
@@ -109,6 +114,7 @@ def tmp_records_dir(tmp_path: Path) -> Path:
 # ============================================================
 # 5. MOCK SERVICES
 # ============================================================
+
 
 @pytest.fixture
 def mock_clicker() -> MagicMock:
@@ -177,12 +183,14 @@ def mock_aim() -> MagicMock:
 # 6. APPLICATION FIXTURES
 # ============================================================
 
+
 @pytest.fixture(scope="session")
 def qapp():
     """QApplication для QML тестов (используется pytest-qt)."""
     if not HAS_PYTEST_QT:
         pytest.skip("pytest-qt не установлен: pip install pytest-qt")
     from PySide6.QtWidgets import QApplication
+
     app = QApplication.instance() or QApplication([])
     yield app
 
@@ -193,6 +201,7 @@ def qtbot(qapp):
     if not HAS_PYTEST_QT:
         pytest.skip("pytest-qt не установлен")
     from pytestqt.plugin import QtBot
+
     bot = QtBot(qapp)
     yield bot
 
@@ -201,10 +210,12 @@ def qtbot(qapp):
 # 7. LOGGER FIXTURE
 # ============================================================
 
+
 @pytest.fixture(autouse=True)
 def _configure_logging():
     """Тихий логгер для тестов (только WARNING+)."""
     import logging
+
     logging.basicConfig(level=logging.WARNING)
     logging.getLogger("PySide6").setLevel(logging.ERROR)
     yield
@@ -213,6 +224,7 @@ def _configure_logging():
 # ============================================================
 # 8. HELPERS
 # ============================================================
+
 
 def parse_json(result: Any) -> Any:
     """Хелпер: парсить JSON-ответы @Slot(result=str) методов bridge."""

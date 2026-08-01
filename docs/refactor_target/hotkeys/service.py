@@ -8,6 +8,7 @@
     unregister_all, is_available, is_mouse_available, is_wheel_available,
     validate_key, debug_status, debug_test_mouse_listener, shutdown
 """
+
 from __future__ import annotations
 
 import logging
@@ -55,12 +56,18 @@ class HotkeyService:
         """Callback от dispatcher при срабатывании горячей клавиши."""
         try:
             if hold_mode:
-                handler = self._handlers.get_start_handler if pressed else self._handlers.get_stop_handler
+                handler = (
+                    self._handlers.get_start_handler
+                    if pressed
+                    else self._handlers.get_stop_handler
+                )
             else:
                 handler = self._handlers.get_handler
             handler(action)()
         except Exception:
-            logger.exception("Action handler failed: action=%s pressed=%s", action, pressed)
+            logger.exception(
+                "Action handler failed: action=%s pressed=%s", action, pressed
+            )
 
     # ─── Bindings API ────────────────────────────────────────────
     def set_bindings(self, bindings: dict[str, dict[str, str]]) -> None:
@@ -107,15 +114,23 @@ class HotkeyService:
         if not key:
             return
         parsed = KeyValidator.parse_key_string(key)
-        on_press = self._handlers.get_start_handler(action) if mode == "HOLD" else self._handlers.get_handler(action)
-        on_release = self._handlers.get_stop_handler(action) if mode == "HOLD" else lambda: None
+        on_press = (
+            self._handlers.get_start_handler(action)
+            if mode == "HOLD"
+            else self._handlers.get_handler(action)
+        )
+        on_release = (
+            self._handlers.get_stop_handler(action) if mode == "HOLD" else lambda: None
+        )
 
         if parsed["type"] == "keyboard":
             ok, err = self._keyboard.register(action, key, mode, on_press, on_release)
             if not ok and err:
                 logger.warning("Keyboard register failed for %s: %s", action, err)
         elif parsed["type"] == "mouse":
-            ok, err = self._mouse.register_mouse(action, key, mode, on_press, on_release)
+            ok, err = self._mouse.register_mouse(
+                action, key, mode, on_press, on_release
+            )
             if not ok and err:
                 logger.warning("Mouse register failed for %s: %s", action, err)
         elif parsed["type"] == "wheel":

@@ -2,6 +2,7 @@
 HotkeyController - handles hotkey bindings, validation, and debug.
 Extracted from QmlBridge god-object (Phase 2.1).
 """
+
 from __future__ import annotations
 
 import logging
@@ -40,7 +41,12 @@ class HotkeyController(QObject):
     hotkeysChanged = Signal()
     logMessage = Signal(str, str, str)  # level, source, message
 
-    def __init__(self, state: RuntimeState, hotkeys_service: HotkeyService, parent: QObject | None = None) -> None:
+    def __init__(
+        self,
+        state: RuntimeState,
+        hotkeys_service: HotkeyService,
+        parent: QObject | None = None,
+    ) -> None:
         super().__init__(parent)
         self._state: RuntimeState = state
         self._hotkeys: HotkeyService = hotkeys_service
@@ -70,7 +76,9 @@ class HotkeyController(QObject):
         validation_result = self._hotkeys.validate_key(key)
         if not validation_result.get("ok", False):
             error_val = validation_result.get("error")
-            return _qvar_map(make_error_response(str(error_val) if error_val else "Invalid key"))
+            return _qvar_map(
+                make_error_response(str(error_val) if error_val else "Invalid key")
+            )
 
         ok, val_mode, err = validate_enum(mode, VALID_HOTKEY_MODES, name="mode")
         if not ok or val_mode is None:
@@ -149,51 +157,51 @@ class HotkeyController(QObject):
     @property
     def clicker(self) -> Any:
         """Accessor for clicker controller."""
-        return self._state.clicker if hasattr(self._state, 'clicker') else None
+        return self._state.clicker if hasattr(self._state, "clicker") else None
 
     @property
     def aim(self) -> Any:
         """Accessor for aim controller."""
-        return self._state.aim if hasattr(self._state, 'aim') else None
+        return self._state.aim if hasattr(self._state, "aim") else None
 
     @property
     def macro(self) -> Any:
         """Accessor for macro controller."""
-        return self._state.macro if hasattr(self._state, 'macro') else None
+        return self._state.macro if hasattr(self._state, "macro") else None
 
     @property
     def recorder(self) -> Any:
         """Accessor for recorder controller."""
-        return self._state.recorder if hasattr(self._state, 'recorder') else None
+        return self._state.recorder if hasattr(self._state, "recorder") else None
 
     def stop_clicker(self) -> None:
         """Stop the clicker."""
-        if hasattr(self._state, 'clicker') and self._state.clicker:
+        if hasattr(self._state, "clicker") and self._state.clicker:
             self._state.clicker.stop_clicker()
 
     def start_clicker(self) -> None:
         """Start the clicker."""
-        if hasattr(self._state, 'clicker') and self._state.clicker:
+        if hasattr(self._state, "clicker") and self._state.clicker:
             self._state.clicker.start_clicker()
 
     def aim_stop(self) -> None:
         """Stop aim."""
-        if hasattr(self._state, 'aim') and self._state.aim:
+        if hasattr(self._state, "aim") and self._state.aim:
             self._state.aim.stop()
 
     def aim_start(self) -> None:
         """Start aim."""
-        if hasattr(self._state, 'aim') and self._state.aim:
+        if hasattr(self._state, "aim") and self._state.aim:
             self._state.aim.start()
 
     def start_macro(self) -> None:
         """Start macro."""
-        if hasattr(self._state, 'macro') and self._state.macro:
+        if hasattr(self._state, "macro") and self._state.macro:
             self._state.macro.start_macro()
 
     def stop_macro(self) -> None:
         """Stop macro."""
-        if hasattr(self._state, 'macro') and self._state.macro:
+        if hasattr(self._state, "macro") and self._state.macro:
             self._state.macro.stop_macro()
 
     def show_app_window(self) -> None:
@@ -202,15 +210,15 @@ class HotkeyController(QObject):
 
     def recorder_stop(self) -> None:
         """Stop recorder."""
-        if hasattr(self._state, 'recorder') and self._state.recorder:
+        if hasattr(self._state, "recorder") and self._state.recorder:
             self._state.recorder.stop()
 
     def recorder_stop_play(self) -> None:
         """Stop recorder playback."""
-        if hasattr(self._state, 'recorder') and self._state.recorder:
+        if hasattr(self._state, "recorder") and self._state.recorder:
             self._state.recorder.stop_play()
 
     def recorder_start(self) -> None:
         """Start recorder."""
-        if hasattr(self._state, 'recorder') and self._state.recorder:
+        if hasattr(self._state, "recorder") and self._state.recorder:
             self._state.recorder.start()

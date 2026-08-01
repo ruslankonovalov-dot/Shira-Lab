@@ -1,13 +1,38 @@
 """app/main.py — PySide6 entry point с терминальным UI."""
+
 from __future__ import annotations
 
 import ctypes
 import logging
 import logging.handlers
-import os
 import sys
 from ctypes import wintypes
 from pathlib import Path
+
+from PySide6.QtCore import QObject, QTimer, QUrl
+from PySide6.QtGui import QFont, QIcon, QWindow
+from PySide6.QtQml import QQmlApplicationEngine
+from PySide6.QtQuick import QQuickWindow
+from PySide6.QtWidgets import QApplication
+
+# ─── Win32 constants for overlay click-through ─────────────────────────
+GWL_EXSTYLE = -20
+WS_EX_LAYERED = 0x00080000
+WS_EX_TRANSPARENT = 0x00000020
+WS_EX_NOACTIVATE = 0x08000000
+
+_user32 = ctypes.windll.user32
+_user32.GetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int]
+_user32.GetWindowLongW.restype = ctypes.c_long
+_user32.SetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_long]
+_user32.SetWindowLongW.restype = ctypes.c_long
+_user32.SetLayeredWindowAttributes.argtypes = [
+    wintypes.HWND,
+    wintypes.COLORREF,
+    wintypes.BYTE,
+    wintypes.DWORD,
+]
+_user32.SetLayeredWindowAttributes.restype = wintypes.BOOL
 
 
 # ─── Logging Configuration ────────────────────────────────────────────
@@ -24,8 +49,7 @@ def setup_logging() -> logging.Logger:
 
     # Format
     formatter = logging.Formatter(
-        "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
+        "%(asctime)s [%(levelname)s] %(name)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
 
     # Console handler (stdout)
@@ -36,10 +60,7 @@ def setup_logging() -> logging.Logger:
 
     # File handler (rotating, max 5MB per file, 3 files)
     file_handler = logging.handlers.RotatingFileHandler(
-        str(log_file),
-        maxBytes=5 * 1024 * 1024,  # 5 MB
-        backupCount=3,
-        encoding="utf-8"
+        str(log_file), maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8"  # 5 MB
     )
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(formatter)
@@ -59,115 +80,8 @@ def setup_logging() -> logging.Logger:
     return logger
 
 
-# ─── Crash Handler + Auto-Recovery ────────────────────────────────────
-def setup_crash_handler(logger: logging.Logger) -> None:
-    """Install global exception handler with structured crash reports.
-
-    v1.0.0 SSS upgrade: Uses app.backend.services.crash_reporter for:
-    - Local structured crash log (data/crash_logs/crash_*.json)
-    - Optional server reporting (if user opted in via Settings)
-    - Auto-recovery: offer restart after crash
-    """
-    from typing import TYPE_CHECKING
-    if TYPE_CHECKING:
-        from types import TracebackType
-
-    APP_VERSION = "0.17.0"
-
-    # Try to read user's privacy preference
-    send_reports = False
-    try:
-        import json
-        profile_path = Path(__file__).resolve().parents[1] / "data" / "profile.json"
-        if profile_path.exists():
-            data = json.loads(profile_path.read_text(encoding="utf-8"))
-            state = data.get("state") or {}
-            send_reports = bool(state.get("send_crash_reports", False))
-    except (OSError, json.JSONDecodeError, ValueError, KeyError):
-        pass
-
-    # Install structured crash reporter (saves local JSON, optionally sends to server)
-    try:
-        from app.backend.services.crash_reporter import (
-            install_crash_handler as install_structured,
-        )
-        install_structured(app_version=APP_VERSION, send_reports=send_reports)
-    except (OSError, RuntimeError, ImportError, ValueError):
-        logger.exception("Failed to install structured crash reporter")
-
-    def excepthook(exc_type: type[BaseException], exc_value: BaseException, exc_tb: object) -> None:
-        # Type narrow the traceback for logging.critical
-        tb: TracebackType | None = exc_tb if isinstance(exc_tb, BaseException) else None  # type: ignore[assignment]
-        logger.critical(
-            "Unhandled exception: %s: %s",
-            exc_type.__name__,
-            exc_value,
-            exc_info=(exc_type, exc_value, tb)
-        )
-
-        # Show message box with restart option on Windows
-        try:
-            import ctypes
-            # MB_ICONERROR | MB_YESNO = 0x10 | 0x04 = 0x14
-            result = ctypes.windll.user32.MessageBoxW(
-                0,
-                f"Shira Lab crashed:\n{exc_type.__name__}: {exc_value}\n\n"
-                f"Crash report saved to data/crash_logs/.\n"
-                f"Check logs/shira_lab.log for details.\n\n"
-                f"Restart Shira Lab?",
-                "Shira Lab — Crash",
-                0x14  # MB_ICONERROR | MB_YESNO
-            )
-            if result == 6:  # IDYES
-                # Restart the application
-                import subprocess
-                python_exe = sys.executable
-                script = os.path.abspath(__file__)
-                subprocess.Popen([python_exe, script])
-        except (OSError, RuntimeError, AttributeError, ValueError):
-            pass
-        # Cast to TracebackType | None for sys.__excepthook__
-        sys.__excepthook__(exc_type, exc_value, tb)
-
-    sys.excepthook = excepthook
-
-
-# Initialize logging and crash handler ASAP
+# Module-level logger
 logger = setup_logging()
-setup_crash_handler(logger)
-
-
-# Windows: Set AppUserModelID for proper taskbar grouping and icon
-# Use FIXED ID — changing it per-palette causes Windows to show
-# "unknown app" icon because it doesn't have a cached icon for new IDs
-if sys.platform == "win32":
-    try:
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("ShiraLab.ShiraLab")
-    except (OSError, AttributeError):
-        pass
-
-# Принудительно Basic style для консистентного вида
-os.environ["QT_QUICK_CONTROLS_STYLE"] = "Basic"
-
-from PySide6.QtCore import QObject, QTimer, QUrl
-from PySide6.QtGui import QFont, QIcon, QWindow
-from PySide6.QtQml import QQmlApplicationEngine
-from PySide6.QtQuick import QQuickWindow
-from PySide6.QtWidgets import QApplication
-
-# ─── Win32 constants for overlay click-through ─────────────────────────
-GWL_EXSTYLE = -20
-WS_EX_LAYERED = 0x00080000
-WS_EX_TRANSPARENT = 0x00000020
-WS_EX_NOACTIVATE = 0x08000000
-
-_user32 = ctypes.windll.user32
-_user32.GetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int]
-_user32.GetWindowLongW.restype = ctypes.c_long
-_user32.SetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_long]
-_user32.SetWindowLongW.restype = ctypes.c_long
-_user32.SetLayeredWindowAttributes.argtypes = [wintypes.HWND, wintypes.COLORREF, wintypes.BYTE, wintypes.DWORD]
-_user32.SetLayeredWindowAttributes.restype = wintypes.BOOL
 
 LWA_COLORKEY = 0x00000001
 
@@ -178,8 +92,13 @@ def make_window_click_through(hwnd: int) -> None:
         return
     try:
         ex_style = _user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
-        _user32.SetWindowLongW(hwnd, GWL_EXSTYLE,
-                               ctypes.c_long(ex_style | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE))
+        _user32.SetWindowLongW(
+            hwnd,
+            GWL_EXSTYLE,
+            ctypes.c_long(
+                ex_style | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE
+            ),
+        )
         # Set color key to transparent (pure black corner pixel becomes click-through)
         _user32.SetLayeredWindowAttributes(hwnd, 0, 0, LWA_COLORKEY)
     except (OSError, RuntimeError, AttributeError) as e:
@@ -201,6 +120,7 @@ def main() -> None:
     saved_palette = "matrix"
     try:
         import json
+
         profile_path = project_root / "data" / "profile.json"
         if profile_path.exists():
             data = json.loads(profile_path.read_text(encoding="utf-8"))
@@ -224,6 +144,7 @@ def main() -> None:
             generate_palette_ico_unique,
             generate_palette_icon,
         )
+
         png_path = generate_palette_icon(saved_palette)
         generate_palette_ico(saved_palette)
         unique_ico = generate_palette_ico_unique(saved_palette)
@@ -261,6 +182,7 @@ def main() -> None:
             from PySide6.QtGui import QColor, QPainter, QPixmap
 
             from app.backend.models.runtime_state import TERMINAL_PALETTES
+
             palette = TERMINAL_PALETTES.get(saved_palette, {})
             color = QColor(palette.get("acc", "#6aa86a"))
             pix = QPixmap(256, 256)
@@ -282,6 +204,7 @@ def main() -> None:
     if sys.platform == "win32":
         try:
             import ctypes
+
             # SHChangeNotify: tells Windows to refresh icon cache
             ctypes.windll.shell32.SHChangeNotify(0x080000, 0x0000, None, None)
         except (OSError, AttributeError, ValueError):
@@ -323,6 +246,7 @@ def main() -> None:
     if not isinstance(main_window, QQuickWindow):
         # Cast for type checking
         from typing import cast
+
         main_window = cast(QQuickWindow, main_window)
 
     # ─── RE-SET icon after window creation ──────────────────────────────
@@ -331,15 +255,21 @@ def main() -> None:
     try:
         from app.backend.services.icon_generator import OUTPUT_ICO, OUTPUT_PNG
         from app.backend.services.icon_generator import PROJECT_ROOT as ICON_ROOT
-        current_palette = getattr(bridge.state, 'terminal_palette', saved_palette)
+
+        current_palette = getattr(bridge.state, "terminal_palette", saved_palette)
         unique_ico = ICON_ROOT / f"shira_{current_palette}.ico"
-        icon_path = unique_ico if unique_ico.exists() else (OUTPUT_ICO if OUTPUT_ICO.exists() else OUTPUT_PNG)
+        icon_path = (
+            unique_ico
+            if unique_ico.exists()
+            else (OUTPUT_ICO if OUTPUT_ICO.exists() else OUTPUT_PNG)
+        )
         if icon_path and icon_path.exists():
             icon = QIcon(str(icon_path))
             app.setWindowIcon(icon)
             main_window.setIcon(icon)
             try:
                 import ctypes
+
                 hwnd = int(main_window.winId())
                 if hwnd:
                     hicon = ctypes.windll.user32.LoadImageW(
@@ -353,8 +283,13 @@ def main() -> None:
                     SWP_NOSIZE = 0x0001
                     SWP_NOZORDER = 0x0004
                     ctypes.windll.user32.SetWindowPos(
-                        hwnd, 0, 0, 0, 0, 0,
-                        SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED
+                        hwnd,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED,
                     )
             except (OSError, RuntimeError, AttributeError, ValueError):
                 pass
@@ -373,19 +308,26 @@ def main() -> None:
         # Force Windows to refresh the taskbar icon after window creation
         try:
             import ctypes
+
             SWP_FRAMECHANGED = 0x0020
             SWP_NOMOVE = 0x0002
             SWP_NOSIZE = 0x0001
             SWP_NOZORDER = 0x0004
             ctypes.windll.user32.SetWindowPos(
-                app_hwnd, 0, 0, 0, 0, 0,
-                SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED
+                app_hwnd,
+                0,
+                0,
+                0,
+                0,
+                0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED,
             )
         except (OSError, RuntimeError, AttributeError, ValueError):
             pass
         # Apply topmost on startup if is_pinned was saved as True
         if bridge.state.is_pinned:
             from window_utils import set_window_topmost
+
             set_window_topmost(app_hwnd, True)
     except (OSError, RuntimeError, AttributeError, ValueError) as e:
         logger.warning("Failed to store app hwnd: %s", e)
@@ -417,13 +359,13 @@ def main() -> None:
             logger.warning("Hotkey shutdown error: %s", e)
         # Clean up Pico service
         try:
-            if getattr(bridge, '_pico', None):
+            if getattr(bridge, "_pico", None):
                 bridge._pico.disconnect()
         except (OSError, RuntimeError, AttributeError, ValueError) as e:
             logger.warning("Pico shutdown error: %s", e)
         # Clean up ViGEm service
         try:
-            if getattr(bridge, '_vigem', None):
+            if getattr(bridge, "_vigem", None):
                 bridge._vigem.disconnect()
         except (OSError, RuntimeError, AttributeError, ValueError) as e:
             logger.warning("ViGEm shutdown error: %s", e)
@@ -465,7 +407,9 @@ def main() -> None:
                     if overlay_hwnd:
                         bridge.set_overlay_hwnd(overlay_hwnd)
                 except Exception:
-                    logger.exception("Failed to store overlay hwnd on visibility change")
+                    logger.exception(
+                        "Failed to store overlay hwnd on visibility change"
+                    )
 
     sync_timer = QTimer()
     sync_timer.timeout.connect(sync_overlay)
@@ -491,19 +435,25 @@ def main() -> None:
         try:
             from app.backend.services.icon_generator import OUTPUT_ICO, OUTPUT_PNG
             from app.backend.services.icon_generator import PROJECT_ROOT as ICON_ROOT
+
             # Get current palette for unique ICO + unique AppUserModelID
-            current_palette = getattr(bridge.state, 'terminal_palette', 'matrix')
+            current_palette = getattr(bridge.state, "terminal_palette", "matrix")
             unique_ico = ICON_ROOT / f"shira_{current_palette}.ico"
 
             # Flush Windows icon cache
             try:
                 import ctypes
+
                 ctypes.windll.shell32.SHChangeNotify(0x080000, 0x0000, None, None)
             except (OSError, AttributeError, ValueError):
                 pass
 
             # Prefer unique ICO (forces Windows to reload due to different path)
-            icon_path = unique_ico if unique_ico.exists() else (OUTPUT_ICO if OUTPUT_ICO.exists() else OUTPUT_PNG)
+            icon_path = (
+                unique_ico
+                if unique_ico.exists()
+                else (OUTPUT_ICO if OUTPUT_ICO.exists() else OUTPUT_PNG)
+            )
 
             if icon_path and icon_path.exists():
                 new_icon = QIcon(str(icon_path))
@@ -511,28 +461,43 @@ def main() -> None:
                 main_window.setIcon(new_icon)
 
             # Update tray icon
-            if hasattr(bridge, 'tray') and bridge.tray and icon_path and icon_path.exists():
+            if (
+                hasattr(bridge, "tray")
+                and bridge.tray
+                and icon_path
+                and icon_path.exists()
+            ):
                 bridge.tray.update_base_icon(Path(str(icon_path)))
 
             # Force Windows taskbar to refresh icon via Win32 API
             try:
                 import ctypes
+
                 hwnd = int(main_window.winId())
                 if hwnd and icon_path and icon_path.exists():
                     hicon = ctypes.windll.user32.LoadImageW(
                         0, str(icon_path), 1, 0, 0, 0x00000010  # LR_LOADFROMFILE
                     )
                     if hicon:
-                        ctypes.windll.user32.SendMessageW(hwnd, 0x0080, 1, hicon)  # WM_SETICON ICON_BIG
-                        ctypes.windll.user32.SendMessageW(hwnd, 0x0080, 0, hicon)  # WM_SETICON ICON_SMALL
+                        ctypes.windll.user32.SendMessageW(
+                            hwnd, 0x0080, 1, hicon
+                        )  # WM_SETICON ICON_BIG
+                        ctypes.windll.user32.SendMessageW(
+                            hwnd, 0x0080, 0, hicon
+                        )  # WM_SETICON ICON_SMALL
                         # Force Windows to redraw window frame + taskbar icon
                         SWP_FRAMECHANGED = 0x0020
                         SWP_NOMOVE = 0x0002
                         SWP_NOSIZE = 0x0001
                         SWP_NOZORDER = 0x0004
                         ctypes.windll.user32.SetWindowPos(
-                            hwnd, 0, 0, 0, 0, 0,
-                            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED
+                            hwnd,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED,
                         )
             except (OSError, AttributeError, ValueError):
                 pass

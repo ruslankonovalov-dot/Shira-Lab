@@ -14,6 +14,7 @@
 
 Каждый модуль ≤ 250 LOC. HotkeyService делегирует вызовы.
 """
+
 from __future__ import annotations
 
 from app.backend.services.hotkeys.bindings import BindingStore

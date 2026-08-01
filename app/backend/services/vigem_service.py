@@ -9,6 +9,7 @@ DLL обычно находится в: C:\\Program Files\\Nefarius\\ViGEmBus\\V
 - XUSB (Xbox 360) — XInput, нативно в Windows
 - DS4 (DualShock 4) — HID, требует HidGuardian/HidCerberus для скрытия
 """
+
 from __future__ import annotations
 
 import ctypes
@@ -21,27 +22,30 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
 # ─── ViGEmClient constants ──────────────────────────────────────────────
 class VIGEM_TARGET_TYPE(IntEnum):
     XBOX360 = 0  # XUSB (XInput)
-    DS4 = 1      # DualShock 4
+    DS4 = 1  # DualShock 4
+
 
 # XUSB button flags (Xbox 360)
-XUSB_BUTTON_DPAD_UP        = 0x0001
-XUSB_BUTTON_DPAD_DOWN      = 0x0002
-XUSB_BUTTON_DPAD_LEFT      = 0x0004
-XUSB_BUTTON_DPAD_RIGHT     = 0x0008
-XUSB_BUTTON_START          = 0x0010
-XUSB_BUTTON_BACK           = 0x0020
-XUSB_BUTTON_LEFT_THUMB     = 0x0040
-XUSB_BUTTON_RIGHT_THUMB    = 0x0080
-XUSB_BUTTON_LEFT_SHOULDER  = 0x0100
+XUSB_BUTTON_DPAD_UP = 0x0001
+XUSB_BUTTON_DPAD_DOWN = 0x0002
+XUSB_BUTTON_DPAD_LEFT = 0x0004
+XUSB_BUTTON_DPAD_RIGHT = 0x0008
+XUSB_BUTTON_START = 0x0010
+XUSB_BUTTON_BACK = 0x0020
+XUSB_BUTTON_LEFT_THUMB = 0x0040
+XUSB_BUTTON_RIGHT_THUMB = 0x0080
+XUSB_BUTTON_LEFT_SHOULDER = 0x0100
 XUSB_BUTTON_RIGHT_SHOULDER = 0x0200
-XUSB_BUTTON_GUIDE          = 0x0400
-XUSB_BUTTON_A              = 0x1000
-XUSB_BUTTON_B              = 0x2000
-XUSB_BUTTON_X              = 0x4000
-XUSB_BUTTON_Y              = 0x8000
+XUSB_BUTTON_GUIDE = 0x0400
+XUSB_BUTTON_A = 0x1000
+XUSB_BUTTON_B = 0x2000
+XUSB_BUTTON_X = 0x4000
+XUSB_BUTTON_Y = 0x8000
+
 
 # ─── Structures matching ViGEmClient.h ──────────────────────────────────
 class XUSB_REPORT(ctypes.Structure):
@@ -56,6 +60,7 @@ class XUSB_REPORT(ctypes.Structure):
         ("sThumbRY", wintypes.SHORT),
     ]
 
+
 class DS4_REPORT(ctypes.Structure):
     _pack_ = 1
     _fields_ = [
@@ -69,6 +74,7 @@ class DS4_REPORT(ctypes.Structure):
         ("bSpecial", wintypes.BYTE),
     ]
 
+
 # ─── Button mapping helpers ─────────────────────────────────────────────
 # Map user-friendly names to XUSB button flags
 XUSB_BUTTON_MAP: dict[str, int | None] = {
@@ -78,8 +84,8 @@ XUSB_BUTTON_MAP: dict[str, int | None] = {
     "y": XUSB_BUTTON_Y,
     "lb": XUSB_BUTTON_LEFT_SHOULDER,
     "rb": XUSB_BUTTON_RIGHT_SHOULDER,
-    "lt": None,     # handled separately as trigger
-    "rt": None,     # handled separately as trigger
+    "lt": None,  # handled separately as trigger
+    "rt": None,  # handled separately as trigger
     "back": XUSB_BUTTON_BACK,
     "start": XUSB_BUTTON_START,
     "ls": XUSB_BUTTON_LEFT_THUMB,
@@ -90,6 +96,7 @@ XUSB_BUTTON_MAP: dict[str, int | None] = {
     "left": XUSB_BUTTON_DPAD_LEFT,
     "right": XUSB_BUTTON_DPAD_RIGHT,
 }
+
 
 # ─── VigemService ───────────────────────────────────────────────────────
 class VigemService:
@@ -128,8 +135,14 @@ class VigemService:
         candidates = [
             r"C:\Program Files\Nefarius\ViGEmBus\ViGEmClient.dll",
             r"C:\Program Files (x86)\Nefarius\ViGEmBus\ViGEmClient.dll",
-            os.path.join(os.environ.get("SystemRoot", r"C:\Windows"), "System32", "ViGEmClient.dll"),
-            os.path.join(os.path.dirname(__file__), "..", "..", "..", "bin", "ViGEmClient.dll"),
+            os.path.join(
+                os.environ.get("SystemRoot", r"C:\Windows"),
+                "System32",
+                "ViGEmClient.dll",
+            ),
+            os.path.join(
+                os.path.dirname(__file__), "..", "..", "..", "bin", "ViGEmClient.dll"
+            ),
         ]
         for path in candidates:
             if os.path.exists(path):
@@ -182,7 +195,11 @@ class VigemService:
 
         # vigem_target_x360_update(PVIGEM_CLIENT, PVIGEM_TARGET, XUSB_REPORT*) -> VIGEM_ERROR
         self._dll.vigem_target_x360_update.restype = ctypes.c_int
-        self._dll.vigem_target_x360_update.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.POINTER(XUSB_REPORT)]
+        self._dll.vigem_target_x360_update.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.POINTER(XUSB_REPORT),
+        ]
 
         # vigem_target_x360_get_user_index(PVIGEM_TARGET) -> ULONG
         self._dll.vigem_target_x360_get_user_index.restype = wintypes.ULONG
@@ -199,7 +216,11 @@ class VigemService:
 
         # vigem_target_ds4_update(PVIGEM_CLIENT, PVIGEM_TARGET, DS4_REPORT*) -> VIGEM_ERROR
         self._dll.vigem_target_ds4_update.restype = ctypes.c_int
-        self._dll.vigem_target_ds4_update.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.POINTER(DS4_REPORT)]
+        self._dll.vigem_target_ds4_update.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.POINTER(DS4_REPORT),
+        ]
 
         return True
 
@@ -308,8 +329,10 @@ class VigemService:
             return {
                 "ok": True,
                 "connected": self._client is not None,
-                "targets": {tid: ttype.name for tid, (_, ttype) in self._targets.items()},
-                "target_count": len(self._targets)
+                "targets": {
+                    tid: ttype.name for tid, (_, ttype) in self._targets.items()
+                },
+                "target_count": len(self._targets),
             }
 
     def get_target_type(self, target_id: int) -> VIGEM_TARGET_TYPE | None:
@@ -358,7 +381,9 @@ class VigemService:
             report.sThumbRX = max(-32768, min(32767, rx))
             report.sThumbRY = max(-32768, min(32767, ry))
 
-            err = self._dll.vigem_target_x360_update(self._client, target, ctypes.byref(report))
+            err = self._dll.vigem_target_x360_update(
+                self._client, target, ctypes.byref(report)
+            )
             return int(err) == 0
 
     def x360_press_button(self, target_id: int, button: str) -> bool:
@@ -372,7 +397,10 @@ class VigemService:
 
             # LT/RT are not buttons, they're triggers
             if button.lower() in ("lt", "rt"):
-                self._log("WARNING", f"{button} is a trigger, not a button. Use x360_set_triggers()")
+                self._log(
+                    "WARNING",
+                    f"{button} is a trigger, not a button. Use x360_set_triggers()",
+                )
                 return False
 
             mask = self.button_name_to_mask(button)
@@ -398,7 +426,10 @@ class VigemService:
 
             # LT/RT are not buttons, they're triggers
             if button.lower() in ("lt", "rt"):
-                self._log("WARNING", f"{button} is a trigger, not a button. Use x360_set_triggers()")
+                self._log(
+                    "WARNING",
+                    f"{button} is a trigger, not a button. Use x360_set_triggers()",
+                )
                 return False
 
             mask = self.button_name_to_mask(button)
@@ -441,7 +472,9 @@ class VigemService:
             if ttype != VIGEM_TARGET_TYPE.DS4:
                 return False
             assert self._dll is not None  # target exists so dll must be loaded
-            err = self._dll.vigem_target_ds4_update(self._client, target, ctypes.byref(report))
+            err = self._dll.vigem_target_ds4_update(
+                self._client, target, ctypes.byref(report)
+            )
             return int(err) == 0
 
     # ─── Helpers for button mapping ─────────────────────────────────────
@@ -480,7 +513,11 @@ class VigemService:
         Returns mapping of button names to their mask values as strings.
         """
         with self._lock:
-            return {name: str(mask) for name, mask in XUSB_BUTTON_MAP.items() if mask is not None}
+            return {
+                name: str(mask)
+                for name, mask in XUSB_BUTTON_MAP.items()
+                if mask is not None
+            }
 
     def set_button_map(self, mapping: dict[str, Any]) -> dict[str, Any]:
         """Set button mapping (currently just validates and returns OK).
@@ -493,7 +530,10 @@ class VigemService:
             if key.lower() not in valid_buttons:
                 return {"ok": False, "error": f"Invalid button name: {key}"}
         # In a full implementation, we'd store this per target
-        return {"ok": True, "message": "Button mapping accepted (stored in memory only)"}
+        return {
+            "ok": True,
+            "message": "Button mapping accepted (stored in memory only)",
+        }
 
 
 # ─── Singleton accessor ─────────────────────────────────────────────────

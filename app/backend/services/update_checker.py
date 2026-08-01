@@ -3,6 +3,7 @@
 Checks for new version at app startup (in background).
 If available -- shows banner in HomePage.
 """
+
 from __future__ import annotations
 
 import json
@@ -18,7 +19,9 @@ GITHUB_API_LATEST = "https://api.github.com/repos/shira/shira-lab/releases/lates
 TIMEOUT_SEC = 5
 
 
-def check_for_updates(current_version: str, repo_url: str = GITHUB_API_LATEST) -> dict[str, Any]:
+def check_for_updates(
+    current_version: str, repo_url: str = GITHUB_API_LATEST
+) -> dict[str, Any]:
     """Check for new version on GitHub.
 
     Args:
@@ -90,6 +93,7 @@ def _compare_versions(v1: str, v2: str) -> int:
     Note: prerelease suffixes (-rc1, -beta) are stripped before comparison,
     so '1.0.0-rc1' compares as equal to '1.0.0'.
     """
+
     def parse(v: str) -> tuple[int, ...]:
         # Strip prerelease suffix (everything after -)
         v = v.split("-")[0]
@@ -116,7 +120,10 @@ def _compare_versions(v1: str, v2: str) -> int:
 
 # ─── Async wrapper for Qt use ──────────────────────
 
-def check_for_updates_async(current_version: str, callback: Callable[[str], None]) -> None:
+
+def check_for_updates_async(
+    current_version: str, callback: Callable[[str], None]
+) -> None:
     """Run check in background thread, call callback with JSON result.
 
     Usage from QmlBridge:

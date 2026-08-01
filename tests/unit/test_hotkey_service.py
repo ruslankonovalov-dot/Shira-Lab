@@ -10,6 +10,7 @@ class TestHotkeyService:
 
     def setup_method(self):
         from app.backend.services.hotkey_service import HotkeyService
+
         # Create a mock API that mimics QmlBridge/HotkeyController
         mock_api = MagicMock()
         mock_api.clicker = MagicMock()
@@ -236,10 +237,17 @@ class TestHotkeyService:
 
         def register_keys(start, count):
             for i in range(count):
-                action_name = f"action_{start+i}"
                 # Only test with valid HOTKEY_ACTIONS - use valid action names cyclically
-                valid_actions = ["clicker_toggle", "aim_toggle", "macro_start", "macro_stop",
-                                 "recorder_start", "recorder_stop", "app_show", "panic_stop"]
+                valid_actions = [
+                    "clicker_toggle",
+                    "aim_toggle",
+                    "macro_start",
+                    "macro_stop",
+                    "recorder_start",
+                    "recorder_stop",
+                    "app_show",
+                    "panic_stop",
+                ]
                 action = valid_actions[(start + i) % len(valid_actions)]
                 # Function keys f1-f12 are valid
                 key_num = (start + i) % 12 + 1
@@ -248,7 +256,7 @@ class TestHotkeyService:
 
         threads = []
         for i in range(5):
-            t = threading.Thread(target=register_keys, args=(i*10, 10))
+            t = threading.Thread(target=register_keys, args=(i * 10, 10))
             threads.append(t)
             t.start()
 
@@ -265,6 +273,7 @@ class TestHotkeyServiceIntegration:
 
     def setup_method(self):
         from app.backend.services.hotkey_service import HotkeyService
+
         mock_api = MagicMock()
         mock_api.clicker = MagicMock()
         mock_api.clicker.is_running = False
@@ -310,6 +319,7 @@ class TestHotkeyServiceIntegration:
     def test_modifier_parsing(self):
         """Test modifier key parsing via _parse_key_string."""
         from app.backend.services.hotkey_service import HotkeyService
+
         # Test via static method
         parsed = HotkeyService._parse_key_string("ctrl+f7")
         assert parsed["modifiers"] == ["ctrl"]

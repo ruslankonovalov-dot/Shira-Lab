@@ -4,6 +4,7 @@ Input validation utilities for QmlBridge @Slot methods.
 All validation functions return tuple of (is_valid, validated_value, error_message).
 Use make_error_response() and make_ok_response() for consistent JSON responses.
 """
+
 from __future__ import annotations
 
 import json
@@ -16,15 +17,7 @@ logger = logging.getLogger(__name__)
 # Type alias for QVariant-compatible return types
 QVariantMap = dict[str, Any]
 QVariantList = list[Any]
-QVariant = (
-    dict[str, Any]
-    | list[Any]
-    | str
-    | int
-    | float
-    | bool
-    | None
-)
+QVariant = dict[str, Any] | list[Any] | str | int | float | bool | None
 
 
 def _qvar(obj: QVariant) -> QVariant:
@@ -52,14 +45,47 @@ def _qvar_map(obj: QVariantMap) -> QVariantMap:
 VALID_PALETTES = {"matrix", "amber", "inverse", "grey", "synthwave", "blood"}
 VALID_LANGUAGES = {"RU", "EN", "ZH"}
 VALID_BACKGROUND_METHODS = {"sendinput", "postmessage", "vigem", "pico"}
-VALID_CLICKER_BUTTONS = {"L", "R", "M", "X1", "X2", "left", "right", "middle", "back", "forward"}
+VALID_CLICKER_BUTTONS = {
+    "L",
+    "R",
+    "M",
+    "X1",
+    "X2",
+    "left",
+    "right",
+    "middle",
+    "back",
+    "forward",
+}
 VALID_GAMEPAD_TYPES = {"X360", "DS4"}
-VALID_AIM_DETECTION_MODES = {"auto", "multi", "circles", "color", "template", "calibrate"}
-VALID_AIM_TARGET_COLORS = {"red", "blue", "green", "purple", "yellow", "cyan", "orange", "pink"}
+VALID_AIM_DETECTION_MODES = {
+    "auto",
+    "multi",
+    "circles",
+    "color",
+    "template",
+    "calibrate",
+}
+VALID_AIM_TARGET_COLORS = {
+    "red",
+    "blue",
+    "green",
+    "purple",
+    "yellow",
+    "cyan",
+    "orange",
+    "pink",
+}
 VALID_HOTKEY_MODES = {"TOGGLE", "HOLD"}
 VALID_HOTKEY_ACTIONS = {
-    "clicker_toggle", "aim_toggle", "macro_start", "macro_stop",
-    "recorder_start", "recorder_stop", "app_show", "panic_stop"
+    "clicker_toggle",
+    "aim_toggle",
+    "macro_start",
+    "macro_stop",
+    "recorder_start",
+    "recorder_stop",
+    "app_show",
+    "panic_stop",
 }
 
 # Clicker limits
@@ -120,23 +146,76 @@ PICO_HOLD_MS_MAX = 10000
 # Pico enums
 VALID_PICO_MODES: set[str] = {"hid", "raw_hid", "cdc"}
 VALID_PICO_BUTTONS: set[str] = {
-    "a", "b", "x", "y", "lb", "rb", "lt", "rt",
-    "start", "back", "guide", "ls", "rs",
-    "up", "down", "left", "right", "dpad_up", "dpad_down", "dpad_left", "dpad_right",
-    "mouse_left", "mouse_right", "mouse_middle", "mouse_x1", "mouse_x2",
+    "a",
+    "b",
+    "x",
+    "y",
+    "lb",
+    "rb",
+    "lt",
+    "rt",
+    "start",
+    "back",
+    "guide",
+    "ls",
+    "rs",
+    "up",
+    "down",
+    "left",
+    "right",
+    "dpad_up",
+    "dpad_down",
+    "dpad_left",
+    "dpad_right",
+    "mouse_left",
+    "mouse_right",
+    "mouse_middle",
+    "mouse_x1",
+    "mouse_x2",
 }
-VALID_PICO_PORTS_WIN = {"COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "COM10", "COM11", "COM12", "COM13", "COM14", "COM15", "COM16", "COM17", "COM18", "COM19", "COM20"}
-VALID_PICO_PORTS_NIX = {"/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3", "/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyACM2", "/dev/ttyACM3"}
+VALID_PICO_PORTS_WIN = {
+    "COM1",
+    "COM2",
+    "COM3",
+    "COM4",
+    "COM5",
+    "COM6",
+    "COM7",
+    "COM8",
+    "COM9",
+    "COM10",
+    "COM11",
+    "COM12",
+    "COM13",
+    "COM14",
+    "COM15",
+    "COM16",
+    "COM17",
+    "COM18",
+    "COM19",
+    "COM20",
+}
+VALID_PICO_PORTS_NIX = {
+    "/dev/ttyUSB0",
+    "/dev/ttyUSB1",
+    "/dev/ttyUSB2",
+    "/dev/ttyUSB3",
+    "/dev/ttyACM0",
+    "/dev/ttyACM1",
+    "/dev/ttyACM2",
+    "/dev/ttyACM3",
+}
 
 
 # ─── Core Validation Functions ──────────────────────────────────────────────
+
 
 def validate_int(
     value: Any,
     min_val: int | None = None,
     max_val: int | None = None,
     default: int | None = None,
-    name: str = "value"
+    name: str = "value",
 ) -> tuple[bool, int | None, str | None]:
     """Validate integer value with optional bounds."""
     if value is None or value == "":
@@ -159,7 +238,7 @@ def validate_float(
     min_val: float | None = None,
     max_val: float | None = None,
     default: float | None = None,
-    name: str = "value"
+    name: str = "value",
 ) -> tuple[bool, float | None, str | None]:
     """Validate float value with optional bounds."""
     if value is None or value == "":
@@ -182,7 +261,7 @@ def validate_enum(
     valid_values: set[str],
     default: str | None = None,
     case_sensitive: bool = False,
-    name: str = "value"
+    name: str = "value",
 ) -> tuple[bool, str | None, str | None]:
     """Validate string value against allowed enum values."""
     if value is None or value == "":
@@ -206,7 +285,7 @@ def validate_str(
     min_len: int = 0,
     max_len: int | None = None,
     default: str | None = None,
-    name: str = "value"
+    name: str = "value",
 ) -> tuple[bool, str | None, str | None]:
     """Validate string value with optional length bounds."""
     if value is None:
@@ -226,7 +305,7 @@ def validate_json_array(
     item_type: type | None = None,
     min_items: int = 0,
     max_items: int | None = None,
-    name: str = "value"
+    name: str = "value",
 ) -> tuple[bool, list[Any] | None, str | None]:
     """Validate and parse JSON array string."""
     if value is None or value == "":
@@ -249,9 +328,7 @@ def validate_json_array(
 
 
 def validate_hwnd(
-    value: Any,
-    allow_zero: bool = True,
-    name: str = "hwnd"
+    value: Any, allow_zero: bool = True, name: str = "hwnd"
 ) -> tuple[bool, int | None, str | None]:
     """Validate window handle (HWND)."""
     if value is None:
@@ -268,9 +345,7 @@ def validate_hwnd(
 
 
 def validate_bool(
-    value: Any,
-    default: bool | None = None,
-    name: str = "value"
+    value: Any, default: bool | None = None, name: str = "value"
 ) -> tuple[bool, bool | None, str | None]:
     """Validate boolean value."""
     if value is None or value == "":
@@ -279,7 +354,7 @@ def validate_bool(
         return False, None, f"{name} is required"
     if isinstance(value, bool):
         return True, value, None
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return True, bool(value), None
     if isinstance(value, str):
         v_lower = value.lower().strip()
@@ -291,9 +366,7 @@ def validate_bool(
 
 
 def validate_pico_mode(
-    value: Any,
-    default: str | None = None,
-    name: str = "mode"
+    value: Any, default: str | None = None, name: str = "mode"
 ) -> tuple[bool, str]:
     """Validate Pico operating mode (COMPOSITE, KEYBOARD, MOUSE, GAMEPAD for test compatibility).
 
@@ -304,27 +377,27 @@ def validate_pico_mode(
         {"COMPOSITE", "KEYBOARD", "MOUSE", "GAMEPAD", "hid", "raw_hid", "cdc"},
         default=default,
         name=name,
-        case_sensitive=False
+        case_sensitive=False,
     )
     return (ok, err or "")
 
 
 def validate_pico_button(
-    value: Any,
-    default: str | None = None,
-    name: str = "button"
+    value: Any, default: str | None = None, name: str = "button"
 ) -> tuple[bool, str | None, str | None]:
     """Validate Pico button name (gamepad or mouse button)."""
-    return validate_enum(value, VALID_PICO_BUTTONS, default=default, name=name, case_sensitive=False)
+    return validate_enum(
+        value, VALID_PICO_BUTTONS, default=default, name=name, case_sensitive=False
+    )
 
 
 def validate_pico_port(
-    value: Any,
-    default: str | None = None,
-    name: str = "port"
+    value: Any, default: str | None = None, name: str = "port"
 ) -> tuple[bool, str | None, str | None]:
     """Validate Pico serial port (Windows COMx or Linux /dev/tty*)."""
-    ok, sval, err = validate_str(value, min_len=1, max_len=64, default=default, name=name)
+    ok, sval, err = validate_str(
+        value, min_len=1, max_len=64, default=default, name=name
+    )
     if not ok:
         return False, None, err
     if sval is None:
@@ -332,19 +405,22 @@ def validate_pico_port(
     # Additional format validation
     import re
     import sys
+
     if sys.platform == "win32":
-        if re.match(r'^COM\d+$', sval, re.IGNORECASE):
+        if re.match(r"^COM\d+$", sval, re.IGNORECASE):
             return True, sval.upper(), None
     else:
-        if re.match(r'^/dev/tty(USB|ACM)\d+$', sval):
+        if re.match(r"^/dev/tty(USB|ACM)\d+$", sval):
             return True, sval, None
     # Allow other patterns but warn (for flexibility with USB serial)
     import logging
+
     logging.getLogger(__name__).warning(f"Non-standard Pico port format: {sval}")
     return True, sval, None
 
 
 # ─── Response Helpers ──────────────────────────────────────────────────────
+
 
 def make_error_response(error: str) -> QVariantMap:
     """Create standardized error JSON response."""
@@ -360,9 +436,12 @@ def make_ok_response(**kwargs: Any) -> QVariantMap:
 
 # ─── Convenience Validator Functions (for test compatibility) ────────────────
 
+
 def validate_interval_ms(value: Any) -> tuple[bool, str]:
     """Validate clicker interval in milliseconds."""
-    ok, _, err = validate_int(value, CLICKER_INTERVAL_MIN, CLICKER_INTERVAL_MAX, name="interval_ms")
+    ok, _, err = validate_int(
+        value, CLICKER_INTERVAL_MIN, CLICKER_INTERVAL_MAX, name="interval_ms"
+    )
     return (ok, err or "")
 
 
@@ -374,7 +453,9 @@ def validate_hold_ms(value: Any) -> tuple[bool, str]:
 
 def validate_button(value: Any) -> tuple[bool, str]:
     """Validate mouse button."""
-    ok, _, err = validate_enum(value, VALID_CLICKER_BUTTONS, case_sensitive=False, name="button")
+    ok, _, err = validate_enum(
+        value, VALID_CLICKER_BUTTONS, case_sensitive=False, name="button"
+    )
     return (ok, err or "")
 
 
@@ -398,7 +479,9 @@ def validate_target_color(value: Any) -> tuple[bool, str]:
 
 def validate_background_method(value: Any) -> tuple[bool, str]:
     """Validate background input method."""
-    ok, _, err = validate_enum(value, VALID_BACKGROUND_METHODS, default="sendinput", name="background_method")
+    ok, _, err = validate_enum(
+        value, VALID_BACKGROUND_METHODS, default="sendinput", name="background_method"
+    )
     return (ok, err or "")
 
 
@@ -413,6 +496,7 @@ def validate_hotkey_key(value: Any) -> tuple[bool, str]:
 
         # Check if it's a valid keyboard key
         import keyboard
+
         if hasattr(keyboard, "parse_hotkey"):
             try:
                 keyboard.parse_hotkey(key)

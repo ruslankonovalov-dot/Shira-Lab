@@ -14,6 +14,7 @@ class TestRecorderService:
 
     def setup_method(self):
         from app.backend.services.recorder_service import RecorderService
+
         self.service = RecorderService()
         # Mock bridge for logging
         self.service._bridge = Mock()
@@ -114,6 +115,7 @@ class TestRecorderServicePlayback:
 
     def setup_method(self):
         from app.backend.services.recorder_service import RecorderService
+
         self.service = RecorderService()
         self.service._bridge = Mock()
 
@@ -141,6 +143,7 @@ class TestRecorderServiceEvents:
 
     def setup_method(self):
         from app.backend.services.recorder_service import RecorderService
+
         self.service = RecorderService()
         self.service._bridge = Mock()
 
@@ -194,6 +197,7 @@ class TestRecorderServiceSave:
 
     def setup_method(self):
         from app.backend.services.recorder_service import RecorderService
+
         self.service = RecorderService()
         self.service._bridge = Mock()
         # Create a temporary directory for test isolation
@@ -223,7 +227,7 @@ class TestRecorderServiceSave:
         assert len(files) == 1
 
         # Check file content
-        with open(os.path.join(self.service.records_dir, files[0]), "r") as f:
+        with open(os.path.join(self.service.records_dir, files[0])) as f:
             data = json.load(f)
         assert "events" in data
         assert "created_at" in data
@@ -236,6 +240,7 @@ class TestRecorderServiceSafePath:
 
     def setup_method(self):
         from app.backend.services.recorder_service import RecorderService
+
         self.service = RecorderService()
 
     def test_safe_path_valid(self):
@@ -265,6 +270,7 @@ class TestRecorderServiceThreadSafety:
 
     def setup_method(self):
         from app.backend.services.recorder_service import RecorderService
+
         self.service = RecorderService()
         self.service._bridge = Mock()
 

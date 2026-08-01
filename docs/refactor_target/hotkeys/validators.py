@@ -8,6 +8,7 @@
 - _normalize_button_n (строки 390–401)
 - validate_key (строки 884–955)
 """
+
 from __future__ import annotations
 
 import re
@@ -72,8 +73,13 @@ class KeyValidator:
     def parse_mouse_button(main: str) -> int | None:
         """Конвертирует имя кнопки в button_n для pynput (1=left, 2=right, 3=middle)."""
         mapping = {
-            "left": 1, "right": 2, "middle": 3,
-            "mouse4": 4, "mouse5": 5, "x1": 4, "x2": 5,
+            "left": 1,
+            "right": 2,
+            "middle": 3,
+            "mouse4": 4,
+            "mouse5": 5,
+            "x1": 4,
+            "x2": 5,
         }
         return mapping.get(main.strip().lower())
 

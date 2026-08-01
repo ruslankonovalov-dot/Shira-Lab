@@ -1,4 +1,5 @@
 """Unit tests for app.backend.profile_io module."""
+
 import json
 from unittest.mock import MagicMock
 
@@ -31,16 +32,19 @@ def mock_bridge():
     bridge.state.bg_fit_mode = "COVER"
     bridge.state.target_hwnd = None
     bridge.state.target_name = "GLOBAL_SCREEN"
-    bridge.state.hotkeys = {
-        "clicker_toggle": {"key": "f6", "mode": "TOGGLE"}
-    }
+    bridge.state.hotkeys = {"clicker_toggle": {"key": "f6", "mode": "TOGGLE"}}
 
     # Make get_status return real dict (MagicMock returns MagicMock by default)
     bridge.clicker = MagicMock()
-    bridge.clicker.get_status = MagicMock(return_value={
-        "interval_ms": 100, "hold_ms": 30, "button": "left",
-        "limit": 0, "background_method": "sendinput",
-    })
+    bridge.clicker.get_status = MagicMock(
+        return_value={
+            "interval_ms": 100,
+            "hold_ms": 30,
+            "button": "left",
+            "limit": 0,
+            "background_method": "sendinput",
+        }
+    )
     bridge.macro = MagicMock()
     bridge.macro.get_status = MagicMock(return_value={"actions": []})
     bridge.aim = MagicMock()
@@ -155,9 +159,9 @@ class TestSafeGet:
         assert result == {}
 
     def test_returns_empty_on_missing_method(self):
-        obj = MagicMock()
         # MagicMock returns another MagicMock for any attr — let's use a real object
         class Empty:
             pass
+
         result = _safe_get(Empty(), "nonexistent")
         assert result == {}

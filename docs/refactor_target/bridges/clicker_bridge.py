@@ -2,12 +2,14 @@
 
 Перенесено из qml_bridge.py, секция "Clicker" (строки 896–943).
 """
+
 from __future__ import annotations
 
 import json
 
-from app.backend.bridges.bridge_base import BridgeBase
 from PySide6.QtCore import Slot
+
+from app.backend.bridges.bridge_base import BridgeBase
 
 
 class ClickerBridge(BridgeBase):

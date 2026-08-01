@@ -10,6 +10,7 @@ pico_service.py — Высокоуровневый сервис для Raspberry
 - Gamepad (XInput-compatible)
 - Composite режим (всё сразу)
 """
+
 from __future__ import annotations
 
 import logging
@@ -62,6 +63,7 @@ logger = logging.getLogger(__name__)
 
 class PicoMode(IntEnum):
     """Режим работы USB интерфейса."""
+
     KEYBOARD = 0
     MOUSE = 1
     GAMEPAD = 2
@@ -70,6 +72,7 @@ class PicoMode(IntEnum):
 
 class PicoCapability(IntEnum):
     """Биты возможностей прошивки."""
+
     KB_BOOT = 1 << 0
     KB_NKRO = 1 << 1
     MS_ABS = 1 << 2
@@ -83,31 +86,79 @@ class PicoCapability(IntEnum):
 # ─── VK Map (common keys) ──────────────────────────────────────────────────
 VK_MAP = {
     # Letters
-    **{chr(c): c - 0x61 + 0x04 for c in range(ord('a'), ord('z') + 1)},
+    **{chr(c): c - 0x61 + 0x04 for c in range(ord("a"), ord("z") + 1)},
     # Digits
     **{str(d): (d + 0x1E) if d != 0 else 0x27 for d in range(10)},
     # Modifiers
-    "ctrl": 0xE0, "shift": 0xE1, "alt": 0xE2, "gui": 0xE3,
-    "lctrl": 0xE0, "lshift": 0xE1, "lalt": 0xE2, "lgui": 0xE3,
-    "rctrl": 0xE4, "rshift": 0xE5, "ralt": 0xE6, "rgui": 0xE7,
+    "ctrl": 0xE0,
+    "shift": 0xE1,
+    "alt": 0xE2,
+    "gui": 0xE3,
+    "lctrl": 0xE0,
+    "lshift": 0xE1,
+    "lalt": 0xE2,
+    "lgui": 0xE3,
+    "rctrl": 0xE4,
+    "rshift": 0xE5,
+    "ralt": 0xE6,
+    "rgui": 0xE7,
     # Special
-    "enter": 0x28, "esc": 0x29, "backspace": 0x2A, "tab": 0x2B,
-    "space": 0x2C, "capslock": 0x39,
-    "f1": 0x3A, "f2": 0x3B, "f3": 0x3C, "f4": 0x3D,
-    "f5": 0x3E, "f6": 0x3F, "f7": 0x40, "f8": 0x41,
-    "f9": 0x42, "f10": 0x43, "f11": 0x44, "f12": 0x45,
-    "printscreen": 0x46, "scrolllock": 0x47, "pause": 0x48,
-    "insert": 0x49, "home": 0x4A, "pageup": 0x4B,
-    "delete": 0x4C, "end": 0x4D, "pagedown": 0x4E,
-    "right": 0x4F, "left": 0x50, "down": 0x51, "up": 0x52,
-    "numlock": 0x53, "kp_divide": 0x54, "kp_multiply": 0x55,
-    "kp_subtract": 0x56, "kp_add": 0x57, "kp_enter": 0x58,
-    "kp_1": 0x59, "kp_2": 0x5A, "kp_3": 0x5B, "kp_4": 0x5C,
-    "kp_5": 0x5D, "kp_6": 0x5E, "kp_7": 0x5F, "kp_8": 0x60,
-    "kp_9": 0x61, "kp_0": 0x62, "kp_dot": 0x63,
+    "enter": 0x28,
+    "esc": 0x29,
+    "backspace": 0x2A,
+    "tab": 0x2B,
+    "space": 0x2C,
+    "capslock": 0x39,
+    "f1": 0x3A,
+    "f2": 0x3B,
+    "f3": 0x3C,
+    "f4": 0x3D,
+    "f5": 0x3E,
+    "f6": 0x3F,
+    "f7": 0x40,
+    "f8": 0x41,
+    "f9": 0x42,
+    "f10": 0x43,
+    "f11": 0x44,
+    "f12": 0x45,
+    "printscreen": 0x46,
+    "scrolllock": 0x47,
+    "pause": 0x48,
+    "insert": 0x49,
+    "home": 0x4A,
+    "pageup": 0x4B,
+    "delete": 0x4C,
+    "end": 0x4D,
+    "pagedown": 0x4E,
+    "right": 0x4F,
+    "left": 0x50,
+    "down": 0x51,
+    "up": 0x52,
+    "numlock": 0x53,
+    "kp_divide": 0x54,
+    "kp_multiply": 0x55,
+    "kp_subtract": 0x56,
+    "kp_add": 0x57,
+    "kp_enter": 0x58,
+    "kp_1": 0x59,
+    "kp_2": 0x5A,
+    "kp_3": 0x5B,
+    "kp_4": 0x5C,
+    "kp_5": 0x5D,
+    "kp_6": 0x5E,
+    "kp_7": 0x5F,
+    "kp_8": 0x60,
+    "kp_9": 0x61,
+    "kp_0": 0x62,
+    "kp_dot": 0x63,
     # Media
-    "mute": 0xE2, "volup": 0xE9, "voldown": 0xEA,
-    "playpause": 0xCD, "next": 0xB5, "prev": 0xB6, "stop": 0xB7,
+    "mute": 0xE2,
+    "volup": 0xE9,
+    "voldown": 0xEA,
+    "playpause": 0xCD,
+    "next": 0xB5,
+    "prev": 0xB6,
+    "stop": 0xB7,
 }
 
 
@@ -140,6 +191,7 @@ GP_DPAD_RIGHT = 0x0008
 @dataclass
 class PicoDevice:
     """Информация о найденном Pico устройстве."""
+
     port: str
     vid: int
     pid: int
@@ -162,7 +214,11 @@ class PicoService:
 
     # Стандартные VID:PID для Pico в CDC режиме
     DEFAULT_VIDS: ClassVar[list[int]] = [0x2E8A]  # Raspberry Pi
-    DEFAULT_PIDS: ClassVar[list[int]] = [0x000A, 0x0005, 0x0009]  # Pico CDC, Pico Boot, Custom
+    DEFAULT_PIDS: ClassVar[list[int]] = [
+        0x000A,
+        0x0005,
+        0x0009,
+    ]  # Pico CDC, Pico Boot, Custom
 
     def __init__(
         self,
@@ -190,7 +246,9 @@ class PicoService:
 
         # Командная очередь: (frame, seq)
         self._cmd_queue: Queue[tuple[bytes, int]] = Queue()
-        self._pending: dict[int, tuple[threading.Event, bytes | None]] = {}  # seq -> (event, response_data)
+        self._pending: dict[int, tuple[threading.Event, bytes | None]] = (
+            {}
+        )  # seq -> (event, response_data)
         self._seq = 0
 
         # Callbacks
@@ -273,8 +331,12 @@ class PicoService:
                 self._ser.reset_output_buffer()
 
                 self._stop_event.clear()
-                self._reader_thread = threading.Thread(target=self._reader_loop, daemon=True)
-                self._writer_thread = threading.Thread(target=self._writer_loop, daemon=True)
+                self._reader_thread = threading.Thread(
+                    target=self._reader_loop, daemon=True
+                )
+                self._writer_thread = threading.Thread(
+                    target=self._writer_loop, daemon=True
+                )
                 self._reader_thread.start()
                 self._writer_thread.start()
 
@@ -286,7 +348,9 @@ class PicoService:
 
                 self._device_info = info
                 self._connected = True
-                logger.info(f"Pico подключен: {info.fw_version}, caps=0x{info.capabilities:04X}")
+                logger.info(
+                    f"Pico подключен: {info.fw_version}, caps=0x{info.capabilities:04X}"
+                )
                 self._log("OK", f"Connected — fw={info.fw_version} port={self._port}")
                 if self._on_connect:
                     self._on_connect(info)
@@ -345,13 +409,17 @@ class PicoService:
     # ─── Device Discovery ──────────────────────────────────────────────────
 
     @classmethod
-    def find_pico(cls, vid_filter: list[int] | None = None, pid_filter: list[int] | None = None) -> PicoDevice | None:
+    def find_pico(
+        cls, vid_filter: list[int] | None = None, pid_filter: list[int] | None = None
+    ) -> PicoDevice | None:
         """Найти первый Pico в системе."""
         devices = cls.list_picos(vid_filter, pid_filter)
         return devices[0] if devices else None
 
     @classmethod
-    def list_picos(cls, vid_filter: list[int] | None = None, pid_filter: list[int] | None = None) -> list[PicoDevice]:
+    def list_picos(
+        cls, vid_filter: list[int] | None = None, pid_filter: list[int] | None = None
+    ) -> list[PicoDevice]:
         """Список всех Pico устройств."""
         vid_filter = vid_filter or cls.DEFAULT_VIDS
         pid_filter = pid_filter or cls.DEFAULT_PIDS
@@ -388,14 +456,23 @@ class PicoService:
 
     # ─── Low-level send/recv ───────────────────────────────────────────────
 
-    def _send_command(self, cmd: int, payload: bytes = b'', wait_resp: bool = True, timeout: float = 2.0) -> bytes | None:
+    def _send_command(
+        self,
+        cmd: int,
+        payload: bytes = b"",
+        wait_resp: bool = True,
+        timeout: float = 2.0,
+    ) -> bytes | None:
         """Отправить команду и опционально дождаться ответа."""
         if not self.is_connected:
             return None
 
         seq = self._next_seq()
         # Frame: [CMD][SEQ][LEN_H][LEN_L][PAYLOAD...]
-        frame = bytes([cmd, seq & 0xFF, (len(payload) >> 8) & 0xFF, len(payload) & 0xFF]) + payload
+        frame = (
+            bytes([cmd, seq & 0xFF, (len(payload) >> 8) & 0xFF, len(payload) & 0xFF])
+            + payload
+        )
 
         if wait_resp:
             event = threading.Event()
@@ -448,8 +525,8 @@ class PicoService:
                     plen = (buffer[2] << 8) | buffer[3]
                     if len(buffer) < 4 + plen:
                         break
-                    payload = bytes(buffer[4:4 + plen])
-                    del buffer[:4 + plen]
+                    payload = bytes(buffer[4 : 4 + plen])
+                    del buffer[: 4 + plen]
 
                     self._handle_response(cmd, seq, payload)
 
@@ -505,6 +582,7 @@ class PicoService:
 
     def _reconnect_loop(self) -> None:
         """Попытки переподключения в фоне."""
+
         def attempt() -> None:
             while self._auto_reconnect and not self._stop_event.is_set():
                 time.sleep(2.0)
@@ -516,25 +594,26 @@ class PicoService:
                         break
                 except (OSError, serial.SerialException, ValueError, RuntimeError):
                     logger.exception("Failed to reconnect to Pico")
+
         threading.Thread(target=attempt, daemon=True).start()
 
     # ─── High-level Commands ───────────────────────────────────────────────
 
     def get_info(self, timeout: float = 1.0) -> PicoInfo | None:
         """Запросить информацию об устройстве."""
-        resp = self._send_command(CMD_GET_INFO, b'', wait_resp=True, timeout=timeout)
+        resp = self._send_command(CMD_GET_INFO, b"", wait_resp=True, timeout=timeout)
         if resp and len(resp) >= 1 and resp[0] == RESP_INFO:
             return parse_info(resp[1:])
         return None
 
     def ping(self, timeout: float = 0.5) -> bool:
         """Проверка связи."""
-        resp = self._send_command(CMD_PING, b'', wait_resp=True, timeout=timeout)
+        resp = self._send_command(CMD_PING, b"", wait_resp=True, timeout=timeout)
         return bool(resp and len(resp) >= 1 and resp[0] == RESP_PONG)
 
     def reset(self, timeout: float = 1.0) -> bool:
         """Софтовый ресет Pico."""
-        resp = self._send_command(CMD_RESET, b'', wait_resp=True, timeout=timeout)
+        resp = self._send_command(CMD_RESET, b"", wait_resp=True, timeout=timeout)
         return bool(resp and resp[0] == RESP_OK)
 
     def set_mode(self, mode: PicoMode) -> bool:
@@ -597,7 +676,7 @@ class PicoService:
             x = max(-32768, min(32767, x))
             y = max(-32768, min(32767, y))
             flags = 0x00
-        payload = struct.pack('<hhB', x, y, flags)
+        payload = struct.pack("<hhB", x, y, flags)
         resp = self._send_command(CMD_MS_MOVE, payload, wait_resp=True)
         return bool(resp and resp[0] == RESP_OK)
 
@@ -647,7 +726,7 @@ class PicoService:
         resp = self._send_command(CMD_GP_BUTTONS, payload, wait_resp=True)
         return bool(resp and resp[0] == RESP_OK)
 
-    def gp_release_button(self, button: int) -> bool:
+    def gp_release_button(self, _button: int) -> bool:
         """Release a specific button while keeping others pressed.
 
         Note: Pico firmware needs to support bitwise operations for this to work correctly.
@@ -701,10 +780,10 @@ def get_pico_service(**kwargs: Any) -> PicoService:
         _pico_instance = PicoService(**kwargs)
     elif kwargs:
         # Reconfigure existing instance with new parameters
-        if 'port' in kwargs:
-            _pico_instance._port = kwargs['port']
-        if 'baudrate' in kwargs:
-            _pico_instance._baudrate = kwargs['baudrate']
+        if "port" in kwargs:
+            _pico_instance._port = kwargs["port"]
+        if "baudrate" in kwargs:
+            _pico_instance._baudrate = kwargs["baudrate"]
     return _pico_instance
 
 

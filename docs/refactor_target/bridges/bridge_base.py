@@ -7,6 +7,7 @@
 - Логирование
 - Управление app hwnd (для window/topmost операций)
 """
+
 from __future__ import annotations
 
 import logging
@@ -59,6 +60,7 @@ class BridgeBase(QObject):
 
         # HotkeyService требует ссылку на bridge (наследник BridgeBase)
         from app.backend.services.hotkey_service import HotkeyService
+
         self.hotkeys = HotkeyService(self)
 
         # Сохранение профиля (debounced)
@@ -72,6 +74,7 @@ class BridgeBase(QObject):
 
         # Загрузка профиля
         from app.backend.persistence import load_profile
+
         try:
             load_profile(self)
         except Exception:
@@ -99,6 +102,7 @@ class BridgeBase(QObject):
         """Реальное сохранение профиля на диск."""
         try:
             from app.backend.persistence import save_profile
+
             save_profile(self)
         except Exception:
             logger.exception("Failed to save profile")
@@ -111,9 +115,7 @@ class BridgeBase(QObject):
     # ─── Логирование ──────────────────────────────────────────────
     def log(self, level: str, source: str, message: str):
         """Логирование события с указанием источника."""
-        getattr(logger, level.lower(), logger.info)(
-            "[%s] %s", source, message
-        )
+        getattr(logger, level.lower(), logger.info)("[%s] %s", source, message)
 
     @Slot(str, str, str)
     def logMessageSlot(self, level, source, message):

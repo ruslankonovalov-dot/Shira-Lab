@@ -39,15 +39,17 @@ class AimService:
     5. Multi-mode detection with visual feedback
     """
 
-    HSV_PRESETS: ClassVar[dict[str, list[tuple[tuple[int, int, int], tuple[int, int, int]]]]] = {
-        "red":    [((0, 50, 50), (15, 255, 255)), ((165, 50, 50), (180, 255, 255))],
-        "blue":   [((85, 50, 50), (135, 255, 255))],
-        "green":  [((35, 50, 50), (85, 255, 255))],
+    HSV_PRESETS: ClassVar[
+        dict[str, list[tuple[tuple[int, int, int], tuple[int, int, int]]]]
+    ] = {
+        "red": [((0, 50, 50), (15, 255, 255)), ((165, 50, 50), (180, 255, 255))],
+        "blue": [((85, 50, 50), (135, 255, 255))],
+        "green": [((35, 50, 50), (85, 255, 255))],
         "purple": [((125, 50, 50), (165, 255, 255))],
         "yellow": [((15, 50, 50), (40, 255, 255))],
-        "cyan":   [((75, 50, 50), (105, 255, 255))],
+        "cyan": [((75, 50, 50), (105, 255, 255))],
         "orange": [((5, 50, 50), (30, 255, 255))],
-        "pink":   [((135, 50, 50), (175, 255, 255))],
+        "pink": [((135, 50, 50), (175, 255, 255))],
     }
 
     def __init__(self) -> None:
@@ -79,15 +81,19 @@ class AimService:
 
         # Predictive aim — compensate for latency
         self.prediction_factor: float = 0.15  # 0 = off, 0.15 = light prediction
-        self.last_target_pos: tuple[int, int, float] | None = None    # (tx, ty, timestamp)
-        self.last_mouse_delta: tuple[int, int] = (0, 0) # for smoothing
+        self.last_target_pos: tuple[int, int, float] | None = (
+            None  # (tx, ty, timestamp)
+        )
+        self.last_mouse_delta: tuple[int, int] = (0, 0)  # for smoothing
 
         # Debug
         self.debug_screenshots: bool = True
         self.debug_frame_count: int = 0
 
         # Performance: pre-built HSV arrays
-        self._hsv_cache: dict[str, list[tuple[npt.NDArray[np.uint8], npt.NDArray[np.uint8]]]] = {}  # color_name → list of (lower_arr, upper_arr)
+        self._hsv_cache: dict[
+            str, list[tuple[npt.NDArray[np.uint8], npt.NDArray[np.uint8]]]
+        ] = {}  # color_name → list of (lower_arr, upper_arr)
         self._kernel_3x3: npt.NDArray[np.uint8] = np.ones((3, 3), np.uint8)
 
         self._bridge: object | None = None
@@ -101,7 +107,9 @@ class AimService:
         # Thread safety
         self._lock: threading.RLock = threading.RLock()
 
-    def _get_hsv_arrays(self, color_name: str) -> list[tuple[npt.NDArray[np.uint8], npt.NDArray[np.uint8]]]:
+    def _get_hsv_arrays(
+        self, color_name: str
+    ) -> list[tuple[npt.NDArray[np.uint8], npt.NDArray[np.uint8]]]:
         """Get cached numpy arrays for HSV range (avoids re-creating every frame)."""
         if color_name not in self._hsv_cache:
             ranges = self.HSV_PRESETS.get(color_name, [])
@@ -114,7 +122,7 @@ class AimService:
     def set_bridge(self, bridge: object | None) -> None:
         self._bridge = bridge
         # Expect bridge to have a log(level, module, message) method
-        if bridge and hasattr(bridge, 'log'):
+        if bridge and hasattr(bridge, "log"):
             self._bridge_log = bridge.log
         else:
             self._bridge_log = None
@@ -143,7 +151,9 @@ class AimService:
 
     # ─── Config ────────────────────────────────────────────────────────
 
-    def update_config(self, confidence: float, smooth_steps: int, reset_delay: float) -> dict[str, Any]:
+    def update_config(
+        self, confidence: float, smooth_steps: int, reset_delay: float
+    ) -> dict[str, Any]:
         with self._lock:
             self.confidence = max(0.1, min(1.0, float(confidence)))
             self.smooth_steps = max(1, int(smooth_steps))
@@ -151,7 +161,13 @@ class AimService:
         return self.get_status()
 
     def set_detection_mode(self, mode: DetectionMode) -> dict[str, Any]:
-        valid: tuple[DetectionMode, ...] = ("auto", "multi", "circles", "color", "calibrate")
+        valid: tuple[DetectionMode, ...] = (
+            "auto",
+            "multi",
+            "circles",
+            "color",
+            "calibrate",
+        )
         if mode in valid:
             with self._lock:
                 self.detection_mode = mode
@@ -184,7 +200,15 @@ class AimService:
             self.aim_speed = max(0.05, min(1.0, float(speed)))
         return {"ok": True, "aim_speed": self.aim_speed}
 
-    def set_filters(self, min_area: int, max_area: int, aspect_min: float, aspect_max: float, brightness: int, saturation: int) -> dict[str, Any]:
+    def set_filters(
+        self,
+        min_area: int,
+        max_area: int,
+        aspect_min: float,
+        aspect_max: float,
+        brightness: int,
+        saturation: int,
+    ) -> dict[str, Any]:
         with self._lock:
             self.min_area = max(1, int(min_area))
             self.max_area = max(self.min_area + 1, int(max_area))
@@ -194,7 +218,9 @@ class AimService:
             self.saturation_threshold = max(0, min(255, int(saturation)))
         return {"ok": True}
 
-    def set_scan_region(self, top: int, left: int, width: int, height: int) -> dict[str, Any]:
+    def set_scan_region(
+        self, top: int, left: int, width: int, height: int
+    ) -> dict[str, Any]:
         """Set custom scan region. Pass all zeros to reset to full screen."""
         if top == 0 and left == 0 and width == 0 and height == 0:
             with self._lock:
@@ -202,8 +228,10 @@ class AimService:
         else:
             with self._lock:
                 self.scan_region = {
-                    "top": int(top), "left": int(left),
-                    "width": max(1, int(width)), "height": max(1, int(height)),
+                    "top": int(top),
+                    "left": int(left),
+                    "width": max(1, int(width)),
+                    "height": max(1, int(height)),
                 }
         return self.get_status()
 
@@ -217,8 +245,14 @@ class AimService:
             # Validate coordinates are within screen bounds
             sw, sh, _, _ = self._get_screen_size()
             if x < 0 or y < 0 or x >= sw or y >= sh:
-                self._log("ERROR", f"Pipette coordinates out of bounds: ({x},{y}) screen={sw}x{sh}")
-                return {"ok": False, "error": f"Coordinates ({x},{y}) out of screen bounds ({sw}x{sh})"}
+                self._log(
+                    "ERROR",
+                    f"Pipette coordinates out of bounds: ({x},{y}) screen={sw}x{sh}",
+                )
+                return {
+                    "ok": False,
+                    "error": f"Coordinates ({x},{y}) out of screen bounds ({sw}x{sh})",
+                }
 
             if self._sct is None:
                 self._sct = mss.mss()
@@ -267,7 +301,10 @@ class AimService:
             with self._lock:
                 self.calibrated_hsv_ranges = calibrated_ranges
                 self.detection_mode = "calibrate"
-            self._log("OK", f"Pipette ({x},{y}): H={int(mean_h)} S={mean_s} V={mean_v} std=({int(std_h)},{std_s},{std_v}) → tol H±{h_tol} S±{s_tol} V±{v_tol}")
+            self._log(
+                "OK",
+                f"Pipette ({x},{y}): H={int(mean_h)} S={mean_s} V={mean_v} std=({int(std_h)},{std_s},{std_v}) → tol H±{h_tol} S±{s_tol} V±{v_tol}",
+            )
             return {
                 "ok": True,
                 "hsv": [int(mean_h), mean_s, mean_v],
@@ -278,13 +315,17 @@ class AimService:
             self._log("ERROR", f"Pipette failed: {e}")
             return {"ok": False, "error": str(e)}
 
-    def _circular_mean(self, hue_array: np.ndarray[Any, Any], max_val: int) -> tuple[int, int]:
+    def _circular_mean(
+        self, hue_array: np.ndarray[Any, Any], max_val: int
+    ) -> tuple[int, int]:
         """Compute circular mean for hue (which wraps around)."""
         radians = hue_array.astype(float) * (2 * np.pi / max_val)
         mean_rad = np.arctan2(np.sin(radians).mean(), np.cos(radians).mean())
         mean_hue = int((mean_rad * max_val / (2 * np.pi)) % max_val)
         # Std as circular distance
-        diffs = np.minimum(np.abs(hue_array - mean_hue), max_val - np.abs(hue_array - mean_hue))
+        diffs = np.minimum(
+            np.abs(hue_array - mean_hue), max_val - np.abs(hue_array - mean_hue)
+        )
         std_hue = int(diffs.std())
         return mean_hue, std_hue
 
@@ -297,7 +338,10 @@ class AimService:
             self.target_hwnd = target_hwnd
         self.is_running = True
         self.last_log = "STARTING"
-        self._log("OK", f"Started — mode={self.detection_mode} fov={self.fov_radius} speed={self.aim_speed}")
+        self._log(
+            "OK",
+            f"Started — mode={self.detection_mode} fov={self.fov_radius} speed={self.aim_speed}",
+        )
         threading.Thread(target=self._worker, daemon=True).start()
         return self.get_status()
 
@@ -314,18 +358,28 @@ class AimService:
         """Move mouse using SendInput (modern, reliable)."""
         try:
             from app.backend.services.stealth_input import StealthInput
+
             StealthInput.send_mouse_move(int(dx), int(dy))
         except (OSError, ValueError, AttributeError):
-            logger.debug("StealthInput send_mouse_move failed, falling back to mouse_event")
+            logger.debug(
+                "StealthInput send_mouse_move failed, falling back to mouse_event"
+            )
             # Fallback to mouse_event
             user32 = ctypes.windll.user32
             user32.mouse_event(0x0001, int(dx), int(dy), 0, 0)
 
     # ─── Detection ─────────────────────────────────────────────────────
 
-    def _detect_auto(self, frame_hsv: np.ndarray[Any, Any], brightness_threshold: int,
-                     saturation_threshold: int, min_area: int, max_area: int,
-                     aspect_ratio_min: float, aspect_ratio_max: float) -> list[tuple[int, int, float]]:
+    def _detect_auto(
+        self,
+        frame_hsv: np.ndarray[Any, Any],
+        brightness_threshold: int,
+        saturation_threshold: int,
+        min_area: int,
+        max_area: int,
+        aspect_ratio_min: float,
+        aspect_ratio_max: float,
+    ) -> list[tuple[int, int, float]]:
         """Auto: brightness + saturation filter. Finds bright saturated objects.
         Optimized: single bitwise_and, no per-pixel loops."""
         if frame_hsv.shape[2] != 3:
@@ -333,16 +387,36 @@ class AimService:
         v_channel = frame_hsv[:, :, 2]
         s_channel = frame_hsv[:, :, 1]
         # Use numpy vectorized thresholding
-        mask = np.where((v_channel >= brightness_threshold) &
-                        (s_channel >= saturation_threshold), 255, 0).astype(np.uint8)
+        mask = np.where(
+            (v_channel >= brightness_threshold) & (s_channel >= saturation_threshold),
+            255,
+            0,
+        ).astype(np.uint8)
         _mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, self._kernel_3x3)
         _mask = cv2.morphologyEx(_mask, cv2.MORPH_CLOSE, self._kernel_3x3)
-        contours, _ = cv2.findContours(_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        return self._filter_contours(cast(Sequence[cv2.Mat], contours), frame_hsv, min_area, max_area, aspect_ratio_min, aspect_ratio_max)
+        contours, _ = cv2.findContours(
+            _mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
+        return self._filter_contours(
+            cast(Sequence[cv2.Mat], contours),
+            frame_hsv,
+            min_area,
+            max_area,
+            aspect_ratio_min,
+            aspect_ratio_max,
+        )
 
-    def _detect_color(self, frame_hsv: np.ndarray[Any, Any], color_name: str, brightness_threshold: int,
-                      saturation_threshold: int, min_area: int, max_area: int,
-                      aspect_ratio_min: float, aspect_ratio_max: float) -> list[tuple[int, int, float]]:
+    def _detect_color(
+        self,
+        frame_hsv: np.ndarray[Any, Any],
+        color_name: str,
+        brightness_threshold: int,
+        _saturation_threshold: int,
+        min_area: int,
+        max_area: int,
+        aspect_ratio_min: float,
+        aspect_ratio_max: float,
+    ) -> list[tuple[int, int, float]]:
         """Single color HSV detection — uses cached arrays.
         Falls back to adaptive V-threshold for low-contrast scenarios."""
         if frame_hsv.shape[2] != 3:
@@ -368,24 +442,46 @@ class AimService:
             if max_v > brightness_threshold:
                 # Re-threshold with V = max_v - 5 (only brightest pixels = target)
                 v_thresh = max(0, max_v - 5)
-                v_mask = cv2.compare(cast(cv2.Mat, v_channel), np.array(v_thresh, dtype=v_channel.dtype), cv2.CMP_GE)
+                v_mask = cv2.compare(
+                    cast(cv2.Mat, v_channel),
+                    np.array(v_thresh, dtype=v_channel.dtype),
+                    cv2.CMP_GE,
+                )
                 mask = cv2.bitwise_and(mask, v_mask)
 
         _mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, self._kernel_3x3)
         _mask = cv2.morphologyEx(_mask, cv2.MORPH_CLOSE, self._kernel_3x3)
-        contours, _ = cv2.findContours(_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        return self._filter_contours(cast(Sequence[cv2.Mat], contours), frame_hsv, min_area, max_area, aspect_ratio_min, aspect_ratio_max)
+        contours, _ = cv2.findContours(
+            _mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
+        return self._filter_contours(
+            cast(Sequence[cv2.Mat], contours),
+            frame_hsv,
+            min_area,
+            max_area,
+            aspect_ratio_min,
+            aspect_ratio_max,
+        )
 
-    def _detect_multi_color(self, frame_hsv: np.ndarray[Any, Any], multi_colors: Sequence[TargetColor],
-                            brightness_threshold: int, saturation_threshold: int,
-                            min_area: int, max_area: int,
-                            aspect_ratio_min: float, aspect_ratio_max: float) -> list[tuple[int, int, float]]:
+    def _detect_multi_color(
+        self,
+        frame_hsv: np.ndarray[Any, Any],
+        multi_colors: Sequence[TargetColor],
+        brightness_threshold: int,
+        _saturation_threshold: int,
+        min_area: int,
+        max_area: int,
+        aspect_ratio_min: float,
+        aspect_ratio_max: float,
+    ) -> list[tuple[int, int, float]]:
         """Multi-color detection with adaptive V-threshold fallback."""
         mask: np.ndarray[Any, Any] = np.zeros(frame_hsv.shape[:2], dtype=np.uint8)
         for color_name in multi_colors:
             arrays = self._get_hsv_arrays(color_name)
             for lower_arr, upper_arr in arrays:
-                mask = cv2.bitwise_or(mask, cv2.inRange(frame_hsv, lower_arr, upper_arr))
+                mask = cv2.bitwise_or(
+                    mask, cv2.inRange(frame_hsv, lower_arr, upper_arr)
+                )
 
         # Adaptive V threshold if bg matches too
         total_pixels = frame_hsv.shape[0] * frame_hsv.shape[1]
@@ -396,23 +492,45 @@ class AimService:
             max_v = int(v_in_mask.max())
             if max_v > brightness_threshold:
                 v_thresh = max(0, max_v - 5)
-                v_mask = cv2.compare(cast(cv2.Mat, v_channel), np.array(v_thresh, dtype=v_channel.dtype), cv2.CMP_GE)
+                v_mask = cv2.compare(
+                    cast(cv2.Mat, v_channel),
+                    np.array(v_thresh, dtype=v_channel.dtype),
+                    cv2.CMP_GE,
+                )
                 mask = cv2.bitwise_and(mask, v_mask)
 
         _mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, self._kernel_3x3)
         _mask = cv2.morphologyEx(_mask, cv2.MORPH_CLOSE, self._kernel_3x3)
-        contours, _ = cv2.findContours(_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        return self._filter_contours(cast(Sequence[cv2.Mat], contours), frame_hsv, min_area, max_area, aspect_ratio_min, aspect_ratio_max)
+        contours, _ = cv2.findContours(
+            _mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
+        return self._filter_contours(
+            cast(Sequence[cv2.Mat], contours),
+            frame_hsv,
+            min_area,
+            max_area,
+            aspect_ratio_min,
+            aspect_ratio_max,
+        )
 
-    def _detect_calibrated(self, frame_hsv: np.ndarray[Any, Any], calibrated_hsv_ranges: list[tuple[tuple[int, int, int], tuple[int, int, int]]],
-                           brightness_threshold: int, saturation_threshold: int,
-                           min_area: int, max_area: int,
-                           aspect_ratio_min: float, aspect_ratio_max: float) -> list[tuple[int, int, float]]:
+    def _detect_calibrated(
+        self,
+        frame_hsv: np.ndarray[Any, Any],
+        calibrated_hsv_ranges: list[tuple[tuple[int, int, int], tuple[int, int, int]]],
+        brightness_threshold: int,
+        _saturation_threshold: int,
+        min_area: int,
+        max_area: int,
+        aspect_ratio_min: float,
+        aspect_ratio_max: float,
+    ) -> list[tuple[int, int, float]]:
         if not calibrated_hsv_ranges:
             return []
         mask: np.ndarray[Any, Any] = np.zeros(frame_hsv.shape[:2], dtype=np.uint8)
         for lower, upper in calibrated_hsv_ranges:
-            mask = cv2.bitwise_or(mask, cv2.inRange(frame_hsv, np.array(lower), np.array(upper)))
+            mask = cv2.bitwise_or(
+                mask, cv2.inRange(frame_hsv, np.array(lower), np.array(upper))
+            )
 
         # Adaptive V threshold if bg matches too
         total_pixels = frame_hsv.shape[0] * frame_hsv.shape[1]
@@ -423,27 +541,52 @@ class AimService:
             max_v = int(v_in_mask.max())
             if max_v > brightness_threshold:
                 v_thresh = max(0, max_v - 5)
-                v_mask = cv2.compare(cast(cv2.Mat, v_channel), np.array(v_thresh, dtype=v_channel.dtype), cv2.CMP_GE)
+                v_mask = cv2.compare(
+                    cast(cv2.Mat, v_channel),
+                    np.array(v_thresh, dtype=v_channel.dtype),
+                    cv2.CMP_GE,
+                )
                 mask = cv2.bitwise_and(mask, v_mask)
 
         _mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, self._kernel_3x3)
         _mask = cv2.morphologyEx(_mask, cv2.MORPH_CLOSE, self._kernel_3x3)
-        contours, _ = cv2.findContours(_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        return self._filter_contours(cast(Sequence[cv2.Mat], contours), frame_hsv, min_area, max_area, aspect_ratio_min, aspect_ratio_max)
+        contours, _ = cv2.findContours(
+            _mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
+        return self._filter_contours(
+            cast(Sequence[cv2.Mat], contours),
+            frame_hsv,
+            min_area,
+            max_area,
+            aspect_ratio_min,
+            aspect_ratio_max,
+        )
 
-    def _detect_circles(self, frame: np.ndarray[Any, Any], frame_hsv: np.ndarray[Any, Any],
-                        min_area: int, max_area: int,
-                        brightness_threshold: int, saturation_threshold: int) -> list[tuple[int, int, float]]:
+    def _detect_circles(
+        self,
+        frame: np.ndarray[Any, Any],
+        frame_hsv: np.ndarray[Any, Any],
+        min_area: int,
+        max_area: int,
+        brightness_threshold: int,
+        saturation_threshold: int,
+    ) -> list[tuple[int, int, float]]:
         gray = cv2.cvtColor(frame, cv2.COLOR_BGRA2GRAY)
         gray = cv2.GaussianBlur(gray, (9, 9), 2)
         circles = cv2.HoughCircles(
-            gray, cv2.HOUGH_GRADIENT, dp=1.2, minDist=30,
-            param1=50, param2=30, minRadius=5, maxRadius=100
+            gray,
+            cv2.HOUGH_GRADIENT,
+            dp=1.2,
+            minDist=30,
+            param1=50,
+            param2=30,
+            minRadius=5,
+            maxRadius=100,
         )
         targets: list[tuple[int, int, float]] = []
         if circles is not None:
             circles = np.round(circles[0, :]).astype("int")
-            for (x, y, r) in circles:
+            for x, y, r in circles:
                 y_c = max(0, min(frame_hsv.shape[0] - 1, y))
                 x_c = max(0, min(frame_hsv.shape[1] - 1, x))
                 pixel = frame_hsv[y_c, x_c]
@@ -457,9 +600,15 @@ class AimService:
                 targets.append((x, y, area))
         return targets
 
-    def _filter_contours(self, contours: Sequence[cv2.Mat], frame_hsv: np.ndarray[Any, Any],
-                         min_area: int, max_area: int,
-                         aspect_ratio_min: float, aspect_ratio_max: float) -> list[tuple[int, int, float]]:
+    def _filter_contours(
+        self,
+        contours: Sequence[cv2.Mat],
+        _frame_hsv: np.ndarray[Any, Any],
+        min_area: int,
+        max_area: int,
+        aspect_ratio_min: float,
+        aspect_ratio_max: float,
+    ) -> list[tuple[int, int, float]]:
         filtered: list[tuple[int, int, float]] = []
         for cnt in contours:
             area = cv2.contourArea(cnt)
@@ -479,11 +628,13 @@ class AimService:
             filtered.append((cx, cy, area))
         return filtered
 
-    def _find_nearest(self, targets: list[tuple[int, int, float]], cx: int, cy: int) -> tuple[int, int, float, float] | None:
+    def _find_nearest(
+        self, targets: list[tuple[int, int, float]], cx: int, cy: int
+    ) -> tuple[int, int, float, float] | None:
         if not targets:
             return None
         nearest: tuple[int, int, float, float] | None = None
-        min_dist = float('inf')
+        min_dist = float("inf")
         for tx, ty, score in targets:
             d = ((tx - cx) ** 2 + (ty - cy) ** 2) ** 0.5
             if d < min_dist:
@@ -493,9 +644,14 @@ class AimService:
 
     # ─── Debug screenshots ─────────────────────────────────────────────
 
-    def _save_debug_screenshot(self, frame: np.ndarray[Any, Any], targets: list[tuple[int, int, float]],
-                               nearest: tuple[int, int, float, float] | None,
-                               region_offset: tuple[int, int], detection_mode: str) -> None:
+    def _save_debug_screenshot(
+        self,
+        frame: np.ndarray[Any, Any],
+        targets: list[tuple[int, int, float]],
+        nearest: tuple[int, int, float, float] | None,
+        _region_offset: tuple[int, int],
+        detection_mode: str,
+    ) -> None:
         if not self.debug_screenshots:
             return
         try:
@@ -517,11 +673,20 @@ class AimService:
             cv2.line(debug_img, (cx - 15, cy), (cx + 15, cy), (0, 255, 255), 2)
             cv2.line(debug_img, (cx, cy - 15), (cx, cy + 15), (0, 255, 255), 2)
             # Add text
-            cv2.putText(debug_img, f"Targets: {len(targets)} Mode: {detection_mode}",
-                        (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+            cv2.putText(
+                debug_img,
+                f"Targets: {len(targets)} Mode: {detection_mode}",
+                (10, 25),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (255, 255, 255),
+                1,
+            )
             # Save (keep only last 10)
             self.debug_frame_count += 1
-            path = os.path.join(debug_dir, f"aim_debug_{self.debug_frame_count:04d}.png")
+            path = os.path.join(
+                debug_dir, f"aim_debug_{self.debug_frame_count:04d}.png"
+            )
             cv2.imwrite(path, debug_img)
             # Cleanup old files
             files = sorted(os.listdir(debug_dir))
@@ -545,7 +710,9 @@ class AimService:
         # - If scan_region is set (custom), use it
         # - Otherwise, capture FOV box around screen center
         with self._lock:
-            scan_region = dict(self.scan_region) if self.scan_region is not None else None
+            scan_region = (
+                dict(self.scan_region) if self.scan_region is not None else None
+            )
             fov_radius = self.fov_radius
 
         if scan_region is not None:
@@ -560,7 +727,10 @@ class AimService:
                 "width": min(r * 2, sw),
                 "height": min(r * 2, sh),
             }
-        self._log("INFO", f"Capture region: {region['width']}x{region['height']} at ({region['left']},{region['top']})")
+        self._log(
+            "INFO",
+            f"Capture region: {region['width']}x{region['height']} at ({region['left']},{region['top']})",
+        )
 
         frame_count = 0
         last_log = time.time()
@@ -602,15 +772,57 @@ class AimService:
 
                 # Detect using snapshot config
                 if detection_mode == "auto":
-                    targets = self._detect_auto(frame_hsv, brightness_threshold, saturation_threshold, min_area, max_area, aspect_ratio_min, aspect_ratio_max)
+                    targets = self._detect_auto(
+                        frame_hsv,
+                        brightness_threshold,
+                        saturation_threshold,
+                        min_area,
+                        max_area,
+                        aspect_ratio_min,
+                        aspect_ratio_max,
+                    )
                 elif detection_mode == "multi":
-                    targets = self._detect_multi_color(frame_hsv, multi_colors, brightness_threshold, saturation_threshold, min_area, max_area, aspect_ratio_min, aspect_ratio_max)
+                    targets = self._detect_multi_color(
+                        frame_hsv,
+                        multi_colors,
+                        brightness_threshold,
+                        saturation_threshold,
+                        min_area,
+                        max_area,
+                        aspect_ratio_min,
+                        aspect_ratio_max,
+                    )
                 elif detection_mode == "circles":
-                    targets = self._detect_circles(frame, frame_hsv, min_area, max_area, brightness_threshold, saturation_threshold)
+                    targets = self._detect_circles(
+                        frame,
+                        frame_hsv,
+                        min_area,
+                        max_area,
+                        brightness_threshold,
+                        saturation_threshold,
+                    )
                 elif detection_mode == "calibrate":
-                    targets = self._detect_calibrated(frame_hsv, calibrated_hsv_ranges, brightness_threshold, saturation_threshold, min_area, max_area, aspect_ratio_min, aspect_ratio_max)
+                    targets = self._detect_calibrated(
+                        frame_hsv,
+                        calibrated_hsv_ranges,
+                        brightness_threshold,
+                        saturation_threshold,
+                        min_area,
+                        max_area,
+                        aspect_ratio_min,
+                        aspect_ratio_max,
+                    )
                 else:
-                    targets = self._detect_color(frame_hsv, target_color, brightness_threshold, saturation_threshold, min_area, max_area, aspect_ratio_min, aspect_ratio_max)
+                    targets = self._detect_color(
+                        frame_hsv,
+                        target_color,
+                        brightness_threshold,
+                        saturation_threshold,
+                        min_area,
+                        max_area,
+                        aspect_ratio_min,
+                        aspect_ratio_max,
+                    )
 
                 frame_count += 1
 
@@ -650,7 +862,7 @@ class AimService:
                     if smooth_steps > 1:
                         step_dx = move_dx / smooth_steps
                         step_dy = move_dy / smooth_steps
-                        for i in range(smooth_steps):
+                        for _i in range(smooth_steps):
                             with self._lock:
                                 if not self.is_running:
                                     break
@@ -665,7 +877,14 @@ class AimService:
                     with self._lock:
                         self.last_log = f"TRACK {len(targets)} targets, nearest dist={int(nearest[3]) if nearest else 0}"
                     if targets:
-                        self._log("OK", f"{len(targets)} targets, nearest: dx={nearest[0]-cx} dy={nearest[1]-cy} dist={int(nearest[3])}") if targets and nearest is not None else None
+                        (
+                            self._log(
+                                "OK",
+                                f"{len(targets)} targets, nearest: dx={nearest[0]-cx} dy={nearest[1]-cy} dist={int(nearest[3])}",
+                            )
+                            if targets and nearest is not None
+                            else None
+                        )
                     else:
                         with self._lock:
                             self.last_log = "SCANNING"
@@ -674,12 +893,24 @@ class AimService:
 
                 # Debug screenshot every 1s
                 if now - last_debug > 1.0:
-                    self._save_debug_screenshot(frame, targets, nearest, (region["left"], region["top"]), detection_mode)
+                    self._save_debug_screenshot(
+                        frame,
+                        targets,
+                        nearest,
+                        (region["left"], region["top"]),
+                        detection_mode,
+                    )
                     last_debug = now
 
                 time.sleep(reset_delay)
 
-        except (OSError, ValueError, RuntimeError, cv2.error, mss_exception.ScreenShotError) as e:
+        except (
+            OSError,
+            ValueError,
+            RuntimeError,
+            cv2.error,
+            mss_exception.ScreenShotError,
+        ) as e:
             with self._lock:
                 self.last_log = f"ERR {e}"
             self._log("ERROR", f"Worker: {e}")
@@ -713,7 +944,12 @@ class AimService:
             }
 
     def set_background_method(self, method: BackgroundMethod) -> dict[str, Any]:
-        valid: tuple[BackgroundMethod, ...] = ("sendinput", "postmessage", "vigem", "pico")
+        valid: tuple[BackgroundMethod, ...] = (
+            "sendinput",
+            "postmessage",
+            "vigem",
+            "pico",
+        )
         if method in valid:
             with self._lock:
                 self.background_method = method

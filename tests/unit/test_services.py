@@ -11,6 +11,7 @@ class TestClickerService:
 
     def test_start_stop(self):
         from app.backend.services.clicker_service import ClickerService
+
         service = ClickerService()
         service._bridge = Mock()
 
@@ -26,6 +27,7 @@ class TestClickerService:
 
     def test_config_validation(self):
         from app.backend.services.clicker_service import ClickerService
+
         service = ClickerService()
         service._bridge = Mock()
 
@@ -49,6 +51,7 @@ class TestClickerService:
 
     def test_calculation(self):
         from app.backend.services.clicker_service import ClickerService
+
         service = ClickerService()
         service._bridge = Mock()
 
@@ -63,6 +66,7 @@ class TestClickerService:
 
     def test_background_methods(self):
         from app.backend.services.clicker_service import ClickerService
+
         service = ClickerService()
         service._bridge = Mock()
 
@@ -81,6 +85,7 @@ class TestRecorderService:
 
     def setup_method(self):
         from app.backend.services.recorder_service import RecorderService
+
         self.service = RecorderService()
         self.service._bridge = Mock()
 
@@ -142,6 +147,7 @@ class TestAimService:
 
     def test_detection_modes(self):
         from app.backend.services.aim_service import AimService
+
         service = AimService()
 
         for mode in ["auto", "multi", "circles", "color", "calibrate"]:
@@ -151,22 +157,31 @@ class TestAimService:
 
     def test_target_color(self):
         from app.backend.services.aim_service import AimService
+
         service = AimService()
 
-        for color in ["red", "blue", "green", "purple", "yellow", "cyan", "orange", "pink"]:
+        for color in [
+            "red",
+            "blue",
+            "green",
+            "purple",
+            "yellow",
+            "cyan",
+            "orange",
+            "pink",
+        ]:
             result = service.set_target_color(color)
             assert result["ok"] is True
             assert service.target_color == color
 
     def test_config(self):
         from app.backend.services.aim_service import AimService
+
         service = AimService()
 
         # update_config returns status dict without "ok" field
         result = service.update_config(
-            confidence=0.5,
-            smooth_steps=5,
-            reset_delay=0.005
+            confidence=0.5, smooth_steps=5, reset_delay=0.005
         )
         assert result["confidence"] == 0.5
         assert result["smooth_steps"] == 5
@@ -174,6 +189,7 @@ class TestAimService:
 
     def test_start_stop(self):
         from app.backend.services.aim_service import AimService
+
         service = AimService()
 
         result = service.start()
@@ -190,6 +206,7 @@ class TestMacroService:
 
     def test_add_action(self):
         from app.backend.services.macro_service import MacroService
+
         service = MacroService()
 
         # Clear first
@@ -204,6 +221,7 @@ class TestMacroService:
 
     def test_undo_redo(self):
         from app.backend.services.macro_service import MacroService
+
         service = MacroService()
 
         service.clear_actions()
@@ -222,6 +240,7 @@ class TestMacroService:
 
     def test_move_action(self):
         from app.backend.services.macro_service import MacroService
+
         service = MacroService()
 
         service.clear_actions()
@@ -234,6 +253,7 @@ class TestMacroService:
 
     def test_run_mode(self):
         from app.backend.services.macro_service import MacroService
+
         service = MacroService()
 
         for mode in ["SEQUENTIAL", "PARALLEL"]:
@@ -247,6 +267,7 @@ class TestMacroService:
 
     def test_start_stop(self):
         from app.backend.services.macro_service import MacroService
+
         service = MacroService()
 
         service.clear_actions()
@@ -270,13 +291,19 @@ class TestProfileIO:
         from app.backend.profile_io import load_profile, save_profile
 
         test_profile = {
-            "clicker": {"interval_ms": 100, "hold_ms": 0, "button": "L", "limit": 0, "background_method": "sendinput"},
+            "clicker": {
+                "interval_ms": 100,
+                "hold_ms": 0,
+                "button": "L",
+                "limit": 0,
+                "background_method": "sendinput",
+            },
             "aim": {"speed": 0.5, "fov": 300, "smooth": 5, "reset_delay": 0.005},
             "macro": {"actions": [], "mode": "SEQUENTIAL"},
             "recorder": {"records_dir": "records"},
             "hotkeys": {},
             "ui": {"terminal_palette": "matrix", "ui_lang": "RU"},
-            "game_profiles": {}
+            "game_profiles": {},
         }
 
         profile_path = tmp_path / "test_profile.json"
@@ -296,11 +323,12 @@ class TestProfileIO:
             "macro": {"actions": []},
             "recorder": {},
             "hotkeys": {},
-            "ui": {"terminal_palette": "matrix"}
+            "ui": {"terminal_palette": "matrix"},
         }
 
         profile_path = tmp_path / "old_profile.json"
         import json
+
         with open(profile_path, "w", encoding="utf-8") as f:
             json.dump(old_profile, f)
 
@@ -314,6 +342,7 @@ class TestHotkeyService:
 
     def test_validate_key(self):
         from app.backend.services.hotkey_service import HotkeyService
+
         service = HotkeyService(Mock())
 
         # Keyboard keys
@@ -336,6 +365,7 @@ class TestHotkeyService:
 
     def test_register_unregister(self):
         from app.backend.services.hotkey_service import HotkeyService
+
         mock_api = Mock()
         mock_api.clicker = Mock()
         mock_api.clicker.is_running = False
@@ -351,7 +381,6 @@ class TestHotkeyService:
         mock_api.pico.is_connected = False
 
         service = HotkeyService(mock_api)
-        callback = Mock()
 
         # Register
         result = service.set_binding("clicker_toggle", "f6", "TOGGLE")
@@ -372,6 +401,7 @@ class TestHotkeyService:
 
     def test_mouse_binding(self):
         from app.backend.services.hotkey_service import HotkeyService
+
         mock_api = Mock()
         mock_api.clicker = Mock()
         mock_api.clicker.is_running = False
@@ -397,11 +427,12 @@ class TestVigemService:
 
     def test_add_remove_target(self):
         from app.backend.services.vigem_service import VigemService
+
         service = VigemService()
 
         # Add X360 target
         result = service.add_x360()
-        assert isinstance(result, (int, type(None)))
+        assert isinstance(result, int | type(None))
 
     def test_button_name_to_mask(self):
         from app.backend.services.vigem_service import XUSB_BUTTON_MAP, VigemService
@@ -413,18 +444,29 @@ class TestVigemService:
         assert VigemService.button_name_to_mask("y") == XUSB_BUTTON_MAP.get("y", 0)
         assert VigemService.button_name_to_mask("lb") == XUSB_BUTTON_MAP.get("lb", 0)
         assert VigemService.button_name_to_mask("rb") == XUSB_BUTTON_MAP.get("rb", 0)
-        assert VigemService.button_name_to_mask("back") == XUSB_BUTTON_MAP.get("back", 0)
-        assert VigemService.button_name_to_mask("start") == XUSB_BUTTON_MAP.get("start", 0)
+        assert VigemService.button_name_to_mask("back") == XUSB_BUTTON_MAP.get(
+            "back", 0
+        )
+        assert VigemService.button_name_to_mask("start") == XUSB_BUTTON_MAP.get(
+            "start", 0
+        )
         assert VigemService.button_name_to_mask("up") == XUSB_BUTTON_MAP.get("up", 0)
-        assert VigemService.button_name_to_mask("down") == XUSB_BUTTON_MAP.get("down", 0)
-        assert VigemService.button_name_to_mask("left") == XUSB_BUTTON_MAP.get("left", 0)
-        assert VigemService.button_name_to_mask("right") == XUSB_BUTTON_MAP.get("right", 0)
+        assert VigemService.button_name_to_mask("down") == XUSB_BUTTON_MAP.get(
+            "down", 0
+        )
+        assert VigemService.button_name_to_mask("left") == XUSB_BUTTON_MAP.get(
+            "left", 0
+        )
+        assert VigemService.button_name_to_mask("right") == XUSB_BUTTON_MAP.get(
+            "right", 0
+        )
 
         # Invalid button
         assert VigemService.button_name_to_mask("invalid") == 0
 
     def test_press_release_button(self):
         from app.backend.services.vigem_service import VigemService
+
         service = VigemService()
 
         service.add_x360()
@@ -440,6 +482,7 @@ class TestVigemService:
 
     def test_set_state_structure(self):
         from app.backend.services.vigem_service import VigemService
+
         service = VigemService()
 
         service.add_x360()
@@ -447,18 +490,13 @@ class TestVigemService:
         if targets:
             target_id = list(targets.keys())[0]
             result = service.x360_set_state(
-                target_id,
-                left_x=10000,
-                left_y=0,
-                right_x=0,
-                right_y=0,
-                lt=0,
-                rt=0
+                target_id, left_x=10000, left_y=0, right_x=0, right_y=0, lt=0, rt=0
             )
             assert isinstance(result, bool)
 
     def test_set_state_trigger_limits(self):
         from app.backend.services.vigem_service import VigemService
+
         service = VigemService()
 
         service.add_x360()
@@ -474,6 +512,7 @@ class TestVigemService:
 
     def test_set_state_stick_limits(self):
         from app.backend.services.vigem_service import VigemService
+
         service = VigemService()
 
         service.add_x360()
@@ -483,17 +522,18 @@ class TestVigemService:
             # Should clamp
             result = service.x360_set_state(
                 target_id,
-                left_x=40000,   # Over limit
+                left_x=40000,  # Over limit
                 left_y=-40000,
                 right_x=0,
                 right_y=0,
                 lt=0,
-                rt=0
+                rt=0,
             )
             assert isinstance(result, bool)
 
     def test_x360_set_buttons(self):
         from app.backend.services.vigem_service import VigemService
+
         service = VigemService()
 
         service.add_x360()
@@ -505,6 +545,7 @@ class TestVigemService:
 
     def test_x360_set_triggers(self):
         from app.backend.services.vigem_service import VigemService
+
         service = VigemService()
 
         service.add_x360()
@@ -516,6 +557,7 @@ class TestVigemService:
 
     def test_x360_set_left_stick(self):
         from app.backend.services.vigem_service import VigemService
+
         service = VigemService()
 
         service.add_x360()
@@ -527,6 +569,7 @@ class TestVigemService:
 
     def test_x360_set_right_stick(self):
         from app.backend.services.vigem_service import VigemService
+
         service = VigemService()
 
         service.add_x360()
@@ -538,6 +581,7 @@ class TestVigemService:
 
     def test_x360_reset(self):
         from app.backend.services.vigem_service import VigemService
+
         service = VigemService()
 
         service.add_x360()
@@ -549,6 +593,7 @@ class TestVigemService:
 
     def test_get_status_structure(self):
         from app.backend.services.vigem_service import VigemService
+
         service = VigemService()
 
         result = service.list_targets()
@@ -556,6 +601,7 @@ class TestVigemService:
 
     def test_is_available(self):
         from app.backend.services.vigem_service import VigemService
+
         service = VigemService()
 
         result = service.is_available()
@@ -563,6 +609,7 @@ class TestVigemService:
 
     def test_connect_disconnect(self):
         from app.backend.services.vigem_service import VigemService
+
         service = VigemService()
 
         result = service.connect()
@@ -571,6 +618,7 @@ class TestVigemService:
 
     def test_combine_buttons(self):
         from app.backend.services.vigem_service import VigemService
+
         service = VigemService()
 
         mask = service.combine_buttons("a", "b", "x")
@@ -579,6 +627,7 @@ class TestVigemService:
 
     def test_stick_normalize(self):
         from app.backend.services.vigem_service import VigemService
+
         service = VigemService()
 
         result = service.stick_normalize(1.0)
@@ -599,6 +648,7 @@ class TestVigemService:
 
     def test_trigger_normalize(self):
         from app.backend.services.vigem_service import VigemService
+
         service = VigemService()
 
         result = service.trigger_normalize(1.0)
@@ -631,6 +681,7 @@ class TestPicoService:
 
     def test_button_map(self):
         from app.backend.services.pico_service import PicoService
+
         service = PicoService()
 
         # Test default mapping
@@ -640,6 +691,7 @@ class TestPicoService:
 
     def test_connect_disconnect(self):
         from app.backend.services.pico_service import PicoService
+
         service = PicoService()
 
         # Try to connect (will fail if no Pico, but should return proper structure)
@@ -651,13 +703,15 @@ class TestBridgeControllers:
     """Tests for controller slots returning correct shapes."""
 
     def test_window_controller_slots(self):
-        from app.backend.controllers.window_controller import WindowController
-        from app.backend.models.runtime_state import RuntimeState
-        from app.backend.sound_manager import SoundManager
         from unittest.mock import Mock
 
+        from app.backend.controllers.window_controller import WindowController
+        from app.backend.models.runtime_state import RuntimeState
+
         state = RuntimeState()
-        controller = WindowController(state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock())
+        controller = WindowController(
+            state, Mock(), Mock(), Mock(), Mock(), Mock(), Mock()
+        )
 
         # Test setTerminalPalette
         result = controller.setTerminalPalette("matrix")
@@ -678,10 +732,11 @@ class TestBridgeControllers:
         assert "ok" in result
 
     def test_hotkey_controller_slots(self):
+        from unittest.mock import Mock
+
         from app.backend.controllers.hotkey_controller import HotkeyController
         from app.backend.models.runtime_state import RuntimeState
         from app.backend.services.hotkey_service import HotkeyService
-        from unittest.mock import Mock
 
         state = RuntimeState()
         mock_api = Mock()

@@ -11,6 +11,7 @@ class TestAimService:
 
     def setup_method(self):
         from app.backend.services.aim_service import AimService
+
         self.service = AimService()
         self.service._bridge = Mock()
 
@@ -28,7 +29,16 @@ class TestAimService:
 
     def test_target_colors(self):
         """Test all target colors."""
-        for color in ["red", "blue", "green", "purple", "yellow", "cyan", "orange", "pink"]:
+        for color in [
+            "red",
+            "blue",
+            "green",
+            "purple",
+            "yellow",
+            "cyan",
+            "orange",
+            "pink",
+        ]:
             result = self.service.set_target_color(color)
             assert result["ok"] is True
             assert self.service.get_status()["target_color"] == color
@@ -41,9 +51,7 @@ class TestAimService:
     def test_config(self):
         """Test full config update."""
         result = self.service.update_config(
-            confidence=0.5,
-            smooth_steps=5,
-            reset_delay=0.005
+            confidence=0.5, smooth_steps=5, reset_delay=0.005
         )
         assert result["ok"] is True
 
@@ -80,7 +88,7 @@ class TestAimService:
             aspect_min=0.2,
             aspect_max=3.0,
             brightness=100,
-            saturation=60
+            saturation=60,
         )
         assert result["ok"] is True
 
@@ -140,10 +148,11 @@ class TestAimServiceCalibration:
 
     def setup_method(self):
         from app.backend.services.aim_service import AimService
+
         self.service = AimService()
         self.service._bridge = Mock()
 
-    @patch('app.backend.services.aim_service.mss.mss')
+    @patch("app.backend.services.aim_service.mss.mss")
     def test_sample_color(self, mock_mss):
         """Test color sampling."""
         # Mock mss grab
@@ -165,7 +174,7 @@ class TestAimServiceCalibration:
         assert self.service.get_status()["detection_mode"] == "calibrate"
         assert len(self.service.calibrated_hsv_ranges) > 0
 
-    @patch('app.backend.services.aim_service.mss.mss')
+    @patch("app.backend.services.aim_service.mss.mss")
     def test_sample_color_out_of_bounds(self, mock_mss):
         """Test sampling out of bounds."""
         result = self.service.sample_color_at(-1, -1)
@@ -178,6 +187,7 @@ class TestAimServiceDetection:
 
     def setup_method(self):
         from app.backend.services.aim_service import AimService
+
         self.service = AimService()
         self.service._bridge = Mock()
 
@@ -196,7 +206,9 @@ class TestAimServiceDetection:
         # Create test contours
         contours = []
         # Large contour (should pass)
-        contour1 = np.array([[[0, 0]], [[100, 0]], [[100, 100]], [[0, 100]]], dtype=np.int32)
+        contour1 = np.array(
+            [[[0, 0]], [[100, 0]], [[100, 100]], [[0, 100]]], dtype=np.int32
+        )
         contours.append(contour1)
 
         # Small contour (should fail min_area)
@@ -205,8 +217,12 @@ class TestAimServiceDetection:
 
         frame_hsv = np.zeros((200, 200, 3), dtype=np.uint8)
         filtered = self.service._filter_contours(
-            contours, frame_hsv, min_area=50, max_area=50000,
-            aspect_ratio_min=0.3, aspect_ratio_max=2.0
+            contours,
+            frame_hsv,
+            min_area=50,
+            max_area=50000,
+            aspect_ratio_min=0.3,
+            aspect_ratio_max=2.0,
         )
 
         assert len(filtered) == 1
@@ -218,6 +234,7 @@ class TestAimServiceScanRegion:
 
     def setup_method(self):
         from app.backend.services.aim_service import AimService
+
         self.service = AimService()
         self.service._bridge = Mock()
 
@@ -244,11 +261,13 @@ class TestAimServiceThreadSafety:
 
     def setup_method(self):
         from app.backend.services.aim_service import AimService
+
         self.service = AimService()
         self.service._bridge = Mock()
 
     def test_concurrent_config_changes(self):
         """Test concurrent config changes."""
+
         def change_config():
             for _ in range(100):
                 self.service.update_config(0.5, 5, 0.005)
@@ -271,11 +290,21 @@ class TestAimServiceHSVPresets:
 
     def setup_method(self):
         from app.backend.services.aim_service import AimService
+
         self.service = AimService()
 
     def test_hsv_presets_exist(self):
         """Test all expected colors have presets."""
-        expected_colors = ["red", "blue", "green", "purple", "yellow", "cyan", "orange", "pink"]
+        expected_colors = [
+            "red",
+            "blue",
+            "green",
+            "purple",
+            "yellow",
+            "cyan",
+            "orange",
+            "pink",
+        ]
         for color in expected_colors:
             assert color in self.service.HSV_PRESETS
             assert len(self.service.HSV_PRESETS[color]) > 0

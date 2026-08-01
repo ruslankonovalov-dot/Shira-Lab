@@ -11,6 +11,7 @@ Usage:
     ProfileManager.list_profiles()
     ProfileManager.delete("Minecraft Auto-Farm")
 """
+
 from __future__ import annotations
 
 import json
@@ -56,10 +57,16 @@ class ProfileManager:
                 "macro": self._bridge.macro.get_status() if self._bridge else {},
                 "recorder": self._bridge.recorder.status() if self._bridge else {},
                 "state": {
-                    "terminal_palette": self._bridge.state.terminal_palette if self._bridge else "matrix",
-                    "is_pinned": self._bridge.state.is_pinned if self._bridge else False,
+                    "terminal_palette": (
+                        self._bridge.state.terminal_palette
+                        if self._bridge
+                        else "matrix"
+                    ),
+                    "is_pinned": (
+                        self._bridge.state.is_pinned if self._bridge else False
+                    ),
                     "hotkeys": self._bridge.state.hotkeys if self._bridge else {},
-                }
+                },
             }
 
             with open(profile_path, "w", encoding="utf-8") as f:
@@ -83,7 +90,7 @@ class ProfileManager:
             return {"ok": False, "error": f"Profile '{name}' not found"}
 
         try:
-            with open(profile_path, "r", encoding="utf-8") as f:
+            with open(profile_path, encoding="utf-8") as f:
                 data = json.load(f)
 
             # Apply clicker config
@@ -118,7 +125,9 @@ class ProfileManager:
             m = data.get("macro", {})
             if m and self._bridge:
                 self._bridge.macro.set_run_mode(m.get("run_mode", "SEQUENTIAL"))
-                self._bridge.macro.set_background_method(m.get("background_method", "sendinput"))
+                self._bridge.macro.set_background_method(
+                    m.get("background_method", "sendinput")
+                )
                 self._bridge.macro.clear_actions()
                 for action in m.get("actions", []):
                     self._bridge.macro.add_action(
@@ -130,7 +139,9 @@ class ProfileManager:
             # Apply recorder config
             r = data.get("recorder", {})
             if r and self._bridge:
-                self._bridge.recorder.set_background_method(r.get("background_method", "sendinput"))
+                self._bridge.recorder.set_background_method(
+                    r.get("background_method", "sendinput")
+                )
 
             # Apply state
             s = data.get("state", {})
@@ -149,12 +160,14 @@ class ProfileManager:
             profiles: list[dict[str, str]] = []
             for f in sorted(PROFILES_DIR.glob("*.json")):
                 try:
-                    with open(f, "r", encoding="utf-8") as fh:
+                    with open(f, encoding="utf-8") as fh:
                         data = json.load(fh)
-                    profiles.append({
-                        "name": data.get("name", f.stem),
-                        "filename": f.name,
-                    })
+                    profiles.append(
+                        {
+                            "name": data.get("name", f.stem),
+                            "filename": f.name,
+                        }
+                    )
                 except (OSError, json.JSONDecodeError, ValueError):
                     profiles.append({"name": f.stem, "filename": f.name})
             return {"ok": True, "profiles": profiles}

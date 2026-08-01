@@ -2,12 +2,14 @@
 
 Перенесено из qml_bridge.py, секция "Aim" (строки 1058–1228).
 """
+
 from __future__ import annotations
 
 import json
 
-from app.backend.bridges.bridge_base import BridgeBase
 from PySide6.QtCore import Slot
+
+from app.backend.bridges.bridge_base import BridgeBase
 
 
 class AimBridge(BridgeBase):
@@ -76,13 +78,22 @@ class AimBridge(BridgeBase):
     @Slot(str, result=str)
     def setAimMultiColors(self, colors_json):
         import json
+
         colors = json.loads(colors_json)
         out = self.aim.set_multi_colors(colors)
         self._schedule_save()
         return json.dumps(out)
 
     @Slot(int, int, int, int, int, int, result=str)
-    def setAimFilters(self, min_area, max_area, aspect_min_x100, aspect_max_x100, brightness, saturation):
+    def setAimFilters(
+        self,
+        min_area,
+        max_area,
+        aspect_min_x100,
+        aspect_max_x100,
+        brightness,
+        saturation,
+    ):
         out = self.aim.set_filters(
             min_area, max_area, aspect_min_x100, aspect_max_x100, brightness, saturation
         )
@@ -99,9 +110,12 @@ class AimBridge(BridgeBase):
     def getMousePosition(self):
         """Возвращает текущие координаты курсора (для UI калибровки)."""
         import ctypes
+
         try:
+
             class POINT(ctypes.Structure):
                 _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
+
             pt = POINT()
             ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
             return json.dumps({"x": pt.x, "y": pt.y})

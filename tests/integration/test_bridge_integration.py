@@ -25,19 +25,19 @@ class TestBridgeIntegration:
         bridge = QmlBridge(state)
 
         # Verify all controllers are present
-        assert hasattr(bridge, '_window_controller')
-        assert hasattr(bridge, '_gamepad_controller')
-        assert hasattr(bridge, '_hotkey_controller')
-        assert hasattr(bridge, '_profile_controller')
+        assert hasattr(bridge, "_window_controller")
+        assert hasattr(bridge, "_gamepad_controller")
+        assert hasattr(bridge, "_hotkey_controller")
+        assert hasattr(bridge, "_profile_controller")
 
         # Verify services are accessible
-        assert hasattr(bridge, 'clicker')
-        assert hasattr(bridge, 'aim')
-        assert hasattr(bridge, 'macro')
-        assert hasattr(bridge, 'recorder')
-        assert hasattr(bridge, 'hotkeys')
-        assert hasattr(bridge, '_vigem')
-        assert hasattr(bridge, '_pico')
+        assert hasattr(bridge, "clicker")
+        assert hasattr(bridge, "aim")
+        assert hasattr(bridge, "macro")
+        assert hasattr(bridge, "recorder")
+        assert hasattr(bridge, "hotkeys")
+        assert hasattr(bridge, "_vigem")
+        assert hasattr(bridge, "_pico")
 
     def test_bridge_signals_connected(self):
         """Test that controller signals are connected to bridge."""
@@ -48,14 +48,14 @@ class TestBridgeIntegration:
         bridge = QmlBridge(state)
 
         # Check that signals exist
-        assert hasattr(bridge, 'statusChanged')
-        assert hasattr(bridge, 'clickerStatusChanged')
-        assert hasattr(bridge, 'aimStatusChanged')
-        assert hasattr(bridge, 'macroStatusChanged')
-        assert hasattr(bridge, 'recorderStatusChanged')
-        assert hasattr(bridge, 'hotkeysChanged')
-        assert hasattr(bridge, 'settingsChanged')
-        assert hasattr(bridge, 'langChanged')
+        assert hasattr(bridge, "statusChanged")
+        assert hasattr(bridge, "clickerStatusChanged")
+        assert hasattr(bridge, "aimStatusChanged")
+        assert hasattr(bridge, "macroStatusChanged")
+        assert hasattr(bridge, "recorderStatusChanged")
+        assert hasattr(bridge, "hotkeysChanged")
+        assert hasattr(bridge, "settingsChanged")
+        assert hasattr(bridge, "langChanged")
 
     def test_bridge_clicker_delegation(self):
         """Test clicker service delegation through bridge."""
@@ -162,7 +162,6 @@ class TestBridgeIntegration:
         """Test recorder service delegation through bridge."""
         from app.backend.models.runtime_state import RuntimeState
         from app.backend.qml_bridge import QmlBridge
-        import time
 
         state = RuntimeState()
         bridge = QmlBridge(state)
@@ -313,20 +312,20 @@ class TestRuntimeState:
         state = RuntimeState()
 
         # Check all expected attributes exist
-        assert hasattr(state, 'clicker_running')
-        assert hasattr(state, 'aim_running')
-        assert hasattr(state, 'macro_running')
-        assert hasattr(state, 'recorder_recording')
-        assert hasattr(state, 'recorder_playing')
-        assert hasattr(state, 'clicker_config')
-        assert hasattr(state, 'aim_config')
-        assert hasattr(state, 'macro_config')
-        assert hasattr(state, 'recorder_config')
-        assert hasattr(state, 'hotkeys')
-        assert hasattr(state, 'palettes')
-        assert hasattr(state, 'terminal_palette')
-        assert hasattr(state, 'ui_lang')
-        assert hasattr(state, 'game_profiles')
+        assert hasattr(state, "clicker_running")
+        assert hasattr(state, "aim_running")
+        assert hasattr(state, "macro_running")
+        assert hasattr(state, "recorder_recording")
+        assert hasattr(state, "recorder_playing")
+        assert hasattr(state, "clicker_config")
+        assert hasattr(state, "aim_config")
+        assert hasattr(state, "macro_config")
+        assert hasattr(state, "recorder_config")
+        assert hasattr(state, "hotkeys")
+        assert hasattr(state, "palettes")
+        assert hasattr(state, "terminal_palette")
+        assert hasattr(state, "ui_lang")
+        assert hasattr(state, "game_profiles")
 
     def test_config_defaults(self):
         from app.backend.models.runtime_state import RuntimeState
@@ -398,7 +397,16 @@ class TestInputValidation:
     def test_validate_target_color(self):
         from app.backend.services.input_validation import validate_target_color
 
-        for color in ["red", "blue", "green", "purple", "yellow", "cyan", "orange", "pink"]:
+        for color in [
+            "red",
+            "blue",
+            "green",
+            "purple",
+            "yellow",
+            "cyan",
+            "orange",
+            "pink",
+        ]:
             ok, err = validate_target_color(color)
             assert ok is True
 

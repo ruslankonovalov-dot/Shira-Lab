@@ -2,12 +2,14 @@
 
 Перенесено из qml_bridge.py, секция "Pico" (строки 1636–1915).
 """
+
 from __future__ import annotations
 
 import json
 
-from app.backend.bridges.bridge_base import BridgeBase
 from PySide6.QtCore import Slot
+
+from app.backend.bridges.bridge_base import BridgeBase
 
 
 class PicoBridge(BridgeBase):
@@ -22,6 +24,7 @@ class PicoBridge(BridgeBase):
         if self._pico is None:
             try:
                 from app.backend.services.pico_service import PicoService
+
                 self._pico = PicoService()
             except Exception:
                 return None

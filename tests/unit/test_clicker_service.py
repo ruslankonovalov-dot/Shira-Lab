@@ -11,6 +11,7 @@ class TestClickerService:
 
     def setup_method(self):
         from app.backend.services.clicker_service import ClickerService
+
         # Reset singleton to get fresh instance
         ClickerService.reset_instance()
         self.service = ClickerService()
@@ -86,7 +87,7 @@ class TestClickerService:
             assert result["is_running"] is False
             assert self.service.get_status()["background_method"] == method
 
-    @patch('app.backend.services.clicker_service.StealthInput.send_mouse_click')
+    @patch("app.backend.services.clicker_service.StealthInput.send_mouse_click")
     def test_sendinput_method(self, mock_send_click):
         """Test sendinput background method."""
         self.service.update_config(100, 0, "L", 0, "sendinput")
@@ -94,14 +95,13 @@ class TestClickerService:
         self.service._send_background_click(0, "L", 0, "sendinput")
         mock_send_click.assert_called_once()
 
-    @patch('app.backend.services.clicker_service.send_background_click')
+    @patch("app.backend.services.clicker_service.send_background_click")
     def test_postmessage_method(self, mock_send_click):
         """Test postmessage background method."""
         self.service.update_config(100, 0, "L", 0, "postmessage")
         self.service.target_hwnd = 12345
         self.service._send_background_click(12345, "L", 0, "postmessage")
         mock_send_click.assert_called_once_with(12345, button="L")
-
 
     def test_limit(self):
         """Test click limit."""
@@ -139,6 +139,7 @@ class TestClickerServiceThreadSafety:
 
     def setup_method(self):
         from app.backend.services.clicker_service import ClickerService
+
         # Reset singleton to get fresh instance
         ClickerService.reset_instance()
         self.service = ClickerService()
@@ -146,6 +147,7 @@ class TestClickerServiceThreadSafety:
 
     def test_concurrent_config_changes(self):
         """Test concurrent config changes."""
+
         def change_config():
             for _ in range(100):
                 self.service.update_config(100, 0, "L", 0, "sendinput")
@@ -163,6 +165,7 @@ class TestClickerServiceThreadSafety:
 
     def test_concurrent_start_stop(self):
         """Test concurrent start/stop."""
+
         def start_stop():
             for _ in range(10):
                 self.service.start()
@@ -184,12 +187,13 @@ class TestClickerServiceBackgroundMethods:
 
     def setup_method(self):
         from app.backend.services.clicker_service import ClickerService
+
         # Reset singleton to get fresh instance
         ClickerService.reset_instance()
         self.service = ClickerService()
         self.service._bridge = Mock()
 
-    @patch('app.backend.services.clicker_service.StealthInput.send_mouse_click')
+    @patch("app.backend.services.clicker_service.StealthInput.send_mouse_click")
     def test_sendinput_method(self, mock_send_click):
         """Test sendinput background method."""
         self.service.update_config(100, 0, "L", 0, "sendinput")
@@ -197,7 +201,7 @@ class TestClickerServiceBackgroundMethods:
         self.service._send_background_click(0, "L", 0, "sendinput")
         mock_send_click.assert_called_once()
 
-    @patch('app.backend.services.clicker_service.send_background_click')
+    @patch("app.backend.services.clicker_service.send_background_click")
     def test_postmessage_method(self, mock_send_click):
         """Test postmessage background method."""
         self.service.update_config(100, 0, "L", 0, "postmessage")

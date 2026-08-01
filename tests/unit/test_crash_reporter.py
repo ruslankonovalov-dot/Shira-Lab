@@ -1,4 +1,5 @@
 """Unit tests for app.backend.services.crash_reporter module."""
+
 import json
 from unittest.mock import patch
 
@@ -16,10 +17,9 @@ class TestCrashReportBuilding:
             raise ValueError("Test exception")
         except ValueError as e:
             import sys
+
             tb = sys.exc_info()[2]
-            report = crash_reporter._build_report(
-                type(e), e, tb, "1.0.0"
-            )
+            report = crash_reporter._build_report(type(e), e, tb, "1.0.0")
 
         assert "timestamp" in report
         assert "app_version" in report
@@ -64,11 +64,13 @@ class TestLocalCrashStorage:
         # Create some fake crash files
         for i in range(3):
             (tmp_path / f"crash_2025010{i}_120000_ValueError.json").write_text(
-                json.dumps({
-                    "timestamp": "2025-01-01T12:00:00",
-                    "exception_type": "ValueError",
-                    "exception_message": "test",
-                })
+                json.dumps(
+                    {
+                        "timestamp": "2025-01-01T12:00:00",
+                        "exception_type": "ValueError",
+                        "exception_message": "test",
+                    }
+                )
             )
 
         # Create non-crash file (should be ignored)
@@ -136,6 +138,7 @@ class TestInstallCrashHandler:
         """install_crash_handler should not raise even on weird environments."""
         monkeypatch.setattr(crash_reporter, "CRASH_LOG_DIR", tmp_path)
         import sys
+
         original_hook = sys.excepthook
 
         try:
@@ -148,7 +151,9 @@ class TestInstallCrashHandler:
     def test_send_to_server_returns_false_on_network_error(self):
         """Server sending should fail gracefully when no network."""
         import urllib.error
-        with patch("urllib.request.urlopen",
-                   side_effect=urllib.error.URLError("No network")):
+
+        with patch(
+            "urllib.request.urlopen", side_effect=urllib.error.URLError("No network")
+        ):
             result = crash_reporter._send_to_server({"test": "data"})
             assert result is False

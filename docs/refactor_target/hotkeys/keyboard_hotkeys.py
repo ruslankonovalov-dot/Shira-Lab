@@ -6,8 +6,10 @@
 - _register_sequence (строки 768–782)
 - _check_modifiers_pressed (строки 612–633)
 """
+
 from __future__ import annotations
 
+import importlib.util
 import logging
 from collections.abc import Callable
 
@@ -22,24 +24,27 @@ class KeyboardHotkeyManager:
     def __init__(self, dispatcher):
         self._dispatcher = dispatcher
         self._listener = None
-        self._registered: dict[str, dict] = {}  # action → {modifiers, main, mode, callback}
+        self._registered: dict[str, dict] = (
+            {}
+        )  # action → {modifiers, main, mode, callback}
         self._available = False
         self._check_pynput()
 
     def _check_pynput(self):
         """Проверяет доступность pynput.keyboard."""
-        try:
-            import pynput.keyboard
+        spec = importlib.util.find_spec("pynput.keyboard")
+        if spec is not None:
             self._available = True
-        except ImportError:
+        else:
             self._available = False
             logger.warning("pynput.keyboard not available")
 
     def is_available(self) -> bool:
         return self._available
 
-    def register(self, action: str, key: str, mode: str,
-                 on_press: Callable, on_release: Callable) -> tuple[bool, str | None]:
+    def register(
+        self, action: str, key: str, mode: str, on_press: Callable, on_release: Callable
+    ) -> tuple[bool, str | None]:
         """Регистрирует keyboard binding для action.
 
         Returns: (success, error_message)
@@ -65,8 +70,10 @@ class KeyboardHotkeyManager:
         try:
             # TODO: полная реализация с GlobalHotKeys или Listener
             self._registered[action] = {
-                "parsed": parsed, "mode": mode,
-                "on_press": on_press, "on_release": on_release,
+                "parsed": parsed,
+                "mode": mode,
+                "on_press": on_press,
+                "on_release": on_release,
             }
             self._ensure_listener()
             return True, None
@@ -78,8 +85,10 @@ class KeyboardHotkeyManager:
         try:
             # TODO: использовать keyboard.GlobalHotKeys
             self._registered[action] = {
-                "parsed": parsed, "mode": mode,
-                "on_press": on_press, "on_release": on_release,
+                "parsed": parsed,
+                "mode": mode,
+                "on_press": on_press,
+                "on_release": on_release,
             }
             self._ensure_listener()
             return True, None
@@ -129,9 +138,13 @@ class KeyboardHotkeyManager:
             return True
         try:
             import ctypes
+
             user32 = ctypes.windll.user32
             MOD_MAP = {
-                "ctrl": 0x0011, "alt": 0x0012, "shift": 0x0010, "win": 0x005B,
+                "ctrl": 0x0011,
+                "alt": 0x0012,
+                "shift": 0x0010,
+                "win": 0x005B,
             }
             for mod in modifiers:
                 vk = MOD_MAP.get(mod.strip().lower())

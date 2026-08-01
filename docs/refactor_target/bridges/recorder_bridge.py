@@ -2,12 +2,14 @@
 
 Перенесено из qml_bridge.py, секция "Recorder" (строки 1002–1057).
 """
+
 from __future__ import annotations
 
 import json
 
-from app.backend.bridges.bridge_base import BridgeBase
 from PySide6.QtCore import Slot
+
+from app.backend.bridges.bridge_base import BridgeBase
 
 
 class RecorderBridge(BridgeBase):
@@ -60,8 +62,9 @@ class RecorderBridge(BridgeBase):
     @Slot(str, str, result=str)
     def recorderRename(self, old_name, new_name):
         out = getattr(
-            self.recorder, "rename_record",
-            lambda *a: {"ok": False, "error": "rename not implemented"}
+            self.recorder,
+            "rename_record",
+            lambda *_a: {"ok": False, "error": "rename not implemented"},
         )(old_name, new_name)
         return json.dumps(out)
 
@@ -69,7 +72,8 @@ class RecorderBridge(BridgeBase):
     def recorderExportAll(self):
         """Экспортирует все записи в один zip-архив."""
         out = getattr(
-            self.recorder, "export_all",
-            lambda: {"ok": False, "error": "export_all not implemented"}
+            self.recorder,
+            "export_all",
+            lambda: {"ok": False, "error": "export_all not implemented"},
         )()
         return json.dumps(out)

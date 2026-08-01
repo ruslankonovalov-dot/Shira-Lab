@@ -3,14 +3,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Optional,
-    TypedDict,
-    TypeGuard,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Optional, TypedDict, TypeGuard, cast
 
 from app.backend.services.pico_service import PicoService
 from app.backend.services.stealth_input import StealthInput
@@ -76,6 +69,7 @@ BackgroundMethod = str
 
 if TYPE_CHECKING:
     from app.backend.services.vigem_service import VigemService
+
     VigemServiceRef = VigemService | None
 else:
     VigemServiceRef = Optional["VigemService"]
@@ -239,14 +233,20 @@ class MacroService:
                 if 0 <= idx < len(self._actions):
                     removed = self._actions.pop(idx)
                     self._redo_stack.append(
-                        cast(AddActionEntry, {"op": "add", "action": dict(removed), "index": idx})
+                        cast(
+                            AddActionEntry,
+                            {"op": "add", "action": dict(removed), "index": idx},
+                        )
                     )
                 self._log("INFO", f"Undo: removed action #{idx + 1}")
             elif _is_clear_entry(entry):
                 # Restore cleared actions
                 self._actions = list(entry["actions"])
                 self._redo_stack.append(
-                    cast(ClearActionsEntry, {"op": "clear", "actions": list(entry["actions"])})
+                    cast(
+                        ClearActionsEntry,
+                        {"op": "clear", "actions": list(entry["actions"])},
+                    )
                 )
                 self._log("INFO", f"Undo: restored {len(self._actions)} action(s)")
             elif _is_move_entry(entry):
@@ -254,21 +254,31 @@ class MacroService:
                 self._actions.pop(entry["to_index"])
                 self._actions.insert(entry["from_index"], entry["action"])
                 self._redo_stack.append(
-                    cast(MoveActionEntry, {
-                        "op": "move",
-                        "action": dict(entry["action"]),
-                        "from_index": entry["to_index"],  # swapped
-                        "to_index": entry["from_index"],
-                    })
+                    cast(
+                        MoveActionEntry,
+                        {
+                            "op": "move",
+                            "action": dict(entry["action"]),
+                            "from_index": entry["to_index"],  # swapped
+                            "to_index": entry["from_index"],
+                        },
+                    )
                 )
-                self._log("INFO", f"Undo: moved action back to #{entry['from_index'] + 1}")
+                self._log(
+                    "INFO", f"Undo: moved action back to #{entry['from_index'] + 1}"
+                )
             elif _is_delete_entry(entry):
                 # Restore deleted action
                 self._actions.insert(entry["index"], entry["action"])
                 self._redo_stack.append(
-                    cast(DeleteActionEntry, {
-                        "op": "delete", "action": dict(entry["action"]), "index": entry["index"]
-                    })
+                    cast(
+                        DeleteActionEntry,
+                        {
+                            "op": "delete",
+                            "action": dict(entry["action"]),
+                            "index": entry["index"],
+                        },
+                    )
                 )
                 self._log("INFO", f"Undo: restored action #{entry['index'] + 1}")
 
@@ -287,13 +297,23 @@ class MacroService:
                 # Re-add the action
                 self._actions.insert(entry["index"], dict(entry["action"]))
                 self._undo_stack.append(
-                    cast(AddActionEntry, {"op": "add", "action": dict(entry["action"]), "index": entry["index"]})
+                    cast(
+                        AddActionEntry,
+                        {
+                            "op": "add",
+                            "action": dict(entry["action"]),
+                            "index": entry["index"],
+                        },
+                    )
                 )
                 self._log("INFO", f"Redo: re-added action #{entry['index'] + 1}")
             elif _is_clear_entry(entry):
                 # Clear again
                 self._undo_stack.append(
-                    cast(ClearActionsEntry, {"op": "clear", "actions": list(self._actions)})
+                    cast(
+                        ClearActionsEntry,
+                        {"op": "clear", "actions": list(self._actions)},
+                    )
                 )
                 self._actions = []
                 self._log("INFO", "Redo: cleared actions")
@@ -302,21 +322,29 @@ class MacroService:
                 self._actions.pop(entry["from_index"])
                 self._actions.insert(entry["to_index"], entry["action"])
                 self._undo_stack.append(
-                    cast(MoveActionEntry, {
-                        "op": "move",
-                        "action": dict(entry["action"]),
-                        "from_index": entry["from_index"],
-                        "to_index": entry["to_index"],
-                    })
+                    cast(
+                        MoveActionEntry,
+                        {
+                            "op": "move",
+                            "action": dict(entry["action"]),
+                            "from_index": entry["from_index"],
+                            "to_index": entry["to_index"],
+                        },
+                    )
                 )
                 self._log("INFO", f"Redo: moved action to #{entry['to_index'] + 1}")
             elif _is_delete_entry(entry):
                 # Delete again
                 self._actions.pop(entry["index"])
                 self._undo_stack.append(
-                    cast(DeleteActionEntry, {
-                        "op": "delete", "action": dict(entry["action"]), "index": entry["index"]
-                    })
+                    cast(
+                        DeleteActionEntry,
+                        {
+                            "op": "delete",
+                            "action": dict(entry["action"]),
+                            "index": entry["index"],
+                        },
+                    )
                 )
                 self._log("INFO", f"Redo: deleted action #{entry['index'] + 1}")
 
@@ -326,7 +354,11 @@ class MacroService:
         """Delete a specific action by index (1-click delete)."""
         with self._lock:
             if index < 0 or index >= len(self._actions):
-                return {"ok": False, "error": f"Invalid index {index}", **self.get_status()}
+                return {
+                    "ok": False,
+                    "error": f"Invalid index {index}",
+                    **self.get_status(),
+                }
 
             removed = self._actions.pop(index)
             self._undo_stack.append(
@@ -390,14 +422,20 @@ class MacroService:
         self._log("OK", f"Started — mode={run_mode} actions={len(actions)}")
 
         if run_mode == "SEQUENTIAL":
-            t = threading.Thread(target=self._sequential_worker, args=(target_hwnd, actions), daemon=True)
+            t = threading.Thread(
+                target=self._sequential_worker, args=(target_hwnd, actions), daemon=True
+            )
             t.start()
             with self._lock:
                 self._threads = [t]
         else:
             threads = []
             for action in actions:
-                t = threading.Thread(target=self._parallel_worker, args=(target_hwnd, action), daemon=True)
+                t = threading.Thread(
+                    target=self._parallel_worker,
+                    args=(target_hwnd, action),
+                    daemon=True,
+                )
                 t.start()
                 threads.append(t)
             with self._lock:
@@ -450,7 +488,9 @@ class MacroService:
             time.sleep(hold)
         keyboard.release(key)
 
-    def _sequential_worker(self, target_hwnd: int | None, actions: list[dict[str, Any]]) -> None:
+    def _sequential_worker(
+        self, target_hwnd: int | None, actions: list[dict[str, Any]]
+    ) -> None:
         time.sleep(0.2)
         cycle = 0
         while True:

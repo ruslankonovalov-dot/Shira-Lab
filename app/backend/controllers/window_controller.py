@@ -2,6 +2,7 @@
 WindowController - handles window management, system tray, overlay, shortcuts, crash reporter.
 Extracted from QmlBridge god-object (Phase 2.1).
 """
+
 from __future__ import annotations
 
 import ctypes
@@ -72,7 +73,7 @@ class WindowController(QObject):
         hotkey_service: HotkeyService,
         sound_manager: SoundManager,
         bridge: QmlBridge | None = None,
-        parent: QObject | None = None
+        parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
         self._state: RuntimeState = state
@@ -131,7 +132,14 @@ class WindowController(QObject):
         if self._visibility_timer is not None:
             self._visibility_timer.timeout.connect(self._check_visibility)
             # Delay start until tray is set (2 seconds)
-            QTimer.singleShot(2000, lambda: self._visibility_timer.start(1000) if self._visibility_timer else None)
+            QTimer.singleShot(
+                2000,
+                lambda: (
+                    self._visibility_timer.start(1000)
+                    if self._visibility_timer
+                    else None
+                ),
+            )
 
     def _check_visibility(self) -> None:
         """Check if app is visible (window OR tray). Stop modules if not visible."""
@@ -251,6 +259,7 @@ class WindowController(QObject):
     def reassertOverlayTopmost(self) -> None:
         """Re-assert overlay window is topmost (call periodically)."""
         from window_utils import set_overlay_always_topmost
+
         overlay_hwnd = self._get_overlay_hwnd()
         if overlay_hwnd:
             set_overlay_always_topmost(overlay_hwnd)
@@ -300,7 +309,11 @@ class WindowController(QObject):
             self._recorder.stop_playing()
         else:
             self._recorder.start_recording()
-        self._sounds.play("start" if not self._recorder.is_recording and not self._recorder.is_playing else "stop")
+        self._sounds.play(
+            "start"
+            if not self._recorder.is_recording and not self._recorder.is_playing
+            else "stop"
+        )
 
     def on_tray_show_window(self) -> None:
         """Handle show window from system tray."""
@@ -330,6 +343,7 @@ class WindowController(QObject):
 
         # Quit application
         from PySide6.QtWidgets import QApplication
+
         QApplication.quit()
 
     # ─── Crash Reporter ───────────────────────────────────────────────────
@@ -352,6 +366,7 @@ class WindowController(QObject):
         """List all crash reports."""
         try:
             from app.backend.services.crash_reporter import list_local_crashes
+
             return {"ok": True, "crashes": list_local_crashes()}
         except (OSError, ImportError, RuntimeError) as e:
             logger.error(f"Failed to list crash reports: {e}")
@@ -362,6 +377,7 @@ class WindowController(QObject):
         """Clear all crash reports."""
         try:
             from app.backend.services.crash_reporter import clear_all_crashes
+
             count = clear_all_crashes()
             return {"ok": True, "cleared": count}
         except (OSError, ImportError, RuntimeError) as e:
@@ -373,6 +389,7 @@ class WindowController(QObject):
         """Read a specific crash report."""
         try:
             from app.backend.services.crash_reporter import read_local_crash
+
             data = read_local_crash(filename)
             if data:
                 return {"ok": True, "report": data}
@@ -386,6 +403,7 @@ class WindowController(QObject):
         """Delete a specific crash report."""
         try:
             from app.backend.services.crash_reporter import delete_local_crash
+
             deleted = delete_local_crash(filename)
             return {"ok": deleted}
         except (OSError, ImportError, RuntimeError) as e:
@@ -402,7 +420,9 @@ class WindowController(QObject):
         if self._icon_regen_timer:
             self._icon_regen_timer.cancel()
 
-        self._icon_regen_timer = threading.Timer(0.5, lambda: self._do_regen_icon(palette_id))
+        self._icon_regen_timer = threading.Timer(
+            0.5, lambda: self._do_regen_icon(palette_id)
+        )
         self._icon_regen_timer.daemon = True
         self._icon_regen_timer.start()
 
@@ -417,6 +437,7 @@ class WindowController(QObject):
                     generate_palette_ico_unique,
                     generate_palette_icon,
                 )
+
                 png_path = generate_palette_icon(palette_id)
                 generate_palette_ico(palette_id)
                 unique_ico = generate_palette_ico_unique(palette_id)
@@ -440,7 +461,9 @@ class WindowController(QObject):
             target_path = project_root / "launch.bat"
 
             if not target_path.exists() or not new_icon_path.exists():
-                logger.warning(f"Shortcut update: target={target_path.exists()}, icon={new_icon_path.exists()}")
+                logger.warning(
+                    f"Shortcut update: target={target_path.exists()}, icon={new_icon_path.exists()}"
+                )
                 return
 
             # Find all Shira Lab.lnk locations
@@ -451,7 +474,9 @@ class WindowController(QObject):
                 lnk_locations.append(Path(desktop) / "Shira Lab.lnk")
 
             try:
-                public_desktop = Path(os.environ.get("PUBLIC", "C:\\Users\\Public")) / "Desktop"
+                public_desktop = (
+                    Path(os.environ.get("PUBLIC", "C:\\Users\\Public")) / "Desktop"
+                )
                 lnk_locations.append(public_desktop / "Shira Lab.lnk")
             except (KeyError, OSError):
                 logger.exception("Failed to resolve public desktop path")
@@ -475,7 +500,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
                         capture_output=True,
                         text=True,
                         creationflags=subprocess.CREATE_NO_WINDOW,
-                        check=False
+                        check=False,
                     )
                     if "UPDATED" in result.stdout:
                         updated_count += 1
@@ -561,8 +586,14 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             uptime_sec = int(time.time() - create_time)
 
             # Module-specific metrics
-            clicker_cps = getattr(self._clicker, 'cps', 0) if hasattr(self._clicker, 'cps') else 0
-            aim_fps = getattr(self._aim, 'last_fps', 0) if hasattr(self._aim, 'last_fps') else 0
+            clicker_cps = (
+                getattr(self._clicker, "cps", 0) if hasattr(self._clicker, "cps") else 0
+            )
+            aim_fps = (
+                getattr(self._aim, "last_fps", 0)
+                if hasattr(self._aim, "last_fps")
+                else 0
+            )
 
             return {
                 "ok": True,
@@ -582,6 +613,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         """Detect Windows system theme (light/dark)."""
         try:
             from app.backend.services.theme_detector import detect_windows_theme
+
             theme = detect_windows_theme()
             result = {"ok": True, "theme": theme}
             self.logMessage.emit("INFO", "SYSTEM", f"System theme detected: {theme}")
@@ -605,8 +637,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             from app.backend.profile_io import export_profile
 
             file_path, _ = QFileDialog.getSaveFileName(
-                None, "Export Profile", "profile.json",
-                "JSON Files (*.json)"
+                None, "Export Profile", "profile.json", "JSON Files (*.json)"
             )
             if not file_path:
                 return {"ok": True, "cancelled": True}
@@ -627,8 +658,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             from app.backend.profile_io import import_profile
 
             file_path, _ = QFileDialog.getOpenFileName(
-                None, "Import Profile", "",
-                "JSON Files (*.json)"
+                None, "Import Profile", "", "JSON Files (*.json)"
             )
             if not file_path:
                 return {"ok": True, "cancelled": True}
@@ -717,6 +747,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             make_error_response,
             make_ok_response,
         )
+
         try:
             return _qvar(make_ok_response(monitors=get_monitors()))  # type: ignore[return-value]
         except Exception as e:
@@ -741,6 +772,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             import ctypes
 
             from window_utils import get_monitors
+
             monitors = get_monitors()
             if not monitors:
                 return _qvar(make_error_response("No monitors found"))  # type: ignore[return-value]
@@ -756,8 +788,10 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             center_y = (rect.top + rect.bottom) // 2
 
             for m in monitors:
-                if (m["work_x"] <= center_x < m["work_x"] + m["work_width"] and
-                    m["work_y"] <= center_y < m["work_y"] + m["work_height"]):
+                if (
+                    m["work_x"] <= center_x < m["work_x"] + m["work_width"]
+                    and m["work_y"] <= center_y < m["work_y"] + m["work_height"]
+                ):
                     return _qvar(make_ok_response(monitor=m))  # type: ignore[return-value]
 
             # Default to first monitor
@@ -776,6 +810,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             make_error_response,
             make_ok_response,
         )
+
         try:
             overlay_hwnd = self._get_overlay_hwnd()
             if overlay_hwnd:
@@ -854,6 +889,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
         # Fallback to state
         from app.backend.models.runtime_state import TERMINAL_PALETTES
         from config import LANGUAGES, LOGO_SHIRA
+
         lang = dict(LANGUAGES.get(self._state.ui_lang, LANGUAGES["RU"]))
         return {
             "terminal_palette": self._state.terminal_palette,
@@ -863,8 +899,8 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             "logo_shira": LOGO_SHIRA,
             "palettes": TERMINAL_PALETTES,
             "hotkeys": self._state.hotkeys,
-            "profiles": getattr(self._state, 'profiles', {}),
-            "active_profile": getattr(self._state, 'active_profile', "default"),
+            "profiles": getattr(self._state, "profiles", {}),
+            "active_profile": getattr(self._state, "active_profile", "default"),
         }
 
     def resetAllHotkeys(self) -> dict[str, Any]:
@@ -873,6 +909,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             return self._bridge.resetAllHotkeys()
         # Fallback - reset in hotkey service
         from app.backend.services.input_validation import _qvar, make_ok_response
+
         self._hotkeys.reset_all()
         return _qvar(make_ok_response())  # type: ignore[return-value]
 
@@ -890,6 +927,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             return self._bridge.saveProfile(name)
         # Fallback -TODO: implement profile saving
         from app.backend.services.input_validation import _qvar, make_error_response
+
         return _qvar(make_error_response("Bridge not available"))  # type: ignore[return-value]
 
     def setHotkey(self, action: str, key: str, mode: str) -> dict[str, Any]:
@@ -902,6 +940,7 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
             make_error_response,
             validate_enum,
         )
+
         ok, val, err = validate_enum(mode, {"TOGGLE", "HOLD"}, name="mode")
         if not ok or val is None:
             return _qvar(make_error_response(err or "Invalid mode"))  # type: ignore[return-value]
@@ -910,34 +949,50 @@ if ($shortcut.TargetPath -eq '{target_path}') {{
     def getClickerStatus(self) -> dict[str, Any]:
         """Get clicker status for tray."""
         return {
-            "is_running": self._clicker.is_running if hasattr(self._clicker, 'is_running') else False,
-            "cps": getattr(self._clicker, 'cps', 0),
+            "is_running": (
+                self._clicker.is_running
+                if hasattr(self._clicker, "is_running")
+                else False
+            ),
+            "cps": getattr(self._clicker, "cps", 0),
         }
 
     def aimStatus(self) -> dict[str, Any]:
         """Get aim status for tray."""
         return {
-            "is_running": self._aim.is_running if hasattr(self._aim, 'is_running') else False,
-            "fps": getattr(self._aim, 'last_fps', 0),
+            "is_running": (
+                self._aim.is_running if hasattr(self._aim, "is_running") else False
+            ),
+            "fps": getattr(self._aim, "last_fps", 0),
         }
 
     def getMacroStatus(self) -> dict[str, Any]:
         """Get macro status for tray."""
         return {
-            "is_running": self._macro.is_running if hasattr(self._macro, 'is_running') else False,
+            "is_running": (
+                self._macro.is_running if hasattr(self._macro, "is_running") else False
+            ),
         }
 
     def recorderStatus(self) -> dict[str, Any]:
         """Get recorder status for tray."""
         return {
-            "is_recording": self._recorder.is_recording if hasattr(self._recorder, 'is_recording') else False,
-            "is_playing": self._recorder.is_playing if hasattr(self._recorder, 'is_playing') else False,
+            "is_recording": (
+                self._recorder.is_recording
+                if hasattr(self._recorder, "is_recording")
+                else False
+            ),
+            "is_playing": (
+                self._recorder.is_playing
+                if hasattr(self._recorder, "is_playing")
+                else False
+            ),
         }
 
     @property
     def profile_controller(self) -> Any:
         """Get profile controller (delegate to bridge)."""
-        if self._bridge and hasattr(self._bridge, 'profile_controller'):
+        if self._bridge and hasattr(self._bridge, "profile_controller"):
             return self._bridge.profile_controller
         # For protocol compliance, return self (WindowController has setModuleTargetWindow)
         return self

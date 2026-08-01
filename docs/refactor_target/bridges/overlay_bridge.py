@@ -2,12 +2,14 @@
 
 Перенесено из qml_bridge.py, секции overlay (строки 1303–1313).
 """
+
 from __future__ import annotations
 
 import json
 
-from app.backend.bridges.bridge_base import BridgeBase
 from PySide6.QtCore import Slot
+
+from app.backend.bridges.bridge_base import BridgeBase
 
 
 class OverlayBridge(BridgeBase):
@@ -23,16 +25,19 @@ class OverlayBridge(BridgeBase):
 
     @Slot(result=str)
     def getOverlayVisibility(self):
-        return json.dumps({
-            "visible": getattr(self.state, "overlay_visible", False),
-            "overlay_hwnd": self._overlay_hwnd,
-        })
+        return json.dumps(
+            {
+                "visible": getattr(self.state, "overlay_visible", False),
+                "overlay_hwnd": self._overlay_hwnd,
+            }
+        )
 
     @Slot(int, int, int, int, result=str)
     def setOverlayGeometry(self, x, y, w, h):
         """Устанавливает позицию/размер overlay (drag & resize)."""
         try:
             import ctypes
+
             if self._overlay_hwnd:
                 # SWP_NOZORDER | SWP_NOACTIVATE
                 ctypes.windll.user32.SetWindowPos(

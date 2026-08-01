@@ -8,17 +8,18 @@ class TestVigemService:
 
     def setup_method(self):
         from app.backend.services.vigem_service import VigemService
+
         self.service = VigemService()
 
     def test_add_x360(self):
         """Test adding X360 target."""
         result = self.service.add_x360()
-        assert isinstance(result, (int, type(None)))
+        assert isinstance(result, int | type(None))
 
     def test_add_ds4(self):
         """Test adding DS4 target."""
         result = self.service.add_ds4()
-        assert isinstance(result, (int, type(None)))
+        assert isinstance(result, int | type(None))
 
     def test_remove_target(self):
         """Test removing target."""
@@ -43,12 +44,22 @@ class TestVigemService:
         assert VigemService.button_name_to_mask("y") == XUSB_BUTTON_MAP.get("y", 0)
         assert VigemService.button_name_to_mask("lb") == XUSB_BUTTON_MAP.get("lb", 0)
         assert VigemService.button_name_to_mask("rb") == XUSB_BUTTON_MAP.get("rb", 0)
-        assert VigemService.button_name_to_mask("back") == XUSB_BUTTON_MAP.get("back", 0)
-        assert VigemService.button_name_to_mask("start") == XUSB_BUTTON_MAP.get("start", 0)
+        assert VigemService.button_name_to_mask("back") == XUSB_BUTTON_MAP.get(
+            "back", 0
+        )
+        assert VigemService.button_name_to_mask("start") == XUSB_BUTTON_MAP.get(
+            "start", 0
+        )
         assert VigemService.button_name_to_mask("up") == XUSB_BUTTON_MAP.get("up", 0)
-        assert VigemService.button_name_to_mask("down") == XUSB_BUTTON_MAP.get("down", 0)
-        assert VigemService.button_name_to_mask("left") == XUSB_BUTTON_MAP.get("left", 0)
-        assert VigemService.button_name_to_mask("right") == XUSB_BUTTON_MAP.get("right", 0)
+        assert VigemService.button_name_to_mask("down") == XUSB_BUTTON_MAP.get(
+            "down", 0
+        )
+        assert VigemService.button_name_to_mask("left") == XUSB_BUTTON_MAP.get(
+            "left", 0
+        )
+        assert VigemService.button_name_to_mask("right") == XUSB_BUTTON_MAP.get(
+            "right", 0
+        )
 
         # Invalid button
         assert VigemService.button_name_to_mask("invalid") == 0
@@ -73,13 +84,7 @@ class TestVigemService:
         if targets:
             target_id = list(targets.keys())[0]
             result = self.service.x360_set_state(
-                target_id,
-                lx=10000,
-                ly=0,
-                rx=0,
-                ry=0,
-                lt=0,
-                rt=0
+                target_id, lx=10000, ly=0, rx=0, ry=0, lt=0, rt=0
             )
             assert isinstance(result, bool)
 
@@ -104,13 +109,7 @@ class TestVigemService:
             target_id = list(targets.keys())[0]
             # Should clamp
             result = self.service.x360_set_state(
-                target_id,
-                lx=40000,   # Over limit
-                ly=-40000,
-                rx=0,
-                ry=0,
-                lt=0,
-                rt=0
+                target_id, lx=40000, ly=-40000, rx=0, ry=0, lt=0, rt=0  # Over limit
             )
             assert isinstance(result, bool)
 

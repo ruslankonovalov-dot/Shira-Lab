@@ -4,6 +4,7 @@ NOTE: MacroService is a @singleton, so we need to bypass the singleton
 to create a fresh instance per test. We use the reset_instance() method
 added by the @singleton decorator, or access the original class.
 """
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -17,19 +18,22 @@ def macro_service():
     from app.backend.services.macro_service import MacroService
 
     # Reset the singleton cache first (useful for test isolation, especially with xdist)
-    if hasattr(MacroService, 'reset_instance'):
+    if hasattr(MacroService, "reset_instance"):
         MacroService.reset_instance()
 
     # Access the original class (stored by @singleton decorator as attribute on wrapper)
     # In multiprocessing/xdist environments, the wrapper may be different, so try multiple approaches
-    original_cls = getattr(MacroService, '_original_class', None)
+    original_cls = getattr(MacroService, "_original_class", None)
     if original_cls is None:
         # Fallback: try to get from the underlying class attribute
-        original_cls = getattr(MacroService, 'cls', None)
+        original_cls = getattr(MacroService, "cls", None)
 
     if original_cls is None:
         # Last resort: import the class directly from the module (bypassing decorator)
-        from app.backend.services.macro_service import MacroService as DirectMacroService
+        from app.backend.services.macro_service import (
+            MacroService as DirectMacroService,
+        )
+
         original_cls = DirectMacroService
 
     # Create a fresh instance, bypassing the singleton cache

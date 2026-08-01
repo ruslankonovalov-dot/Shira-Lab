@@ -3,6 +3,7 @@
 Перенесено из hotkey_service.py, класс HotkeyDispatcher (строки 43–75)
 + функция default_hotkeys (строки 77–112).
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -44,12 +45,12 @@ def default_hotkeys() -> dict[str, dict[str, str]]:
     Используется при первом запуске и при reset_all.
     """
     return {
-        "clicker_toggle":   {"key": "f6",              "mode": "TOGGLE"},
-        "aim_toggle":       {"key": "f7",              "mode": "TOGGLE"},
-        "macro_start":      {"key": "f8",              "mode": "HOLD"},
-        "macro_stop":       {"key": "f9",              "mode": "TOGGLE"},
-        "recorder_start":   {"key": "f10",             "mode": "TOGGLE"},
-        "recorder_stop":    {"key": "ctrl+shift+f10",  "mode": "TOGGLE"},
-        "app_show":         {"key": "ctrl+shift+s",    "mode": "TOGGLE"},
-        "panic_stop":       {"key": "ctrl+shift+p",    "mode": "TOGGLE"},
+        "clicker_toggle": {"key": "f6", "mode": "TOGGLE"},
+        "aim_toggle": {"key": "f7", "mode": "TOGGLE"},
+        "macro_start": {"key": "f8", "mode": "HOLD"},
+        "macro_stop": {"key": "f9", "mode": "TOGGLE"},
+        "recorder_start": {"key": "f10", "mode": "TOGGLE"},
+        "recorder_stop": {"key": "ctrl+shift+f10", "mode": "TOGGLE"},
+        "app_show": {"key": "ctrl+shift+s", "mode": "TOGGLE"},
+        "panic_stop": {"key": "ctrl+shift+p", "mode": "TOGGLE"},
     }

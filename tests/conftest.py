@@ -2,6 +2,7 @@
 
 Импортируется автоматически pytest для всех тестов в tests/.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -14,12 +15,8 @@ def bridge(monkeypatch, tmp_path):
     Используется для integration и bridge-тестов.
     """
     # Замокаем persistence чтобы не писать в реальный profile.json
-    monkeypatch.setattr(
-        "app.backend.persistence.save_profile", lambda *a, **kw: None
-    )
-    monkeypatch.setattr(
-        "app.backend.persistence.load_profile", lambda *a, **kw: None
-    )
+    monkeypatch.setattr("app.backend.persistence.save_profile", lambda *a, **kw: None)
+    monkeypatch.setattr("app.backend.persistence.load_profile", lambda *a, **kw: None)
 
     try:
         from app.backend.bridges import QmlBridge

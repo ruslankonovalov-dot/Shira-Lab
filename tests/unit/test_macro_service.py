@@ -11,6 +11,7 @@ class TestMacroService:
 
     def setup_method(self):
         from app.backend.services.macro_service import MacroService
+
         self.service = MacroService._original_class()
         self.service.set_bridge(Mock())
 
@@ -104,6 +105,7 @@ class TestMacroServiceUndoRedo:
 
     def setup_method(self):
         from app.backend.services.macro_service import MacroService
+
         self.service = MacroService._original_class()
         self.service.set_bridge(Mock())
 
@@ -226,6 +228,7 @@ class TestMacroServiceMoveDelete:
 
     def setup_method(self):
         from app.backend.services.macro_service import MacroService
+
         self.service = MacroService._original_class()
         self.service.set_bridge(Mock())
 
@@ -332,11 +335,13 @@ class TestMacroServiceThreadSafety:
 
     def setup_method(self):
         from app.backend.services.macro_service import MacroService
+
         self.service = MacroService._original_class()
         self.service.set_bridge(Mock())
 
     def test_concurrent_add_actions(self):
         """Test concurrent add actions."""
+
         def add_actions():
             for i in range(20):
                 self.service.add_action(f"key{i}", 0.1, 0.05)

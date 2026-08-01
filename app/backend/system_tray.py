@@ -9,6 +9,8 @@ from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 logger = logging.getLogger(__name__)
+
+
 class _TrayBridge(Protocol):
     def getSettings(self) -> dict[str, Any]: ...
     def resetAllHotkeys(self) -> dict[str, Any]: ...
@@ -55,7 +57,9 @@ class SystemTrayManager(QObject):
         self._project_root = Path(__file__).resolve().parents[2]
         self._base_icon_path: Path | None = None
         self._overlay_dir = Path(__file__).resolve().parent / "assets" / "overlays"
-        self._current_overlay: str | None = None  # track current overlay to avoid redundant icon changes
+        self._current_overlay: str | None = (
+            None  # track current overlay to avoid redundant icon changes
+        )
 
         self._setup_tray()
         # Don't call _update_menu_states() here - wait for timer to fire after bridge init
@@ -66,7 +70,9 @@ class SystemTrayManager(QObject):
         self._update_timer: QTimer | None = QTimer(self)
         self._update_timer.timeout.connect(self._update_menu_states)
         self._update_timer.setSingleShot(True)
-        QTimer.singleShot(2000, lambda: self._update_timer.start(1000) if self._update_timer else None)
+        QTimer.singleShot(
+            2000, lambda: self._update_timer.start(1000) if self._update_timer else None
+        )
 
     def _setup_tray(self) -> None:
         # Create tray icon
@@ -172,7 +178,7 @@ class SystemTrayManager(QObject):
         self._profiles_menu.clear()
 
         # Guard against bridge not fully initialized
-        if not hasattr(self._bridge, 'getSettings'):
+        if not hasattr(self._bridge, "getSettings"):
             return
 
         try:
@@ -185,16 +191,20 @@ class SystemTrayManager(QObject):
             current = "default"
 
         # Default profile action
-        act = self._profiles_menu.addAction(f"{'●' if current == 'default' else '○'} Default")
+        act = self._profiles_menu.addAction(
+            f"{'●' if current == 'default' else '○'} Default"
+        )
         act.setData("default")
-        act.triggered.connect(lambda checked, p="default": self._switch_profile(p))
+        act.triggered.connect(lambda _checked, p="default": self._switch_profile(p))
 
         if profiles:
             self._profiles_menu.addSeparator()
             for name in sorted(profiles.keys()):
-                act = self._profiles_menu.addAction(f"{'●' if current == name else '○'} {name}")
+                act = self._profiles_menu.addAction(
+                    f"{'●' if current == name else '○'} {name}"
+                )
                 act.setData(name)
-                act.triggered.connect(lambda checked, p=name: self._switch_profile(p))
+                act.triggered.connect(lambda _checked, p=name: self._switch_profile(p))
 
         self._profiles_menu.addSeparator()
         save_act = self._profiles_menu.addAction("+ Save Current as Profile...")
@@ -203,7 +213,7 @@ class SystemTrayManager(QObject):
     def _switch_profile(self, profile_name: str) -> None:
         """Switch to a profile by name."""
         # Guard against bridge not fully initialized
-        if not hasattr(self._bridge, 'getSettings'):
+        if not hasattr(self._bridge, "getSettings"):
             return
 
         try:
@@ -213,18 +223,26 @@ class SystemTrayManager(QObject):
             if profile_name == "default":
                 # Reset to defaults (reload default hotkeys etc)
                 self._bridge.resetAllHotkeys()
-                self._bridge.setTerminalPalette(settings.get("terminal_palette", "matrix"))
+                self._bridge.setTerminalPalette(
+                    settings.get("terminal_palette", "matrix")
+                )
                 self._bridge.saveProfile("")
             elif profile_name in profiles:
                 profile = profiles[profile_name]
                 # Apply profile settings
                 if "hotkeys" in profile:
                     for action, binding in profile["hotkeys"].items():
-                        self._bridge.setHotkey(action, binding.get("key", ""), binding.get("mode", "TOGGLE"))
+                        self._bridge.setHotkey(
+                            action,
+                            binding.get("key", ""),
+                            binding.get("mode", "TOGGLE"),
+                        )
                 if "terminal_palette" in profile:
                     self._bridge.setTerminalPalette(profile["terminal_palette"])
                 if "target_hwnd" in profile:
-                    self._bridge.profile_controller.setModuleTargetWindow("clicker", profile["target_hwnd"])
+                    self._bridge.profile_controller.setModuleTargetWindow(
+                        "clicker", profile["target_hwnd"]
+                    )
                 self._bridge.saveProfile("")
 
             # Update active profile
@@ -280,7 +298,7 @@ class SystemTrayManager(QObject):
         """Periodically update menu action states based on bridge status."""
         try:
             # Guard against bridge not fully initialized
-            if not hasattr(self._bridge, 'getClickerStatus'):
+            if not hasattr(self._bridge, "getClickerStatus"):
                 return
 
             clicker_status = self._bridge.getClickerStatus() or {}
@@ -294,9 +312,15 @@ class SystemTrayManager(QObject):
             rec_recording = recorder_status.get("is_recording", False)
             rec_playing = recorder_status.get("is_playing", False)
 
-            self._actions["clicker"].setText(f"{'●' if clk_running else '○'} CLICKER: {'Running' if clk_running else 'Idle'}")
-            self._actions["aim"].setText(f"{'●' if aim_running else '○'} AIM: {'Running' if aim_running else 'Idle'}")
-            self._actions["macro"].setText(f"{'●' if macro_running else '○'} MACRO: {'Running' if macro_running else 'Idle'}")
+            self._actions["clicker"].setText(
+                f"{'●' if clk_running else '○'} CLICKER: {'Running' if clk_running else 'Idle'}"
+            )
+            self._actions["aim"].setText(
+                f"{'●' if aim_running else '○'} AIM: {'Running' if aim_running else 'Idle'}"
+            )
+            self._actions["macro"].setText(
+                f"{'●' if macro_running else '○'} MACRO: {'Running' if macro_running else 'Idle'}"
+            )
 
             if rec_recording:
                 rec_state = "Recording"
@@ -304,7 +328,9 @@ class SystemTrayManager(QObject):
                 rec_state = "Playing"
             else:
                 rec_state = "Idle"
-            self._actions["recorder"].setText(f"{'●' if (rec_recording or rec_playing) else '○'} RECORDER: {rec_state}")
+            self._actions["recorder"].setText(
+                f"{'●' if (rec_recording or rec_playing) else '○'} RECORDER: {rec_state}"
+            )
 
             # Guard against overlayVisible property not being initialized yet
             # overlayVisible is a @Property(bool) on QmlBridge, not a method

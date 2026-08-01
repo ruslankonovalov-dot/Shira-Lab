@@ -2,13 +2,14 @@
 
 Перенесено из qml_bridge.py, секция "Hotkeys" (строки 1229–1288).
 """
+
 from __future__ import annotations
 
 import json
 
-from app.backend.bridges.bridge_base import BridgeBase
 from PySide6.QtCore import Slot
 
+from app.backend.bridges.bridge_base import BridgeBase
 from app.backend.services.hotkey_service import default_hotkeys
 
 
@@ -17,12 +18,14 @@ class HotkeysBridge(BridgeBase):
 
     @Slot(result=str)
     def getHotkeys(self):
-        return json.dumps({
-            "available": self.hotkeys.is_available(),
-            "mouse_available": self.hotkeys.is_mouse_available(),
-            "wheel_available": self.hotkeys.is_wheel_available(),
-            "bindings": self.hotkeys.get_bindings(),
-        })
+        return json.dumps(
+            {
+                "available": self.hotkeys.is_available(),
+                "mouse_available": self.hotkeys.is_mouse_available(),
+                "wheel_available": self.hotkeys.is_wheel_available(),
+                "bindings": self.hotkeys.get_bindings(),
+            }
+        )
 
     @Slot(str, str, str, result=str)
     def setHotkey(self, action, key, mode):
@@ -34,7 +37,7 @@ class HotkeysBridge(BridgeBase):
         if result.get("ok"):
             self.state.hotkeys[action] = {
                 "key": str(key or "").strip().lower(),
-                "mode": str(mode or "TOGGLE").upper()
+                "mode": str(mode or "TOGGLE").upper(),
             }
             self._schedule_save()
             self.hotkeysChanged.emit()

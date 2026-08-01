@@ -1,4 +1,5 @@
 """Unit tests for app.backend.i18n module."""
+
 import pytest
 
 from app.backend.i18n import (
@@ -60,19 +61,34 @@ class TestTranslations:
 class TestTranslationKeys:
 
     def test_nav_keys_exist(self):
-        for key in ["nav.home", "nav.clicker", "nav.aim", "nav.macro",
-                    "nav.recorder", "nav.gamepad", "nav.settings"]:
+        for key in [
+            "nav.home",
+            "nav.clicker",
+            "nav.aim",
+            "nav.macro",
+            "nav.recorder",
+            "nav.gamepad",
+            "nav.settings",
+        ]:
             assert key in TRANSLATIONS
 
     def test_clicker_keys_exist(self):
-        for key in ["clicker.title", "clicker.interval", "clicker.start"
-                    if "clicker.start" in TRANSLATIONS else "common.start",
-                    "clicker.running"]:
+        for key in [
+            "clicker.title",
+            "clicker.interval",
+            "clicker.start" if "clicker.start" in TRANSLATIONS else "common.start",
+            "clicker.running",
+        ]:
             assert key in TRANSLATIONS or key in TRANSLATIONS
 
     def test_settings_keys_exist(self):
-        for key in ["settings.title", "settings.language", "settings.theme_auto",
-                    "settings.theme_dark", "settings.theme_light"]:
+        for key in [
+            "settings.title",
+            "settings.language",
+            "settings.theme_auto",
+            "settings.theme_dark",
+            "settings.theme_light",
+        ]:
             assert key in TRANSLATIONS
 
     def test_diagnostics_keys_exist(self):

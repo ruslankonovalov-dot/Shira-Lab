@@ -3,6 +3,7 @@ qml_bridge.py — Thin bridge between QML UI and Python backend.
 Aggregates signals and delegates to 4 controllers (Window, Gamepad, Hotkey, Profile).
 All @Slot methods return native dict/list/str/int/float/bool (QVariantMap compatible).
 """
+
 from __future__ import annotations
 
 import json
@@ -76,9 +77,7 @@ from app.backend.services.recorder_service import RecorderService
 from app.backend.services.vigem_service import get_vigem_service
 from app.backend.sound_manager import SoundManager
 from app.backend.system_tray import SystemTrayManager
-from window_utils import (
-    get_visible_windows,
-)
+from window_utils import get_visible_windows
 
 # Controllers (Phase 2.1: extracted from god-object)
 if TYPE_CHECKING:
@@ -112,7 +111,9 @@ class QmlBridge(QObject):
     updateCheckResult = Signal(object)
     crashReportSaved = Signal(str)
 
-    def __init__(self, state: RuntimeState | None = None, parent: QObject | None = None):
+    def __init__(
+        self, state: RuntimeState | None = None, parent: QObject | None = None
+    ):
         # Handle both old signature (state as parent) and new signature (state as first arg)
         if state is not None and isinstance(state, QObject):
             # Called as QmlBridge(state) where state is actually a QObject (old usage)
@@ -159,19 +160,28 @@ class QmlBridge(QObject):
 
         self._window_controller: WindowController = WindowController(
             self.state,
-            self.clicker, self.macro, self.recorder, self.aim, self.hotkeys,
+            self.clicker,
+            self.macro,
+            self.recorder,
+            self.aim,
+            self.hotkeys,
             self.sounds,
             bridge=self,
-            parent=self
+            parent=self,
         )
         self._gamepad_controller: GamepadController = GamepadController(parent=self)
-        self._hotkey_controller: HotkeyController = HotkeyController(self.state, self.hotkeys, parent=self)
-        self._profile_controller: ProfileController = ProfileController(self.state, bridge=self, parent=self)
+        self._hotkey_controller: HotkeyController = HotkeyController(
+            self.state, self.hotkeys, parent=self
+        )
+        self._profile_controller: ProfileController = ProfileController(
+            self.state, bridge=self, parent=self
+        )
 
         # System tray - AFTER controllers so timer doesn't fire before init
         self.tray: SystemTrayManager | None = None
         # By default, don't create system tray in tests
         import os
+
         if not os.environ.get("DISABLE_SYSTEM_TRAY"):
             self.tray = SystemTrayManager(self)  # type: ignore[arg-type]
             # Pass tray to WindowController (it was created without tray)
@@ -202,8 +212,8 @@ class QmlBridge(QObject):
         self.settingsChanged.emit()
 
         # Apply sound settings
-        self.sounds.set_enabled(getattr(self.state, 'sounds_enabled', True))
-        self.sounds.set_volume(getattr(self.state, 'sounds_volume', 0.5))
+        self.sounds.set_enabled(getattr(self.state, "sounds_enabled", True))
+        self.sounds.set_volume(getattr(self.state, "sounds_volume", 0.5))
 
         # Start background status poller for OverlayHUD
         self._status_poller: threading.Thread | None = None
@@ -235,9 +245,15 @@ class QmlBridge(QObject):
         """Forward signals from controllers to bridge signals for QML."""
         # WindowController signals - use slots to bridge Signal -> Signal
         self._window_controller.windowPinChanged.connect(self._on_window_pin_changed)
-        self._window_controller.windowVisibilityChanged.connect(lambda v: self.statusChanged.emit("visibility" if v else "hidden"))
-        self._window_controller.overlayVisibilityChanged.connect(self._on_overlay_visibility_changed)
-        self._window_controller.appVisibilityChanged.connect(self._on_app_visibility_changed)
+        self._window_controller.windowVisibilityChanged.connect(
+            lambda v: self.statusChanged.emit("visibility" if v else "hidden")
+        )
+        self._window_controller.overlayVisibilityChanged.connect(
+            self._on_overlay_visibility_changed
+        )
+        self._window_controller.appVisibilityChanged.connect(
+            self._on_app_visibility_changed
+        )
         self._window_controller.iconChanged.connect(self.iconChanged.emit)
         self._window_controller.iconReady.connect(self._on_icon_generated)
         self._window_controller.crashReportSaved.connect(self.crashReportSaved.emit)
@@ -248,9 +264,15 @@ class QmlBridge(QObject):
         self._hotkey_controller.logMessage.connect(self.logMessage.emit)
 
         # GamepadController signals
-        self._gamepad_controller.vigemStatusChanged.connect(lambda: self.statusChanged.emit("vigem"))
-        self._gamepad_controller.picoStatusChanged.connect(lambda: self.statusChanged.emit("pico"))
-        self._gamepad_controller.physicalGamepadsChanged.connect(lambda: self.statusChanged.emit("physical"))
+        self._gamepad_controller.vigemStatusChanged.connect(
+            lambda: self.statusChanged.emit("vigem")
+        )
+        self._gamepad_controller.picoStatusChanged.connect(
+            lambda: self.statusChanged.emit("pico")
+        )
+        self._gamepad_controller.physicalGamepadsChanged.connect(
+            lambda: self.statusChanged.emit("physical")
+        )
         self._gamepad_controller.logMessage.connect(self.logMessage.emit)
 
         # ProfileController signals
@@ -283,20 +305,39 @@ class QmlBridge(QObject):
 
         def poll_loop() -> None:
             import time
-            while not getattr(self, '_shutdown', False):
+
+            while not getattr(self, "_shutdown", False):
                 time.sleep(0.3)
                 try:
                     status = {
-                        "clicker": self.clicker.get_status() if hasattr(self.clicker, 'get_status') else {},
-                        "aim": self.aim.get_status() if hasattr(self.aim, 'get_status') else {},
-                        "macro": self.macro.get_status() if hasattr(self.macro, 'get_status') else {},
-                        "recorder": self.recorder.status() if hasattr(self.recorder, 'status') else {},
+                        "clicker": (
+                            self.clicker.get_status()
+                            if hasattr(self.clicker, "get_status")
+                            else {}
+                        ),
+                        "aim": (
+                            self.aim.get_status()
+                            if hasattr(self.aim, "get_status")
+                            else {}
+                        ),
+                        "macro": (
+                            self.macro.get_status()
+                            if hasattr(self.macro, "get_status")
+                            else {}
+                        ),
+                        "recorder": (
+                            self.recorder.status()
+                            if hasattr(self.recorder, "status")
+                            else {}
+                        ),
                     }
                     self.overlayStatusUpdate.emit(status)
                 except (OSError, RuntimeError, AttributeError, ValueError) as e:
                     logger.debug(f"Status poller error: {e}")
 
-        self._status_poller = threading.Thread(target=poll_loop, daemon=True, name="OverlayStatusPoller")
+        self._status_poller = threading.Thread(
+            target=poll_loop, daemon=True, name="OverlayStatusPoller"
+        )
         self._status_poller.start()
 
     # ─── Visibility Check ──────────────────────────────────────────────────
@@ -342,6 +383,7 @@ class QmlBridge(QObject):
         try:
             from app.backend.i18n import tr as _tr
             from app.backend.services.input_validation import VALID_LANGUAGES
+
             lang: str = getattr(self.state, "ui_lang", "RU")
             if lang not in VALID_LANGUAGES:
                 lang = "RU"
@@ -362,6 +404,7 @@ class QmlBridge(QObject):
         try:
             from app.backend.i18n import tr as _tr
             from app.backend.services.input_validation import VALID_LANGUAGES
+
             if lang not in VALID_LANGUAGES:
                 lang = "RU"
             return _tr(key, lang)
@@ -376,11 +419,14 @@ class QmlBridge(QObject):
                 get_available_languages,
                 get_translation_coverage,
             )
-            return _qvar_map({
-                "ok": True,
-                "coverage": get_translation_coverage(),
-                "languages": get_available_languages(),
-            })
+
+            return _qvar_map(
+                {
+                    "ok": True,
+                    "coverage": get_translation_coverage(),
+                    "languages": get_available_languages(),
+                }
+            )
         except (OSError, RuntimeError, AttributeError, ValueError, KeyError) as e:
             return _qvar_map({"ok": False, "error": str(e)})
 
@@ -388,7 +434,7 @@ class QmlBridge(QObject):
 
     @Slot(result=str)
     def getAppVersion(self) -> str:
-        return getattr(self.state, 'app_version', '1.0.0')
+        return getattr(self.state, "app_version", "1.0.0")
 
     # ─── Clicker ───────────────────────────────────────────────────────────
 
@@ -403,30 +449,51 @@ class QmlBridge(QObject):
 
     @Slot(result=float)
     def getClickerCPS(self) -> float:
-        return float(getattr(self.clicker, 'cps', 0.0))
+        return float(getattr(self.clicker, "cps", 0.0))
 
     @Slot(int, int, str, int, str, result="QVariantMap")
-    def setClickerConfig(self, interval_ms: int, hold_ms: int, button: str, limit: int, background_method: str) -> QVariantMap:
+    def setClickerConfig(
+        self,
+        interval_ms: int,
+        hold_ms: int,
+        button: str,
+        limit: int,
+        background_method: str,
+    ) -> QVariantMap:
         ok: bool
-        ok, interval_val, err = validate_int(interval_ms, CLICKER_INTERVAL_MIN, CLICKER_INTERVAL_MAX, name="interval_ms")
+        ok, interval_val, err = validate_int(
+            interval_ms, CLICKER_INTERVAL_MIN, CLICKER_INTERVAL_MAX, name="interval_ms"
+        )
         if not ok or interval_val is None:
             return _qvar_map(make_error_response(err or "Invalid interval_ms"))
-        ok, hold_val, err = validate_int(hold_ms, CLICKER_HOLD_MIN, CLICKER_HOLD_MAX, name="hold_ms")
+        ok, hold_val, err = validate_int(
+            hold_ms, CLICKER_HOLD_MIN, CLICKER_HOLD_MAX, name="hold_ms"
+        )
         if not ok or hold_val is None:
             return _qvar_map(make_error_response(err or "Invalid hold_ms"))
-        ok, button_val, err = validate_enum(button, VALID_CLICKER_BUTTONS, case_sensitive=False, name="button")
+        ok, button_val, err = validate_enum(
+            button, VALID_CLICKER_BUTTONS, case_sensitive=False, name="button"
+        )
         if not ok or button_val is None:
             return _qvar_map(make_error_response(err or "Invalid button"))
-        ok, limit_val, err = validate_int(limit, CLICKER_LIMIT_MIN, CLICKER_LIMIT_MAX, name="limit")
+        ok, limit_val, err = validate_int(
+            limit, CLICKER_LIMIT_MIN, CLICKER_LIMIT_MAX, name="limit"
+        )
         if not ok or limit_val is None:
             return _qvar_map(make_error_response(err or "Invalid limit"))
         ok, method_val, err = validate_enum(
-            background_method, VALID_BACKGROUND_METHODS, default="sendinput", name="background_method")
+            background_method,
+            VALID_BACKGROUND_METHODS,
+            default="sendinput",
+            name="background_method",
+        )
         if not ok or method_val is None:
             return _qvar_map(make_error_response(err or "Invalid background_method"))
 
         self.clicker.background_method = method_val
-        status = self.clicker.update_config(interval_val, hold_val, button_val, limit_val)
+        status = self.clicker.update_config(
+            interval_val, hold_val, button_val, limit_val
+        )
         self._schedule_save()
         return _qvar_map(status)
 
@@ -452,7 +519,9 @@ class QmlBridge(QObject):
 
     @Slot(str, result="QVariantMap")
     def setMacroMode(self, mode: str) -> QVariantMap:
-        ok, val, err = validate_enum(mode, {"sequence", "hold", "toggle"}, case_sensitive=False, name="mode")
+        ok, val, err = validate_enum(
+            mode, {"sequence", "hold", "toggle"}, case_sensitive=False, name="mode"
+        )
         if not ok or val is None:
             return _qvar_map(make_error_response(err or "Invalid mode"))
         out = self.macro.set_run_mode(val)
@@ -461,7 +530,9 @@ class QmlBridge(QObject):
 
     @Slot(str, result="QVariantMap")
     def setMacroBackgroundMethod(self, method: str) -> QVariantMap:
-        ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, default="sendinput", name="method")
+        ok, val, err = validate_enum(
+            method, VALID_BACKGROUND_METHODS, default="sendinput", name="method"
+        )
         if not ok or val is None:
             return _qvar_map(make_error_response(err or "Invalid method"))
         out = self.macro.set_background_method(val)
@@ -473,10 +544,14 @@ class QmlBridge(QObject):
         ok, key_val, err = validate_str(key, min_len=1, max_len=50, name="key")
         if not ok or key_val is None:
             return _qvar_map(make_error_response(err or "Invalid key"))
-        ok, delay_val, err = validate_float(delay, MACRO_DELAY_MIN, MACRO_DELAY_MAX, name="delay")
+        ok, delay_val, err = validate_float(
+            delay, MACRO_DELAY_MIN, MACRO_DELAY_MAX, name="delay"
+        )
         if not ok or delay_val is None:
             return _qvar_map(make_error_response(err or "Invalid delay"))
-        ok, hold_val, err = validate_float(hold, MACRO_HOLD_MIN, MACRO_HOLD_MAX, name="hold")
+        ok, hold_val, err = validate_float(
+            hold, MACRO_HOLD_MIN, MACRO_HOLD_MAX, name="hold"
+        )
         if not ok or hold_val is None:
             return _qvar_map(make_error_response(err or "Invalid hold"))
         out = self.macro.add_action(key_val, delay_val, hold_val)
@@ -574,10 +649,18 @@ class QmlBridge(QObject):
 
     @Slot(str, int, result="QVariantMap")
     def recorderPlay(self, name: str, repeats: int = 1) -> QVariantMap:
-        ok, name_val, err = validate_str(name, min_len=1, max_len=255, name="record_name")
+        ok, name_val, err = validate_str(
+            name, min_len=1, max_len=255, name="record_name"
+        )
         if not ok or name_val is None:
             return _qvar_map(make_error_response(err or "Invalid name"))
-        ok, repeats_val, err = validate_int(repeats, RECORDER_REPEATS_MIN, RECORDER_REPEATS_MAX, default=1, name="repeats")
+        ok, repeats_val, err = validate_int(
+            repeats,
+            RECORDER_REPEATS_MIN,
+            RECORDER_REPEATS_MAX,
+            default=1,
+            name="repeats",
+        )
         if not ok or repeats_val is None:
             return _qvar_map(make_error_response(err or "Invalid repeats"))
         result = self.recorder.play_record(name_val, repeats_val)
@@ -592,7 +675,9 @@ class QmlBridge(QObject):
 
     @Slot(str, result="QVariantMap")
     def setRecorderBackgroundMethod(self, method: str) -> QVariantMap:
-        ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, default="sendinput", name="method")
+        ok, val, err = validate_enum(
+            method, VALID_BACKGROUND_METHODS, default="sendinput", name="method"
+        )
         if not ok or val is None:
             return _qvar_map(make_error_response(err or "Invalid method"))
         out = self.recorder.set_background_method(val)
@@ -601,7 +686,9 @@ class QmlBridge(QObject):
 
     @Slot(str)
     def recorderDelete(self, name: str) -> None:
-        ok, name_val, err = validate_str(name, min_len=1, max_len=255, name="record_name")
+        ok, name_val, err = validate_str(
+            name, min_len=1, max_len=255, name="record_name"
+        )
         if not ok or name_val is None:
             logger.warning("recorderDelete: %s", err or "Invalid name")
             return
@@ -614,14 +701,22 @@ class QmlBridge(QObject):
         return _qvar_map(self.aim.get_status())
 
     @Slot(float, int, float, result="QVariantMap")
-    def aimSetConfig(self, confidence: float, smooth_steps: int, reset_delay: float) -> QVariantMap:
-        ok, conf_val, err = validate_float(confidence, AIM_CONFIDENCE_MIN, AIM_CONFIDENCE_MAX, name="confidence")
+    def aimSetConfig(
+        self, confidence: float, smooth_steps: int, reset_delay: float
+    ) -> QVariantMap:
+        ok, conf_val, err = validate_float(
+            confidence, AIM_CONFIDENCE_MIN, AIM_CONFIDENCE_MAX, name="confidence"
+        )
         if not ok or conf_val is None:
             return _qvar_map(make_error_response(err or "Invalid confidence"))
-        ok, smooth_val, err = validate_int(smooth_steps, AIM_SMOOTH_MIN, AIM_SMOOTH_MAX, name="smooth_steps")
+        ok, smooth_val, err = validate_int(
+            smooth_steps, AIM_SMOOTH_MIN, AIM_SMOOTH_MAX, name="smooth_steps"
+        )
         if not ok or smooth_val is None:
             return _qvar_map(make_error_response(err or "Invalid smooth_steps"))
-        ok, reset_val, err = validate_float(reset_delay, AIM_RESET_DELAY_MIN, AIM_RESET_DELAY_MAX, name="reset_delay")
+        ok, reset_val, err = validate_float(
+            reset_delay, AIM_RESET_DELAY_MIN, AIM_RESET_DELAY_MAX, name="reset_delay"
+        )
         if not ok or reset_val is None:
             return _qvar_map(make_error_response(err or "Invalid reset_delay"))
         out = self.aim.update_config(conf_val, smooth_val, reset_val)
@@ -662,7 +757,9 @@ class QmlBridge(QObject):
 
     @Slot(str, result="QVariantMap")
     def setAimBackgroundMethod(self, method: str) -> QVariantMap:
-        ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, default="sendinput", name="method")
+        ok, val, err = validate_enum(
+            method, VALID_BACKGROUND_METHODS, default="sendinput", name="method"
+        )
         if not ok or val is None:
             return _qvar_map(make_error_response(err or "Invalid method"))
         out = self.aim.set_background_method(val)
@@ -707,41 +804,80 @@ class QmlBridge(QObject):
 
     @Slot(str, result="QVariantMap")
     def setAimMultiColors(self, colors_json: str) -> QVariantMap:
-        ok, colors_val, err = validate_json_array(colors_json, item_type=str, min_items=1, max_items=10, name="colors")
+        ok, colors_val, err = validate_json_array(
+            colors_json, item_type=str, min_items=1, max_items=10, name="colors"
+        )
         if not ok or colors_val is None:
             return _qvar_map(make_error_response(err or "Invalid colors"))
         for c in colors_val:
             if c.lower() not in VALID_AIM_TARGET_COLORS:
-                return _qvar_map(make_error_response(f"Invalid color: {c}. Must be one of: {', '.join(sorted(VALID_AIM_TARGET_COLORS))}"))
+                return _qvar_map(
+                    make_error_response(
+                        f"Invalid color: {c}. Must be one of: {', '.join(sorted(VALID_AIM_TARGET_COLORS))}"
+                    )
+                )
         out = self.aim.set_multi_colors(colors_val)
         self._schedule_save()
         return _qvar_map(out)
 
     @Slot(int, int, int, int, int, int, result="QVariantMap")
-    def setAimFilters(self, min_area: int, max_area: int, aspect_min_x100: int, aspect_max_x100: int, brightness: int, saturation: int) -> QVariantMap:
-        ok, min_val, err = validate_int(min_area, AIM_MIN_AREA_MIN, AIM_MIN_AREA_MAX, name="min_area")
+    def setAimFilters(
+        self,
+        min_area: int,
+        max_area: int,
+        aspect_min_x100: int,
+        aspect_max_x100: int,
+        brightness: int,
+        saturation: int,
+    ) -> QVariantMap:
+        ok, min_val, err = validate_int(
+            min_area, AIM_MIN_AREA_MIN, AIM_MIN_AREA_MAX, name="min_area"
+        )
         if not ok or min_val is None:
             return _qvar_map(make_error_response(err or "Invalid min_area"))
-        ok, max_val, err = validate_int(max_area, AIM_MAX_AREA_MIN, AIM_MAX_AREA_MAX, name="max_area")
+        ok, max_val, err = validate_int(
+            max_area, AIM_MAX_AREA_MIN, AIM_MAX_AREA_MAX, name="max_area"
+        )
         if not ok or max_val is None:
             return _qvar_map(make_error_response(err or "Invalid max_area"))
         if min_val > max_val:
             return _qvar_map(make_error_response("min_area must be <= max_area"))
-        ok, aspect_min_val, err = validate_int(aspect_min_x100, int(AIM_ASPECT_MIN * 100), int(AIM_ASPECT_MAX * 100), name="aspect_min")
+        ok, aspect_min_val, err = validate_int(
+            aspect_min_x100,
+            int(AIM_ASPECT_MIN * 100),
+            int(AIM_ASPECT_MAX * 100),
+            name="aspect_min",
+        )
         if not ok or aspect_min_val is None:
             return _qvar_map(make_error_response(err or "Invalid aspect_min"))
-        ok, aspect_max_val, err = validate_int(aspect_max_x100, int(AIM_ASPECT_MIN * 100), int(AIM_ASPECT_MAX * 100), name="aspect_max")
+        ok, aspect_max_val, err = validate_int(
+            aspect_max_x100,
+            int(AIM_ASPECT_MIN * 100),
+            int(AIM_ASPECT_MAX * 100),
+            name="aspect_max",
+        )
         if not ok or aspect_max_val is None:
             return _qvar_map(make_error_response(err or "Invalid aspect_max"))
         if aspect_min_val > aspect_max_val:
             return _qvar_map(make_error_response("aspect_min must be <= aspect_max"))
-        ok, bright_val, err = validate_int(brightness, AIM_BRIGHTNESS_MIN, AIM_BRIGHTNESS_MAX, name="brightness")
+        ok, bright_val, err = validate_int(
+            brightness, AIM_BRIGHTNESS_MIN, AIM_BRIGHTNESS_MAX, name="brightness"
+        )
         if not ok or bright_val is None:
             return _qvar_map(make_error_response(err or "Invalid brightness"))
-        ok, sat_val, err = validate_int(saturation, AIM_SATURATION_MIN, AIM_SATURATION_MAX, name="saturation")
+        ok, sat_val, err = validate_int(
+            saturation, AIM_SATURATION_MIN, AIM_SATURATION_MAX, name="saturation"
+        )
         if not ok or sat_val is None:
             return _qvar_map(make_error_response(err or "Invalid saturation"))
-        out = self.aim.set_filters(min_val, max_val, aspect_min_val / 100.0, aspect_max_val / 100.0, bright_val, sat_val)
+        out = self.aim.set_filters(
+            min_val,
+            max_val,
+            aspect_min_val / 100.0,
+            aspect_max_val / 100.0,
+            bright_val,
+            sat_val,
+        )
         self._schedule_save()
         return _qvar_map(out)
 
@@ -764,8 +900,10 @@ class QmlBridge(QObject):
         """Get current mouse cursor position. Returns {x, y}."""
         try:
             import ctypes
+
             class POINT(ctypes.Structure):
                 _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
+
             pt = POINT()
             user32 = ctypes.windll.user32
             user32.GetCursorPos(ctypes.byref(pt))
@@ -819,15 +957,18 @@ class QmlBridge(QObject):
     @Slot(result="QVariantMap")
     def getDiagnostics(self) -> QVariantMap:
         import platform
-        return _qvar_map({
-            "platform": platform.platform(),
-            "python": platform.python_version(),
-            "is_pinned": self.state.is_pinned,
-            "hotkeys_available": self.hotkeys.is_available(),
-            "mouse_hotkeys_available": self.hotkeys.is_mouse_available(),
-            "terminal_palette": self.state.terminal_palette,
-            "ui": "pyside6",
-        })
+
+        return _qvar_map(
+            {
+                "platform": platform.platform(),
+                "python": platform.python_version(),
+                "is_pinned": self.state.is_pinned,
+                "hotkeys_available": self.hotkeys.is_available(),
+                "mouse_hotkeys_available": self.hotkeys.is_mouse_available(),
+                "terminal_palette": self.state.terminal_palette,
+                "ui": "pyside6",
+            }
+        )
 
     # ─── Panic Stop ─────────────────────────────────────────────────────────
 
@@ -861,7 +1002,9 @@ class QmlBridge(QObject):
 
     def start_clicker(self) -> QVariantMap:
         if not self.is_app_visible():
-            logger.warning("Clicker start blocked: app not visible (no window, no tray)")
+            logger.warning(
+                "Clicker start blocked: app not visible (no window, no tray)"
+            )
             return _qvar_map({"ok": False, "error": "App not visible"})
         return self.startClicker()
 
@@ -888,7 +1031,9 @@ class QmlBridge(QObject):
 
     def recorder_start(self) -> QVariantMap:
         if not self.is_app_visible():
-            logger.warning("Recorder start blocked: app not visible (no window, no tray)")
+            logger.warning(
+                "Recorder start blocked: app not visible (no window, no tray)"
+            )
             return _qvar_map({"ok": False, "error": "App not visible"})
         return self.recorderStart()
 
@@ -914,9 +1059,7 @@ class QmlBridge(QObject):
     @Slot(int)
     def set_app_hwnd(self, hwnd: int) -> None:
         """Called from main.py after QML window creation to store app HWND."""
-        from app.backend.services.input_validation import (
-            validate_int,
-        )
+        from app.backend.services.input_validation import validate_int
 
         ok, hwnd_val, err = validate_int(hwnd, 0, None, name="hwnd")
         if not ok or hwnd_val is None:
@@ -927,9 +1070,7 @@ class QmlBridge(QObject):
     @Slot(int)
     def set_overlay_hwnd(self, hwnd: int) -> None:
         """Called from main.py when overlay becomes visible to store overlay HWND."""
-        from app.backend.services.input_validation import (
-            validate_int,
-        )
+        from app.backend.services.input_validation import validate_int
 
         ok, hwnd_val, err = validate_int(hwnd, 0, None, name="hwnd")
         if not ok or hwnd_val is None:
@@ -952,6 +1093,7 @@ class QmlBridge(QObject):
     @Slot()
     def windowMinimize(self) -> None:
         import ctypes
+
         hwnd = self._window_controller._get_app_hwnd()
         if hwnd:
             user32 = ctypes.windll.user32
@@ -961,9 +1103,11 @@ class QmlBridge(QObject):
     def windowToggleMaximize(self) -> None:
         import ctypes
         from ctypes import wintypes
+
         hwnd = self._window_controller._get_app_hwnd()
         if hwnd:
             user32 = ctypes.windll.user32
+
             # WINDOWPLACEMENT structure (not in wintypes, define locally)
             class WINDOWPLACEMENT(ctypes.Structure):
                 _fields_ = [
@@ -974,6 +1118,7 @@ class QmlBridge(QObject):
                     ("ptMaxPosition", wintypes.POINT),
                     ("rcNormalPosition", wintypes.RECT),
                 ]
+
             placement = WINDOWPLACEMENT()
             placement.length = ctypes.sizeof(placement)
             user32.GetWindowPlacement(hwnd, ctypes.byref(placement))
@@ -1050,7 +1195,9 @@ class QmlBridge(QObject):
 
     @Slot(str, result="QVariantMap")
     def setVigemControllerType(self, controller_type: str) -> QVariantMap:
-        return _qvar_map(self.gamepad_controller.setGamepadControllerType(controller_type))
+        return _qvar_map(
+            self.gamepad_controller.setGamepadControllerType(controller_type)
+        )
 
     @Slot(int, result="QVariantMap")
     def setVigemTargetIndex(self, index: int) -> QVariantMap:
@@ -1058,7 +1205,11 @@ class QmlBridge(QObject):
 
     @Slot(str, str, result="QVariantMap")
     def setVigemButtonMap(self, key: str, gamepad_btn: str) -> QVariantMap:
-        return _qvar_map(self.gamepad_controller.setVigemButtonMap({key.strip().lower(): gamepad_btn.strip().upper()}))
+        return _qvar_map(
+            self.gamepad_controller.setVigemButtonMap(
+                {key.strip().lower(): gamepad_btn.strip().upper()}
+            )
+        )
 
     @Slot(result="QVariantMap")
     def startVigem(self) -> QVariantMap:
@@ -1073,17 +1224,31 @@ class QmlBridge(QObject):
         return _qvar_map(self.gamepad_controller.getVigemStatus())
 
     @Slot(int, int, int, int, int, int, int, int, result="QVariantMap")
-    def vigemSetGamepadState(self, target_id: int, buttons: int, lt: int, rt: int, lx: int, ly: int, rx: int, ry: int) -> QVariantMap:
-        return _qvar_map(self.gamepad_controller.sendVigemTestState({
-            "target_id": target_id,
-            "buttons": buttons,
-            "lt": lt,
-            "rt": rt,
-            "lx": lx,
-            "ly": ly,
-            "rx": rx,
-            "ry": ry
-        }))
+    def vigemSetGamepadState(
+        self,
+        target_id: int,
+        buttons: int,
+        lt: int,
+        rt: int,
+        lx: int,
+        ly: int,
+        rx: int,
+        ry: int,
+    ) -> QVariantMap:
+        return _qvar_map(
+            self.gamepad_controller.sendVigemTestState(
+                {
+                    "target_id": target_id,
+                    "buttons": buttons,
+                    "lt": lt,
+                    "rt": rt,
+                    "lx": lx,
+                    "ly": ly,
+                    "rx": rx,
+                    "ry": ry,
+                }
+            )
+        )
 
     @Slot(dict, result="QVariantMap")
     def sendVigemTestState(self, state_map: dict[str, Any]) -> QVariantMap:
@@ -1091,91 +1256,135 @@ class QmlBridge(QObject):
         # Validate target_id
         ok, target_id_val, err = validate_int(
             state_map.get("target_id", 0) if state_map else 0,
-            GAMEPAD_TARGET_INDEX_MIN, GAMEPAD_TARGET_INDEX_MAX, default=0, name="target_id")
+            GAMEPAD_TARGET_INDEX_MIN,
+            GAMEPAD_TARGET_INDEX_MAX,
+            default=0,
+            name="target_id",
+        )
         if not ok or target_id_val is None:
             return _qvar_map(make_error_response(err or "Invalid target_id"))
 
         # Validate buttons (0..0xFFFFFFFF)
         ok, buttons_val, err = validate_int(
             state_map.get("buttons", 0) if state_map else 0,
-            0, GAMEPAD_BUTTONS_MASK_MAX, default=0, name="buttons")
+            0,
+            GAMEPAD_BUTTONS_MASK_MAX,
+            default=0,
+            name="buttons",
+        )
         if not ok or buttons_val is None:
             return _qvar_map(make_error_response(err or "Invalid buttons"))
 
         # Validate triggers (0..255)
         ok, lt_val, err = validate_int(
             state_map.get("lt", 0) if state_map else 0,
-            GAMEPAD_TRIGGER_MIN, GAMEPAD_TRIGGER_MAX, default=0, name="lt")
+            GAMEPAD_TRIGGER_MIN,
+            GAMEPAD_TRIGGER_MAX,
+            default=0,
+            name="lt",
+        )
         if not ok or lt_val is None:
             return _qvar_map(make_error_response(err or "Invalid lt"))
         ok, rt_val, err = validate_int(
             state_map.get("rt", 0) if state_map else 0,
-            GAMEPAD_TRIGGER_MIN, GAMEPAD_TRIGGER_MAX, default=0, name="rt")
+            GAMEPAD_TRIGGER_MIN,
+            GAMEPAD_TRIGGER_MAX,
+            default=0,
+            name="rt",
+        )
         if not ok or rt_val is None:
             return _qvar_map(make_error_response(err or "Invalid rt"))
 
         # Validate sticks (-32768..32767)
         ok, lx_val, err = validate_int(
             state_map.get("lx", 0) if state_map else 0,
-            GAMEPAD_STICK_MIN, GAMEPAD_STICK_MAX, default=0, name="lx")
+            GAMEPAD_STICK_MIN,
+            GAMEPAD_STICK_MAX,
+            default=0,
+            name="lx",
+        )
         if not ok or lx_val is None:
             return _qvar_map(make_error_response(err or "Invalid lx"))
         ok, ly_val, err = validate_int(
             state_map.get("ly", 0) if state_map else 0,
-            GAMEPAD_STICK_MIN, GAMEPAD_STICK_MAX, default=0, name="ly")
+            GAMEPAD_STICK_MIN,
+            GAMEPAD_STICK_MAX,
+            default=0,
+            name="ly",
+        )
         if not ok or ly_val is None:
             return _qvar_map(make_error_response(err or "Invalid ly"))
         ok, rx_val, err = validate_int(
             state_map.get("rx", 0) if state_map else 0,
-            GAMEPAD_STICK_MIN, GAMEPAD_STICK_MAX, default=0, name="rx")
+            GAMEPAD_STICK_MIN,
+            GAMEPAD_STICK_MAX,
+            default=0,
+            name="rx",
+        )
         if not ok or rx_val is None:
             return _qvar_map(make_error_response(err or "Invalid rx"))
         ok, ry_val, err = validate_int(
             state_map.get("ry", 0) if state_map else 0,
-            GAMEPAD_STICK_MIN, GAMEPAD_STICK_MAX, default=0, name="ry")
+            GAMEPAD_STICK_MIN,
+            GAMEPAD_STICK_MAX,
+            default=0,
+            name="ry",
+        )
         if not ok or ry_val is None:
             return _qvar_map(make_error_response(err or "Invalid ry"))
 
-        return _qvar_map(self.gamepad_controller.sendVigemTestState({
-            "target_id": target_id_val,
-            "buttons": buttons_val,
-            "lt": lt_val,
-            "rt": rt_val,
-            "lx": lx_val,
-            "ly": ly_val,
-            "rx": rx_val,
-            "ry": ry_val
-        }))
+        return _qvar_map(
+            self.gamepad_controller.sendVigemTestState(
+                {
+                    "target_id": target_id_val,
+                    "buttons": buttons_val,
+                    "lt": lt_val,
+                    "rt": rt_val,
+                    "lx": lx_val,
+                    "ly": ly_val,
+                    "rx": rx_val,
+                    "ry": ry_val,
+                }
+            )
+        )
 
     @Slot(int, int, result="QVariantMap")
     def vigemSetButtons(self, target_id: int, button_mask: int) -> QVariantMap:
-        return _qvar_map(self.gamepad_controller.sendVigemTestState({
-            "target_id": target_id, "buttons": button_mask
-        }))
+        return _qvar_map(
+            self.gamepad_controller.sendVigemTestState(
+                {"target_id": target_id, "buttons": button_mask}
+            )
+        )
 
     @Slot(int, int, int, result="QVariantMap")
     def vigemSetTriggers(self, target_id: int, left: int, right: int) -> QVariantMap:
-        return _qvar_map(self.gamepad_controller.sendVigemTestState({
-            "target_id": target_id, "lt": left, "rt": right
-        }))
+        return _qvar_map(
+            self.gamepad_controller.sendVigemTestState(
+                {"target_id": target_id, "lt": left, "rt": right}
+            )
+        )
 
     @Slot(int, int, int, result="QVariantMap")
     def vigemSetLeftStick(self, target_id: int, x: int, y: int) -> QVariantMap:
-        return _qvar_map(self.gamepad_controller.sendVigemTestState({
-            "target_id": target_id, "lx": x, "ly": y
-        }))
+        return _qvar_map(
+            self.gamepad_controller.sendVigemTestState(
+                {"target_id": target_id, "lx": x, "ly": y}
+            )
+        )
 
     @Slot(int, int, int, result="QVariantMap")
     def vigemSetRightStick(self, target_id: int, x: int, y: int) -> QVariantMap:
-        return _qvar_map(self.gamepad_controller.sendVigemTestState({
-            "target_id": target_id, "rx": x, "ry": y
-        }))
+        return _qvar_map(
+            self.gamepad_controller.sendVigemTestState(
+                {"target_id": target_id, "rx": x, "ry": y}
+            )
+        )
 
     @Slot(int, result="QVariantMap")
     def vigemReset(self, target_id: int) -> QVariantMap:
-        return _qvar_map(self.gamepad_controller.sendVigemTestState({
-            "target_id": target_id
-        }))
+        return _qvar_map(
+            self.gamepad_controller.sendVigemTestState({"target_id": target_id})
+        )
 
     @Slot(str, result="QVariantMap")
     def setGamepadBackgroundMethod(self, method: str) -> QVariantMap:
@@ -1190,7 +1399,7 @@ class QmlBridge(QObject):
         return _qvar_map(self.gamepad_controller.listPicoDevices())
 
     @Slot(str, int, result="QVariantMap")
-    def setPicoPort(self, port: str, baudrate: int = 115200) -> QVariantMap:
+    def setPicoPort(self, port: str, _baudrate: int = 115200) -> QVariantMap:
         # GamepadController doesn't have setPicoPort; use startPico with port
         return _qvar_map(self.gamepad_controller.startPico(port))
 
@@ -1215,12 +1424,26 @@ class QmlBridge(QObject):
         return _qvar_map(self.gamepad_controller.picoSendKey(key, action, hold_ms))
 
     @Slot(int, int, int, int, result="QVariantMap")
-    def picoSendMouse(self, dx: int, dy: int, button: int = 0, hold_ms: int = 0) -> QVariantMap:
+    def picoSendMouse(
+        self, dx: int, dy: int, button: int = 0, hold_ms: int = 0
+    ) -> QVariantMap:
         return _qvar_map(self.gamepad_controller.picoSendMouse(dx, dy, button, hold_ms))
 
     @Slot(int, int, int, int, int, int, int, int, result="QVariantMap")
-    def picoSendGamepad(self, buttons: int, lt: int, rt: int, lx: int, ly: int, rx: int, ry: int, mask: int = 65535) -> QVariantMap:
-        return _qvar_map(self.gamepad_controller.picoSendGamepad(buttons, lt, rt, lx, ly, rx, ry))
+    def picoSendGamepad(
+        self,
+        buttons: int,
+        lt: int,
+        rt: int,
+        lx: int,
+        ly: int,
+        rx: int,
+        ry: int,
+        _mask: int = 65535,
+    ) -> QVariantMap:
+        return _qvar_map(
+            self.gamepad_controller.picoSendGamepad(buttons, lt, rt, lx, ly, rx, ry)
+        )
 
     @Slot(int, int, int, result="QVariantMap")
     def picoSetStick(self, stick: int, x: int, y: int) -> QVariantMap:
@@ -1229,7 +1452,9 @@ class QmlBridge(QObject):
     @Slot(int, int, result="QVariantMap")
     def picoSetTriggers(self, lt: int, rt: int) -> QVariantMap:
         # Delegate to sendVigemTestState for triggers
-        return _qvar_map(self.gamepad_controller.sendVigemTestState({"lt": lt, "rt": rt}))
+        return _qvar_map(
+            self.gamepad_controller.sendVigemTestState({"lt": lt, "rt": rt})
+        )
 
     @Slot(result="QVariantMap")
     def picoReset(self) -> QVariantMap:
@@ -1283,18 +1508,32 @@ class QmlBridge(QObject):
     def exportProfile(self, path: str) -> QVariantMap:
         try:
             from app.backend.profile_io import export_profile
+
             result = export_profile(self, path)
             return _qvar_map(result)
-        except (OSError, RuntimeError, AttributeError, ValueError, json.JSONDecodeError) as e:
+        except (
+            OSError,
+            RuntimeError,
+            AttributeError,
+            ValueError,
+            json.JSONDecodeError,
+        ) as e:
             return _qvar_map({"ok": False, "error": str(e)})
 
     @Slot(str, result="QVariantMap")
     def importProfile(self, path: str) -> QVariantMap:
         try:
             from app.backend.profile_io import import_profile
+
             result = import_profile(self, path)
             return _qvar_map(result)
-        except (OSError, RuntimeError, AttributeError, ValueError, json.JSONDecodeError) as e:
+        except (
+            OSError,
+            RuntimeError,
+            AttributeError,
+            ValueError,
+            json.JSONDecodeError,
+        ) as e:
             return _qvar_map({"ok": False, "error": str(e)})
 
     @Slot(result="QVariantMap")
@@ -1334,6 +1573,7 @@ class QmlBridge(QObject):
                 detect_windows_theme,
                 get_palette_for_theme,
             )
+
             theme = detect_windows_theme()
             palette = get_palette_for_theme(theme, self.state.terminal_palette)
             self.settingsChanged.emit()
@@ -1347,6 +1587,7 @@ class QmlBridge(QObject):
     def checkForUpdates(self, current_version: str = "0.17.0") -> QVariantMap:
         try:
             from app.backend.services.update_checker import check_for_updates
+
             result = check_for_updates(current_version)
             return _qvar_map(result)
         except (OSError, RuntimeError, AttributeError, ValueError, ImportError) as e:
@@ -1356,12 +1597,15 @@ class QmlBridge(QObject):
     def checkForUpdatesAsync(self, current_version: str = "0.17.0") -> QVariantMap:
         try:
             from app.backend.services.update_checker import check_for_updates_async
+
             def callback(result: str) -> None:
                 try:
                     import json as _json
+
                     self.updateCheckResult.emit(_qvar_map(_json.loads(result)))
                 except (json.JSONDecodeError, ValueError):
                     pass
+
             check_for_updates_async(current_version, callback)
             return _qvar_map({"ok": True, "started": True})
         except (OSError, RuntimeError, AttributeError, ValueError, ImportError) as e:

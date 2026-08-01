@@ -21,6 +21,7 @@
 
 Каждый миксин ≤ 250 LOC. QmlBridge.__init__ создаёт все сервисы.
 """
+
 from __future__ import annotations
 
 from app.backend.bridges.aim_bridge import AimBridge
@@ -62,6 +63,7 @@ class QmlBridge(
     3. Добавить класс в список наследования QmlBridge
     4. Инициализировать сервисы в __init__ (если нужно)
     """
+
     pass
 
 

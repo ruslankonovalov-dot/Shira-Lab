@@ -61,17 +61,20 @@ class SoundManager(QObject):
             self._beep(1000, 300)
             # Double beep for panic
             from PySide6.QtCore import QTimer
+
             QTimer.singleShot(150, lambda: self._beep(800, 300))
 
     def _beep(self, frequency: int, duration: int) -> None:
         """Fallback: system beep using winsound on Windows."""
         import sys
+
         try:
             if sys.platform == "win32":
                 import winsound
+
                 winsound.Beep(frequency, duration)
             else:
-                sys.stdout.write('\a')  # ASCII bell
+                sys.stdout.write("\a")  # ASCII bell
         except (OSError, ImportError, ValueError):
             logger.debug("Failed to play system beep fallback")
 

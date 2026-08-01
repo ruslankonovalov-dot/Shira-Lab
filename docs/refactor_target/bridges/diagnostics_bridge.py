@@ -2,13 +2,15 @@
 
 Перенесено из qml_bridge.py, секции Diagnostics + panic_stop (строки 1289–1345).
 """
+
 from __future__ import annotations
 
 import json
 import platform
 
-from app.backend.bridges.bridge_base import BridgeBase
 from PySide6.QtCore import Slot
+
+from app.backend.bridges.bridge_base import BridgeBase
 
 
 class DiagnosticsBridge(BridgeBase):
@@ -17,23 +19,25 @@ class DiagnosticsBridge(BridgeBase):
     @Slot(result=str)
     def getDiagnostics(self):
         """Возвращает полную диагностическую информацию для DiagnosticsPage."""
-        return json.dumps({
-            "platform": platform.platform(),
-            "python": platform.python_version(),
-            "is_pinned": self.state.is_pinned,
-            "hotkeys_available": self.hotkeys.is_available(),
-            "mouse_hotkeys_available": self.hotkeys.is_mouse_available(),
-            "wheel_hotkeys_available": self.hotkeys.is_wheel_available(),
-            "terminal_palette": self.state.terminal_palette,
-            "global_transparency": self.state.global_transparency,
-            "clicker": self.clicker.get_status(),
-            "macro": self.macro.get_status(),
-            "recorder": self.recorder.status(),
-            "aim": self.aim.get_status(),
-            "ui": "pyside6",
-            "app_hwnd": self._hwnd,
-            "overlay_hwnd": self._overlay_hwnd,
-        })
+        return json.dumps(
+            {
+                "platform": platform.platform(),
+                "python": platform.python_version(),
+                "is_pinned": self.state.is_pinned,
+                "hotkeys_available": self.hotkeys.is_available(),
+                "mouse_hotkeys_available": self.hotkeys.is_mouse_available(),
+                "wheel_hotkeys_available": self.hotkeys.is_wheel_available(),
+                "terminal_palette": self.state.terminal_palette,
+                "global_transparency": self.state.global_transparency,
+                "clicker": self.clicker.get_status(),
+                "macro": self.macro.get_status(),
+                "recorder": self.recorder.status(),
+                "aim": self.aim.get_status(),
+                "ui": "pyside6",
+                "app_hwnd": self._hwnd,
+                "overlay_hwnd": self._overlay_hwnd,
+            }
+        )
 
     @Slot(result=str)
     def panicStop(self):
@@ -70,17 +74,22 @@ class DiagnosticsBridge(BridgeBase):
         import time
 
         import psutil  # type: ignore
+
         try:
             process = psutil.Process()
-            return json.dumps({
-                "ok": True,
-                "cpu_percent": process.cpu_percent(interval=0.1),
-                "memory_mb": process.memory_info().rss / 1024 / 1024,
-                "threads": process.num_threads(),
-                "uptime_sec": time.time() - process.create_time(),
-                "clicker_cps": getattr(self.clicker, "get_cps", lambda: 0)(),
-                "aim_fps": getattr(self.aim, "get_fps", lambda: 0)(),
-                "hotkey_latency_ms": getattr(self.hotkeys, "get_latency_ms", lambda: 0)(),
-            })
+            return json.dumps(
+                {
+                    "ok": True,
+                    "cpu_percent": process.cpu_percent(interval=0.1),
+                    "memory_mb": process.memory_info().rss / 1024 / 1024,
+                    "threads": process.num_threads(),
+                    "uptime_sec": time.time() - process.create_time(),
+                    "clicker_cps": getattr(self.clicker, "get_cps", lambda: 0)(),
+                    "aim_fps": getattr(self.aim, "get_fps", lambda: 0)(),
+                    "hotkey_latency_ms": getattr(
+                        self.hotkeys, "get_latency_ms", lambda: 0
+                    )(),
+                }
+            )
         except Exception as e:
             return json.dumps({"ok": False, "error": str(e)})

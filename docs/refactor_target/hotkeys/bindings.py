@@ -4,6 +4,7 @@ CRUD операции над bindings: set, get, reset, list.
 Перенесено из hotkey_service.py методы set_bindings, set_binding,
 get_bindings, reset_binding, reset_all, unregister_all.
 """
+
 from __future__ import annotations
 
 import threading

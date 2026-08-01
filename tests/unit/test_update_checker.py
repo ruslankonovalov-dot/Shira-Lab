@@ -1,4 +1,5 @@
 """Unit tests for app.backend.services.update_checker module."""
+
 import urllib.error
 from unittest.mock import MagicMock, patch
 
@@ -43,8 +44,9 @@ class TestCompareVersions:
 class TestCheckForUpdates:
 
     def test_returns_error_on_network_failure(self):
-        with patch("urllib.request.urlopen",
-                   side_effect=urllib.error.URLError("Network error")):
+        with patch(
+            "urllib.request.urlopen", side_effect=urllib.error.URLError("Network error")
+        ):
             result = check_for_updates("0.16.0")
             assert result["ok"] is False
             assert "error" in result
@@ -75,7 +77,9 @@ class TestCheckForUpdates:
 
     def test_returns_no_update_when_older(self):
         mock_response = MagicMock()
-        mock_response.read.return_value = b'{"tag_name": "v0.15.0", "html_url": "", "body": "", "assets": []}'
+        mock_response.read.return_value = (
+            b'{"tag_name": "v0.15.0", "html_url": "", "body": "", "assets": []}'
+        )
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
 
@@ -93,7 +97,10 @@ class TestCheckForUpdates:
         with patch("urllib.request.urlopen", return_value=mock_response):
             result = check_for_updates("0.16.0")
             assert result["ok"] is True
-            assert result["download_url"] == "https://github.com/shira/shira-lab/releases/download/v0.17.0/ShiraLab.exe"
+            assert (
+                result["download_url"]
+                == "https://github.com/shira/shira-lab/releases/download/v0.17.0/ShiraLab.exe"
+            )
 
     def test_handles_invalid_response(self):
         mock_response = MagicMock()
@@ -111,11 +118,14 @@ class TestAsyncUpdateChecker:
     def test_async_calls_callback(self):
         """Async checker should call callback with JSON result."""
         mock_response = MagicMock()
-        mock_response.read.return_value = b'{"tag_name": "v0.17.0", "html_url": "", "body": "", "assets": []}'
+        mock_response.read.return_value = (
+            b'{"tag_name": "v0.17.0", "html_url": "", "body": "", "assets": []}'
+        )
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
 
         received = []
+
         def callback(result_json):
             received.append(result_json)
 
@@ -123,6 +133,7 @@ class TestAsyncUpdateChecker:
             check_for_updates_async("0.16.0", callback)
             # Wait a bit for the thread to complete
             import time
+
             time.sleep(0.5)
 
         assert len(received) == 1

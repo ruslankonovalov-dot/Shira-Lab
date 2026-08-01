@@ -1,4 +1,5 @@
 """Unit tests for app.backend.services.theme_detector module."""
+
 import sys
 from unittest.mock import MagicMock, patch
 

@@ -2,12 +2,14 @@
 
 Перенесено из qml_bridge.py, секция "Vigem" (строки 1388–1635).
 """
+
 from __future__ import annotations
 
 import json
 
-from app.backend.bridges.bridge_base import BridgeBase
 from PySide6.QtCore import Slot
+
+from app.backend.bridges.bridge_base import BridgeBase
 
 
 class GamepadBridge(BridgeBase):
@@ -23,6 +25,7 @@ class GamepadBridge(BridgeBase):
         if self._vigem is None:
             try:
                 from app.backend.services.vigem_service import VigemService
+
                 self._vigem = VigemService()
             except Exception:
                 return None
@@ -74,9 +77,9 @@ class GamepadBridge(BridgeBase):
     def vigemSetGamepadState(self, target_id, buttons, lt, rt, lx, ly, rx, ry):
         if not self.vigem:
             return json.dumps({"ok": False, "error": "ViGEm not available"})
-        return json.dumps(self.vigem.set_gamepad_state(
-            target_id, buttons, lt, rt, lx, ly, rx, ry
-        ))
+        return json.dumps(
+            self.vigem.set_gamepad_state(target_id, buttons, lt, rt, lx, ly, rx, ry)
+        )
 
     @Slot(int, int, result=str)
     def vigemSetButtons(self, target_id, button_mask):
@@ -118,6 +121,7 @@ class GamepadBridge(BridgeBase):
     def detectPhysicalGamepads(self):
         """Список физических геймпадов через XInput (для info panel)."""
         import ctypes
+
         try:
             # XINPUT_STATE structure
             class XINPUT_GAMEPAD(ctypes.Structure):
@@ -132,20 +136,24 @@ class GamepadBridge(BridgeBase):
                 ]
 
             class XINPUT_STATE(ctypes.Structure):
-                _fields_ = [("dwPacketNumber", ctypes.c_uint),
-                            ("Gamepad", XINPUT_GAMEPAD)]
+                _fields_ = [
+                    ("dwPacketNumber", ctypes.c_uint),
+                    ("Gamepad", XINPUT_GAMEPAD),
+                ]
 
             xinput = ctypes.windll.xinput1_4
             devices = []
             for i in range(4):
                 state = XINPUT_STATE()
                 if xinput.XInputGetState(i, ctypes.byref(state)) == 0:
-                    devices.append({
-                        "index": i,
-                        "buttons": state.Gamepad.wButtons,
-                        "left_trigger": state.Gamepad.bLeftTrigger,
-                        "right_trigger": state.Gamepad.bRightTrigger,
-                    })
+                    devices.append(
+                        {
+                            "index": i,
+                            "buttons": state.Gamepad.wButtons,
+                            "left_trigger": state.Gamepad.bLeftTrigger,
+                            "right_trigger": state.Gamepad.bRightTrigger,
+                        }
+                    )
             return json.dumps({"ok": True, "devices": devices})
         except Exception as e:
             return json.dumps({"ok": False, "error": str(e)})

@@ -8,6 +8,7 @@ Sets sys.excepthook to catch unhandled exceptions:
 IMPORTANT: Server reporting MUST be explicitly enabled by user
 in Settings -> Privacy -> "Send crash reports to help improve Shira Lab".
 """
+
 from __future__ import annotations
 
 import datetime
@@ -17,7 +18,6 @@ import platform
 import sys
 import traceback
 import urllib.request
-from datetime import timezone
 from pathlib import Path
 from types import TracebackType
 from typing import Any
@@ -38,9 +38,11 @@ def install_crash_handler(app_version: str, send_reports: bool = False) -> None:
     CRASH_LOG_DIR.mkdir(parents=True, exist_ok=True)
     original_excepthook = sys.excepthook
 
-    def handler(exc_type: type[BaseException],
-                exc_value: BaseException,
-                tb: TracebackType | None) -> None:
+    def handler(
+        exc_type: type[BaseException],
+        exc_value: BaseException,
+        tb: TracebackType | None,
+    ) -> None:
         try:
             # traceback.format_exception requires non-None exc_type, but we handle the Optional case
             report = _build_report(exc_type, exc_value, tb, app_version)
@@ -59,13 +61,15 @@ def install_crash_handler(app_version: str, send_reports: bool = False) -> None:
     logger.info("Crash handler installed (send_reports=%s)", send_reports)
 
 
-def _build_report(exc_type: type[BaseException],
-                  exc_value: BaseException | None,
-                  tb: TracebackType | None,
-                  app_version: str) -> dict[str, Any]:
+def _build_report(
+    exc_type: type[BaseException],
+    exc_value: BaseException | None,
+    tb: TracebackType | None,
+    app_version: str,
+) -> dict[str, Any]:
     """Build structured crash report."""
     return {
-        "timestamp": datetime.datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
         "app_version": app_version,
         "python_version": platform.python_version(),
         "platform": platform.platform(),
@@ -73,7 +77,11 @@ def _build_report(exc_type: type[BaseException],
         "processor": platform.processor(),
         "exception_type": exc_type.__name__ if exc_type else "Unknown",
         "exception_message": str(exc_value) if exc_value else "",
-        "traceback": "".join(traceback.format_exception(exc_type, exc_value, tb)) if exc_type else "",
+        "traceback": (
+            "".join(traceback.format_exception(exc_type, exc_value, tb))
+            if exc_type
+            else ""
+        ),
         # NOT collected: path to profile.json, record contents, screenshots
         # User may manually attach if needed
     }
@@ -82,15 +90,14 @@ def _build_report(exc_type: type[BaseException],
 def _save_local(report: dict[str, Any]) -> Path:
     """Save report locally to data/crash_logs/."""
     CRASH_LOG_DIR.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.datetime.now(datetime.UTC).strftime("%Y%m%d_%H%M%S")
     exc_type = report.get("exception_type", "Unknown")
     filename = f"crash_{timestamp}_{exc_type}.json"
     path = CRASH_LOG_DIR / filename
 
     try:
         path.write_text(
-            json.dumps(report, indent=2, ensure_ascii=False),
-            encoding="utf-8"
+            json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
         )
         logger.error("Crash report saved to %s", path)
     except OSError as e:
@@ -131,13 +138,15 @@ def list_local_crashes() -> list[dict[str, Any]]:
     for path in sorted(CRASH_LOG_DIR.glob("crash_*.json"), reverse=True):
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
-            crashes.append({
-                "file": path.name,
-                "timestamp": data.get("timestamp", ""),
-                "exception_type": data.get("exception_type", "Unknown"),
-                "exception_message": data.get("exception_message", ""),
-                "size_bytes": path.stat().st_size,
-            })
+            crashes.append(
+                {
+                    "file": path.name,
+                    "timestamp": data.get("timestamp", ""),
+                    "exception_type": data.get("exception_type", "Unknown"),
+                    "exception_message": data.get("exception_message", ""),
+                    "size_bytes": path.stat().st_size,
+                }
+            )
         except (OSError, json.JSONDecodeError, ValueError):
             continue
 

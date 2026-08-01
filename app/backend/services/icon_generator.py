@@ -11,6 +11,7 @@ The icon is created from Ico_Shine.png template:
 - Add dark outline for contrast on light backgrounds
 - Add subtle glow using palette's foreground color
 """
+
 from __future__ import annotations
 
 import logging
@@ -34,20 +35,72 @@ try:
 except (ImportError, AttributeError):
     logger.debug("TERMINAL_PALETTES not available from runtime_state, using fallback")
     TERMINAL_PALETTES = {
-        "matrix": {"name": "Terminal Green", "bg": "#0d1b0d", "fg": "#8fbf8f", "acc": "#6aa86a",
-                   "muted": "#3d5a3d", "success": "#8fbf8f", "danger": "#cf6a6a", "warning": "#d4b87a", "icon_color": "#8fbf8f"},
-        "amber": {"name": "Amber CRT", "bg": "#1a1202", "fg": "#d4a843", "acc": "#c8963a",
-                  "muted": "#6b5426", "success": "#8fc97a", "danger": "#c97a7a", "warning": "#d4b843", "icon_color": "#d4a843"},
-        "inverse": {"name": "Инверсия", "bg": "#e8e8e8", "fg": "#2a2a2a", "acc": "#555555",
-                    "muted": "#a0a0a0", "success": "#4a7a4a", "danger": "#a04040", "warning": "#907030",
-                    "icon_color": "#e8e8e8"},
-        "grey": {"name": "Paper White", "bg": "#181818", "fg": "#c8c8c8", "acc": "#a0a0a0",
-                 "muted": "#555555", "success": "#88aa88", "danger": "#aa7777", "warning": "#aaa888",
-                 "icon_color": "#a0a0a0"},
-        "synthwave": {"name": "Dusk", "bg": "#141020", "fg": "#b8a8d0", "acc": "#9888b8",
-                      "muted": "#5a4a7a", "success": "#7ab88a", "danger": "#b87a7a", "warning": "#d0b87a", "icon_color": "#b8a8d0"},
-        "blood": {"name": "Crimson", "bg": "#1a0808", "fg": "#d08888", "acc": "#c07070",
-                  "muted": "#6a3a3a", "success": "#7ab88a", "danger": "#c07070", "warning": "#d0b87a", "icon_color": "#d08888"},
+        "matrix": {
+            "name": "Terminal Green",
+            "bg": "#0d1b0d",
+            "fg": "#8fbf8f",
+            "acc": "#6aa86a",
+            "muted": "#3d5a3d",
+            "success": "#8fbf8f",
+            "danger": "#cf6a6a",
+            "warning": "#d4b87a",
+            "icon_color": "#8fbf8f",
+        },
+        "amber": {
+            "name": "Amber CRT",
+            "bg": "#1a1202",
+            "fg": "#d4a843",
+            "acc": "#c8963a",
+            "muted": "#6b5426",
+            "success": "#8fc97a",
+            "danger": "#c97a7a",
+            "warning": "#d4b843",
+            "icon_color": "#d4a843",
+        },
+        "inverse": {
+            "name": "Инверсия",
+            "bg": "#e8e8e8",
+            "fg": "#2a2a2a",
+            "acc": "#555555",
+            "muted": "#a0a0a0",
+            "success": "#4a7a4a",
+            "danger": "#a04040",
+            "warning": "#907030",
+            "icon_color": "#e8e8e8",
+        },
+        "grey": {
+            "name": "Paper White",
+            "bg": "#181818",
+            "fg": "#c8c8c8",
+            "acc": "#a0a0a0",
+            "muted": "#555555",
+            "success": "#88aa88",
+            "danger": "#aa7777",
+            "warning": "#aaa888",
+            "icon_color": "#a0a0a0",
+        },
+        "synthwave": {
+            "name": "Dusk",
+            "bg": "#141020",
+            "fg": "#b8a8d0",
+            "acc": "#9888b8",
+            "muted": "#5a4a7a",
+            "success": "#7ab88a",
+            "danger": "#b87a7a",
+            "warning": "#d0b87a",
+            "icon_color": "#b8a8d0",
+        },
+        "blood": {
+            "name": "Crimson",
+            "bg": "#1a0808",
+            "fg": "#d08888",
+            "acc": "#c07070",
+            "muted": "#6a3a3a",
+            "success": "#7ab88a",
+            "danger": "#c07070",
+            "warning": "#d0b87a",
+            "icon_color": "#d08888",
+        },
     }
 
 
@@ -57,18 +110,24 @@ def hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
     if len(hex_color) != 6:
         return (100, 200, 100)  # fallback green
     try:
-        return (int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16))
+        return (
+            int(hex_color[0:2], 16),
+            int(hex_color[2:4], 16),
+            int(hex_color[4:6], 16),
+        )
     except ValueError:
         return (100, 200, 100)
 
 
-def generate_palette_icon(palette_id: str, output_path: Path | None = None) -> Path | None:
+def generate_palette_icon(
+    palette_id: str, output_path: Path | None = None
+) -> Path | None:
     """Generate a palette-colored icon PNG.
-    
+
     Args:
         palette_id: one of TERMINAL_PALETTES keys
         output_path: where to save PNG (default: shira_current.png in project root)
-    
+
     Returns:
         Path to generated PNG, or None on failure.
     """
@@ -103,7 +162,9 @@ def generate_palette_icon(palette_id: str, output_path: Path | None = None) -> P
         alpha_dilated = alpha.filter(ImageFilter.MaxFilter(5))
         arr_dilated = np.array(alpha_dilated)
         arr_orig = np.array(alpha)
-        arr_outline = np.clip(arr_dilated.astype(int) - arr_orig.astype(int), 0, 255).astype(np.uint8)
+        arr_outline = np.clip(
+            arr_dilated.astype(int) - arr_orig.astype(int), 0, 255
+        ).astype(np.uint8)
         outline_mask = Image.fromarray(arr_outline, mode="L")
 
         outline = Image.new("RGBA", orig.size, outline_color)
@@ -140,13 +201,15 @@ def generate_palette_icon(palette_id: str, output_path: Path | None = None) -> P
         return None
 
 
-def generate_palette_ico(palette_id: str, output_path: Path | None = None) -> Path | None:
+def generate_palette_ico(
+    palette_id: str, output_path: Path | None = None
+) -> Path | None:
     """Generate a palette-colored ICO file (multi-resolution).
-    
+
     Args:
         palette_id: one of TERMINAL_PALETTES keys
         output_path: where to save ICO (default: shira.ico in project root)
-    
+
     Returns:
         Path to generated ICO, or None on failure.
     """
@@ -160,7 +223,15 @@ def generate_palette_ico(palette_id: str, output_path: Path | None = None) -> Pa
             output_path = OUTPUT_ICO
 
         img = Image.open(png_path).convert("RGBA")
-        sizes = [(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)]
+        sizes = [
+            (16, 16),
+            (24, 24),
+            (32, 32),
+            (48, 48),
+            (64, 64),
+            (128, 128),
+            (256, 256),
+        ]
         # Save ICO — ATOMIC RENAME to avoid "empty file" window
         tmp_path = output_path.with_suffix(".tmp" + output_path.suffix)
         img.save(tmp_path, format="ICO", sizes=sizes)
@@ -170,7 +241,7 @@ def generate_palette_ico(palette_id: str, output_path: Path | None = None) -> Pa
     except (OSError, ValueError, RuntimeError, AttributeError) as e:
         logger.error(f"Failed to generate palette ICO: {e}")
         try:
-            if 'tmp_path' in locals() and tmp_path.exists():
+            if "tmp_path" in locals() and tmp_path.exists():
                 tmp_path.unlink()
         except (OSError, ValueError):
             logger.debug("Failed to clean up temporary ICO file")
@@ -179,14 +250,14 @@ def generate_palette_ico(palette_id: str, output_path: Path | None = None) -> Pa
 
 def generate_palette_ico_unique(palette_id: str) -> Path | None:
     """Generate a palette-colored ICO with UNIQUE filename per palette.
-    
+
     Returns path to shira_<palette>.ico (e.g. shira_matrix.ico, shira_blood.ico).
-    
+
     CRITICAL: Windows caches icons by file PATH, not by file content.
     When shira.ico is overwritten, Windows keeps showing the OLD cached icon
     because the path hasn't changed. The ONLY reliable way to force Windows
     to reload the icon is to use a DIFFERENT file path.
-    
+
     By generating shira_<palette>.ico (unique per palette), each palette
     change creates a new file path → Windows MUST read the new icon.
     """
@@ -198,7 +269,15 @@ def generate_palette_ico_unique(palette_id: str) -> Path | None:
         # Unique filename per palette: shira_matrix.ico, shira_blood.ico, etc.
         unique_ico = PROJECT_ROOT / f"shira_{palette_id}.ico"
         img = Image.open(png_path).convert("RGBA")
-        sizes = [(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)]
+        sizes = [
+            (16, 16),
+            (24, 24),
+            (32, 32),
+            (48, 48),
+            (64, 64),
+            (128, 128),
+            (256, 256),
+        ]
         # Atomic rename
         tmp_path = unique_ico.with_suffix(".tmp.ico")
         img.save(tmp_path, format="ICO", sizes=sizes)
@@ -223,4 +302,11 @@ if __name__ == "__main__":
         png = generate_palette_icon(palette_id)
         ico = generate_palette_ico(palette_id)
         if png and ico:
-            logger.info("%s: PNG=%s (%dB), ICO=%s (%dB)", palette_id, png.name, png.stat().st_size, ico.name, ico.stat().st_size)
+            logger.info(
+                "%s: PNG=%s (%dB), ICO=%s (%dB)",
+                palette_id,
+                png.name,
+                png.stat().st_size,
+                ico.name,
+                ico.stat().st_size,
+            )

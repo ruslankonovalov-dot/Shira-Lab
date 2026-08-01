@@ -6,12 +6,8 @@ import logging
 import os
 import threading
 import time
-from datetime import timezone
 from pathlib import Path
-from typing import (
-    Any,
-    Protocol,
-)
+from typing import Any, Protocol
 
 # keyboard lib — тоже нет стабов
 from pynput import keyboard as pynput_key
@@ -24,16 +20,14 @@ from pynput.mouse import Listener as MouseListener
 
 from app.backend.services.singleton import singleton
 from app.backend.services.stealth_input import VK_MAP, StealthInput
-from app.backend.services.vigem_service import (
-    VIGEM_TARGET_TYPE,
-    XUSB_REPORT,
-)
+from app.backend.services.vigem_service import VIGEM_TARGET_TYPE, XUSB_REPORT
 
 logger = logging.getLogger(__name__)
 
 # Type aliases
 BackgroundMethod = str
 RecordedEvents = list[list[Any]]
+
 
 # Bridge protocol для типизации _bridge
 class BridgeLike(Protocol):
@@ -44,7 +38,9 @@ class BridgeLike(Protocol):
 class RecorderService:
     def __init__(self) -> None:
         # Use absolute path next to script — independent of CWD.
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        base_dir = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        )
         self.records_dir: str = os.path.join(base_dir, "records")
         os.makedirs(self.records_dir, exist_ok=True)
         self.is_recording: bool = False
@@ -135,10 +131,18 @@ class RecorderService:
             self.is_recording = True
             self.recorded_events = []
             self.start_time = time.time()
-            self._m_listener = mouse.Listener(on_click=self._on_click, on_move=self._on_move)
-            self._k_listener = pynput_key.Listener(on_press=self._on_key_down, on_release=self._on_key_up)
-            self._m_listener_thread = threading.Thread(target=self._m_listener.run, daemon=True)
-            self._k_listener_thread = threading.Thread(target=self._k_listener.run, daemon=True)
+            self._m_listener = mouse.Listener(
+                on_click=self._on_click, on_move=self._on_move
+            )
+            self._k_listener = pynput_key.Listener(
+                on_press=self._on_key_down, on_release=self._on_key_up
+            )
+            self._m_listener_thread = threading.Thread(
+                target=self._m_listener.run, daemon=True
+            )
+            self._k_listener_thread = threading.Thread(
+                target=self._k_listener.run, daemon=True
+            )
             self._m_listener_thread.start()
             self._k_listener_thread.start()
             self._log("OK", "Recording started")
@@ -157,8 +161,10 @@ class RecorderService:
 
     def _stop_listeners_locked(self) -> None:
         """Stop listeners and join threads. Must be called with _lock held."""
-        for listener, thread in [(self._m_listener, self._m_listener_thread),
-                                 (self._k_listener, self._k_listener_thread)]:
+        for listener, thread in [
+            (self._m_listener, self._m_listener_thread),
+            (self._k_listener, self._k_listener_thread),
+        ]:
             if listener:
                 try:
                     listener.stop()
@@ -178,7 +184,7 @@ class RecorderService:
                 self._log("WARN", f"Record not found: {name}")
                 return {"ok": False, "error": "Record not found"}
             try:
-                with open(path, "r", encoding="utf-8") as f:
+                with open(path, encoding="utf-8") as f:
                     data = json.load(f)
             except (OSError, json.JSONDecodeError, ValueError) as e:
                 self._log("ERROR", f"Failed to load {name}: {e}")
@@ -187,7 +193,9 @@ class RecorderService:
                 return self.status()
             self.is_playing = True
             self._log("OK", f"Playing '{name}' x{repeats}")
-            threading.Thread(target=self._play_thread, args=(data, max(1, int(repeats))), daemon=True).start()
+            threading.Thread(
+                target=self._play_thread, args=(data, max(1, int(repeats))), daemon=True
+            ).start()
             return self.status()
 
     def stop_playing(self) -> dict[str, Any]:
@@ -213,6 +221,7 @@ class RecorderService:
                 XUSB_BUTTON_MAP,
                 get_vigem_service,
             )
+
             vigem = get_vigem_service()
             if not vigem.connect():
                 return False
@@ -235,7 +244,9 @@ class RecorderService:
             # Press
             report = XUSB_REPORT()
             report.wButtons = mask
-            err = vigem._dll.vigem_target_x360_update(vigem._client, target, ctypes.byref(report))
+            err = vigem._dll.vigem_target_x360_update(
+                vigem._client, target, ctypes.byref(report)
+            )
             return bool(err == 0)
         except (OSError, ValueError, RuntimeError, AttributeError, ImportError):
             logger.exception("ViGEm press button failed")
@@ -247,6 +258,7 @@ class RecorderService:
             import ctypes
 
             from app.backend.services.vigem_service import get_vigem_service
+
             vigem = get_vigem_service()
             if not vigem.connect():
                 return False
@@ -262,7 +274,9 @@ class RecorderService:
             # Release
             report = XUSB_REPORT()
             report.wButtons = 0
-            err = vigem._dll.vigem_target_x360_update(vigem._client, target, ctypes.byref(report))
+            err = vigem._dll.vigem_target_x360_update(
+                vigem._client, target, ctypes.byref(report)
+            )
             return bool(err == 0)
         except (OSError, ValueError, RuntimeError, AttributeError, ImportError):
             logger.exception("ViGEm release failed")
@@ -277,16 +291,26 @@ class RecorderService:
         if self.target_hwnd:
             if self.background_method == "postmessage":
                 from utils import send_background_key
+
                 send_background_key(self.target_hwnd, key_name.upper())
             elif self.background_method == "vigem":
                 # Map keyboard key to gamepad button and send via ViGEm
                 key_to_gamepad = {
-                    "space": "a", "enter": "a",
-                    "shift": "lb", "ctrl": "rb",
-                    "q": "x", "e": "y", "r": "b",
-                    "tab": "back", "escape": "start",
-                    "w": "up", "s": "down", "a": "left", "d": "right",
-                    "mouse1": "lt", "mouse2": "rt",
+                    "space": "a",
+                    "enter": "a",
+                    "shift": "lb",
+                    "ctrl": "rb",
+                    "q": "x",
+                    "e": "y",
+                    "r": "b",
+                    "tab": "back",
+                    "escape": "start",
+                    "w": "up",
+                    "s": "down",
+                    "a": "left",
+                    "d": "right",
+                    "mouse1": "lt",
+                    "mouse2": "rt",
                 }
                 gamepad_btn = key_to_gamepad.get(key_name.lower())
                 if gamepad_btn:
@@ -301,6 +325,7 @@ class RecorderService:
         else:
             # No target window - use global keyboard library (foreground)
             import keyboard
+
             keyboard.press(key_name)
             if hold_ms > 0:
                 time.sleep(hold_ms / 1000.0)
@@ -313,15 +338,25 @@ class RecorderService:
             return
         if self.target_hwnd and self.background_method == "postmessage":
             from utils import send_background_key
+
             send_background_key(self.target_hwnd, key_name.upper())
         elif self.target_hwnd and self.background_method == "vigem":
             key_to_gamepad = {
-                "space": "a", "enter": "a",
-                "shift": "lb", "ctrl": "rb",
-                "q": "x", "e": "y", "r": "b",
-                "tab": "back", "escape": "start",
-                "w": "up", "s": "down", "a": "left", "d": "right",
-                "mouse1": "lt", "mouse2": "rt",
+                "space": "a",
+                "enter": "a",
+                "shift": "lb",
+                "ctrl": "rb",
+                "q": "x",
+                "e": "y",
+                "r": "b",
+                "tab": "back",
+                "escape": "start",
+                "w": "up",
+                "s": "down",
+                "a": "left",
+                "d": "right",
+                "mouse1": "lt",
+                "mouse2": "rt",
             }
             gamepad_btn = key_to_gamepad.get(key_name.lower())
             if gamepad_btn:
@@ -335,11 +370,13 @@ class RecorderService:
         """Release key only (for background methods)."""
         if self.target_hwnd and self.background_method == "postmessage":
             from utils import send_background_key_up
+
             send_background_key_up(self.target_hwnd, key_name.upper())
         elif self.target_hwnd and self.background_method == "vigem":
             self._vigem_release_all()
         elif self.target_hwnd and self.background_method == "pico":
             from app.backend.services.pico_service import get_pico_service
+
             pico = get_pico_service()
             if pico.is_connected:
                 pico.gp_set_buttons(0)
@@ -349,15 +386,16 @@ class RecorderService:
         if self.target_hwnd:
             if self.background_method == "postmessage":
                 from utils import send_background_click
+
                 send_background_click(self.target_hwnd, button=button)
             elif self.background_method == "vigem":
                 # Map mouse button to gamepad trigger/button and send via ViGEm
                 button_to_gamepad = {
-                    "L": "a",      # Left click -> A button
-                    "R": "b",      # Right click -> B button
-                    "M": "x",      # Middle click -> X button
-                    "X1": "lb",    # X1 -> Left bumper
-                    "X2": "rb",    # X2 -> Right bumper
+                    "L": "a",  # Left click -> A button
+                    "R": "b",  # Right click -> B button
+                    "M": "x",  # Middle click -> X button
+                    "X1": "lb",  # X1 -> Left bumper
+                    "X2": "rb",  # X2 -> Right bumper
                 }
                 gamepad_btn = button_to_gamepad.get(button)
                 if gamepad_btn:
@@ -372,6 +410,7 @@ class RecorderService:
         else:
             # No target window - use global mouse_event
             import ctypes
+
             buttons = {
                 "L": {"down": 0x0002, "up": 0x0004, "data": 0},
                 "R": {"down": 0x0008, "up": 0x0010, "data": 0},
@@ -389,10 +428,15 @@ class RecorderService:
         """Press mouse button only (for background methods)."""
         if self.target_hwnd and self.background_method == "postmessage":
             from utils import send_background_click
+
             send_background_click(self.target_hwnd, button=button)
         elif self.target_hwnd and self.background_method == "vigem":
             button_to_gamepad = {
-                "L": "a", "R": "b", "M": "x", "X1": "lb", "X2": "rb",
+                "L": "a",
+                "R": "b",
+                "M": "x",
+                "X1": "lb",
+                "X2": "rb",
             }
             gamepad_btn = button_to_gamepad.get(button)
             if gamepad_btn:
@@ -404,11 +448,13 @@ class RecorderService:
         """Release mouse button only (for background methods)."""
         if self.target_hwnd and self.background_method == "postmessage":
             from utils import send_background_click_up
+
             send_background_click_up(self.target_hwnd, button)
         elif self.target_hwnd and self.background_method == "vigem":
             self._vigem_release_all()
         elif self.target_hwnd and self.background_method == "pico":
             from app.backend.services.pico_service import get_pico_service
+
             pico = get_pico_service()
             if pico.is_connected:
                 pico.ms_click(0, 0)
@@ -417,7 +463,9 @@ class RecorderService:
         m_ctrl: MouseController = mouse.Controller()
         k_ctrl: KeyboardController = pynput_key.Controller()
         try:
-            events: list[list[Any]] = data.get("events", []) if isinstance(data, dict) else data
+            events: list[list[Any]] = (
+                data.get("events", []) if isinstance(data, dict) else data
+            )
             for _ in range(repeats):
                 if not self.is_playing:
                     break
@@ -433,7 +481,10 @@ class RecorderService:
                     try:
                         if ev[0] == "m":
                             # Mouse move
-                            if self.target_hwnd and self.background_method != "sendinput":
+                            if (
+                                self.target_hwnd
+                                and self.background_method != "sendinput"
+                            ):
                                 # For background, we'd need PostMessage for moves
                                 # For now, use global move
                                 m_ctrl.position = (int(ev[1]), int(ev[2]))
@@ -443,33 +494,53 @@ class RecorderService:
                             # Mouse click
                             btn = ev[3].split(".")[-1].upper()
                             if ev[4]:  # press
-                                if self.target_hwnd and self.background_method != "sendinput":
+                                if (
+                                    self.target_hwnd
+                                    and self.background_method != "sendinput"
+                                ):
                                     self._send_click(btn, 0)  # hold=0 for press
                                 else:
                                     m_ctrl.position = (int(ev[1]), int(ev[2]))
                                     m_ctrl.press(getattr(mouse.Button, btn))
                             else:  # release
-                                if self.target_hwnd and self.background_method != "sendinput":
+                                if (
+                                    self.target_hwnd
+                                    and self.background_method != "sendinput"
+                                ):
                                     # Use PostMessage for background release
                                     from utils import send_background_click_up
-                                    send_background_click_up(self.target_hwnd, btn, int(ev[1]), int(ev[2]))
+
+                                    send_background_click_up(
+                                        self.target_hwnd, btn, int(ev[1]), int(ev[2])
+                                    )
                                 else:
                                     m_ctrl.release(getattr(mouse.Button, btn))
                         elif ev[0] in ("kd", "ku"):
                             # Key down/up
-                            key_str = str(ev[1]).replace("Key.", "").replace("'", "").lower()
+                            key_str = (
+                                str(ev[1]).replace("Key.", "").replace("'", "").lower()
+                            )
                             k_obj = self._resolve_key_obj(ev[1])
                             if k_obj is None:
                                 continue
                             if ev[0] == "kd":
-                                if self.target_hwnd and self.background_method != "sendinput":
-                                    self._press_key(key_str, 50)  # small hold for background
+                                if (
+                                    self.target_hwnd
+                                    and self.background_method != "sendinput"
+                                ):
+                                    self._press_key(
+                                        key_str, 50
+                                    )  # small hold for background
                                 else:
                                     k_ctrl.press(k_obj)
                             else:
-                                if self.target_hwnd and self.background_method != "sendinput":
+                                if (
+                                    self.target_hwnd
+                                    and self.background_method != "sendinput"
+                                ):
                                     # Key up - use PostMessage for background release
                                     from utils import send_background_key_up
+
                                     send_background_key_up(self.target_hwnd, key_str)
                                 else:
                                     k_ctrl.release(k_obj)
@@ -487,7 +558,9 @@ class RecorderService:
 
     def _on_click(self, x: int, y: int, button: MouseController, pressed: bool) -> None:
         if self.is_recording:
-            self.recorded_events.append(["c", x, y, str(button), pressed, time.time() - self.start_time])
+            self.recorded_events.append(
+                ["c", x, y, str(button), pressed, time.time() - self.start_time]
+            )
 
     def _on_key_down(self, key: PynputKey) -> None:
         if self.is_recording:
@@ -514,11 +587,15 @@ class RecorderService:
         if not self.recorded_events:
             return
         try:
-            filename = "REC_" + datetime.datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S") + ".json"
+            filename = (
+                "REC_"
+                + datetime.datetime.now(datetime.UTC).strftime("%Y%m%d_%H%M%S")
+                + ".json"
+            )
             path = os.path.join(self.records_dir, filename)
             data = {
                 "events": self.recorded_events,
-                "created_at": datetime.datetime.now(timezone.utc).isoformat(),
+                "created_at": datetime.datetime.now(datetime.UTC).isoformat(),
                 "events_count": len(self.recorded_events),
             }
             with open(path, "w", encoding="utf-8") as f:
@@ -543,6 +620,7 @@ class RecorderService:
         """
         try:
             from app.backend.services.pico_service import get_pico_service
+
             pico = get_pico_service()
             if not pico.is_connected:
                 # Try to connect using saved config from profile
@@ -555,12 +633,21 @@ class RecorderService:
 
             # Map common keys to gamepad buttons (XInput layout)
             btn_map = {
-                "space": 0x1000, "enter": 0x1000,  # A
-                "shift": 0x0100, "ctrl": 0x0200,  # LB, RB
-                "q": 0x4000, "e": 0x8000, "r": 0x2000,  # X, Y, B
-                "tab": 0x0020, "escape": 0x0010,  # BACK, START
-                "w": 0x0001, "s": 0x0002, "a": 0x0004, "d": 0x0008,  # DPAD
-                "mouse1": 0x0100, "mouse2": 0x0200,  # LT, RT (as LB, RB)
+                "space": 0x1000,
+                "enter": 0x1000,  # A
+                "shift": 0x0100,
+                "ctrl": 0x0200,  # LB, RB
+                "q": 0x4000,
+                "e": 0x8000,
+                "r": 0x2000,  # X, Y, B
+                "tab": 0x0020,
+                "escape": 0x0010,  # BACK, START
+                "w": 0x0001,
+                "s": 0x0002,
+                "a": 0x0004,
+                "d": 0x0008,  # DPAD
+                "mouse1": 0x0100,
+                "mouse2": 0x0200,  # LT, RT (as LB, RB)
             }
             btn = btn_map.get(key_name.lower())
             if btn is None:
@@ -589,6 +676,7 @@ class RecorderService:
             import json
 
             from app.backend.persistence import PROFILE_PATH
+
             data = json.loads(PROFILE_PATH.read_text(encoding="utf-8"))
             state = data.get("state") or {}
             port = state.get("pico_port")
@@ -601,6 +689,7 @@ class RecorderService:
         """Send mouse click via Pico HID."""
         try:
             from app.backend.services.pico_service import get_pico_service
+
             pico = get_pico_service()
             if not pico.is_connected:
                 port, baudrate = self._get_pico_config()

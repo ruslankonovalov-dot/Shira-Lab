@@ -2,6 +2,7 @@
 ProfileController - handles profile loading, saving, settings, and palettes.
 Extracted from QmlBridge god-object (Phase 2.1).
 """
+
 from __future__ import annotations
 
 import logging
@@ -45,7 +46,12 @@ class ProfileController(QObject):
     langChanged = Signal()
     logMessage = Signal(str, str, str)  # level, source, message
 
-    def __init__(self, state: RuntimeState, bridge: Any | None = None, parent: QObject | None = None) -> None:
+    def __init__(
+        self,
+        state: RuntimeState,
+        bridge: Any | None = None,
+        parent: QObject | None = None,
+    ) -> None:
         super().__init__(parent)
         self._state: RuntimeState = state
         self._bridge = bridge
@@ -128,6 +134,7 @@ class ProfileController(QObject):
         """Open file dialog and export profile."""
         try:
             from app.backend.profile_io import export_profile_dialog
+
             return _qvar_map(export_profile_dialog(self._state))
         except Exception as e:
             logger.exception("exportProfileDialog failed")
@@ -138,6 +145,7 @@ class ProfileController(QObject):
         """Open file dialog and import profile."""
         try:
             from app.backend.profile_io import import_profile_dialog
+
             return _qvar_map(import_profile_dialog(self._state))
         except Exception as e:
             logger.exception("importProfileDialog failed")
@@ -152,6 +160,7 @@ class ProfileController(QObject):
             return _qvar_map(make_error_response(err or "Invalid name"))
         try:
             from app.backend.profile_io import save_profile_to_file
+
             return _qvar_map(save_profile_to_file(self._state, name_val))
         except Exception as e:
             logger.exception("saveProfile failed")
@@ -160,12 +169,15 @@ class ProfileController(QObject):
     @Slot(str, result="QVariantMap")
     def loadProfile(self, filename: str) -> dict[str, Any]:
         """Load profile from file."""
-        ok, filename_val, err = validate_str(filename, min_len=1, max_len=512, name="filename")
+        ok, filename_val, err = validate_str(
+            filename, min_len=1, max_len=512, name="filename"
+        )
         if not ok or filename_val is None:
             logger.warning(f"loadProfile: {err}")
             return _qvar_map(make_error_response(err or "Invalid filename"))
         try:
             from app.backend.profile_io import load_profile_from_file
+
             result = load_profile_from_file(filename_val, self._state)
             if result.get("ok"):
                 self.settingsChanged.emit()
@@ -177,12 +189,15 @@ class ProfileController(QObject):
     @Slot(str, result="QVariantMap")
     def deleteProfile(self, filename: str) -> dict[str, Any]:
         """Delete a profile file."""
-        ok, filename_val, err = validate_str(filename, min_len=1, max_len=512, name="filename")
+        ok, filename_val, err = validate_str(
+            filename, min_len=1, max_len=512, name="filename"
+        )
         if not ok or filename_val is None:
             logger.warning(f"deleteProfile: {err}")
             return _qvar_map(make_error_response(err or "Invalid filename"))
         try:
             from app.backend.profile_io import delete_profile_file
+
             return _qvar_map(delete_profile_file(filename_val))
         except Exception as e:
             logger.exception("deleteProfile failed")
@@ -193,6 +208,7 @@ class ProfileController(QObject):
         """List available profile files."""
         try:
             from app.backend.profile_io import list_profile_files
+
             return _qvar_map(list_profile_files())
         except Exception as e:
             logger.exception("listProfiles failed")
@@ -264,7 +280,9 @@ class ProfileController(QObject):
         """Set clicker background method."""
         from app.backend.services.input_validation import validate_enum
 
-        ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, name="background_method")
+        ok, val, err = validate_enum(
+            method, VALID_BACKGROUND_METHODS, name="background_method"
+        )
         if not ok or val is None:
             logger.warning(f"setClickerBackgroundMethod: {err}")
             return _qvar(make_error_response(err or "Invalid method"))  # type: ignore[return-value]
@@ -276,7 +294,9 @@ class ProfileController(QObject):
     @Slot(str, result="QVariantMap")
     def setMacroBackgroundMethod(self, method: str) -> dict[str, Any]:
         """Set macro background method."""
-        ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, name="background_method")
+        ok, val, err = validate_enum(
+            method, VALID_BACKGROUND_METHODS, name="background_method"
+        )
         if not ok or val is None:
             logger.warning(f"setMacroBackgroundMethod: {err}")
             return _qvar_map(make_error_response(err or "Invalid method"))
@@ -288,7 +308,9 @@ class ProfileController(QObject):
     @Slot(str, result="QVariantMap")
     def setRecorderBackgroundMethod(self, method: str) -> dict[str, Any]:
         """Set recorder background method."""
-        ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, name="background_method")
+        ok, val, err = validate_enum(
+            method, VALID_BACKGROUND_METHODS, name="background_method"
+        )
         if not ok or val is None:
             logger.warning(f"setRecorderBackgroundMethod: {err}")
             return _qvar_map(make_error_response(err or "Invalid method"))
@@ -300,7 +322,9 @@ class ProfileController(QObject):
     @Slot(str, result="QVariantMap")
     def setGamepadBackgroundMethod(self, method: str) -> dict[str, Any]:
         """Set gamepad background method."""
-        ok, val, err = validate_enum(method, VALID_BACKGROUND_METHODS, name="background_method")
+        ok, val, err = validate_enum(
+            method, VALID_BACKGROUND_METHODS, name="background_method"
+        )
         if not ok or val is None:
             logger.warning(f"setGamepadBackgroundMethod: {err}")
             return _qvar_map(make_error_response(err or "Invalid method"))
@@ -316,14 +340,20 @@ class ProfileController(QObject):
     def setModuleTargetWindow(self, module: str, hwnd: int) -> dict[str, Any]:
         """Set target window for a module."""
         try:
-            ok, module_val, err = validate_str(module, min_len=1, max_len=50, name="module")
+            ok, module_val, err = validate_str(
+                module, min_len=1, max_len=50, name="module"
+            )
             if not ok or module_val is None:
                 logger.warning(f"setModuleTargetWindow: {err}")
                 return _qvar_map(make_error_response(err or "Invalid module"))
             # Validate module is supported
             if module_val not in self.VALID_TARGET_MODULES:
-                logger.warning(f"setModuleTargetWindow: Unsupported module: {module_val}")
-                return _qvar_map(make_error_response(f"Unsupported module: {module_val}"))
+                logger.warning(
+                    f"setModuleTargetWindow: Unsupported module: {module_val}"
+                )
+                return _qvar_map(
+                    make_error_response(f"Unsupported module: {module_val}")
+                )
             ok, val, err = validate_hwnd(hwnd)
             if not ok or val is None:
                 logger.warning(f"setModuleTargetWindow: {err}")
@@ -385,6 +415,7 @@ class ProfileController(QObject):
         """Detect system theme (dark/light)."""
         try:
             from app.backend.services.theme_detector import detect_windows_theme
+
             theme = detect_windows_theme()
             return {"ok": True, "theme": theme}
         except Exception as e:
@@ -404,7 +435,11 @@ class ProfileController(QObject):
         try:
             # The crash reporter module doesn't have a set_crash_report_sending function
             # This is handled at startup via install_crash_handler
-            self.logMessage.emit("INFO", "SYSTEM", f"Crash report sending: {'enabled' if enabled_val else 'disabled'}")
+            self.logMessage.emit(
+                "INFO",
+                "SYSTEM",
+                f"Crash report sending: {'enabled' if enabled_val else 'disabled'}",
+            )
             return _qvar_map(make_ok_response())
         except (OSError, ImportError, RuntimeError) as e:
             logger.error(f"setCrashReportSending failed: {e}")
@@ -417,6 +452,7 @@ class ProfileController(QObject):
             from app.backend.services.crash_reporter import (
                 list_local_crashes as list_reports,
             )
+
             return _qvar_map({"ok": True, "crashes": list_reports()})
         except (OSError, ImportError, RuntimeError) as e:
             logger.exception("listCrashReports failed")
@@ -429,6 +465,7 @@ class ProfileController(QObject):
             from app.backend.services.crash_reporter import (
                 clear_all_crashes as clear_reports,
             )
+
             count = clear_reports()
             return _qvar_map({"ok": True, "cleared": count})
         except (OSError, ImportError, RuntimeError) as e:
@@ -440,6 +477,7 @@ class ProfileController(QObject):
         """Check for updates."""
         try:
             from app.backend.services.update_checker import check_for_updates
+
             return check_for_updates("0.17.0")
         except (OSError, ImportError, RuntimeError) as e:
             logger.exception("checkForUpdates failed")
@@ -452,6 +490,7 @@ class ProfileController(QObject):
         """Get list of monitors."""
         try:
             from window_utils import get_monitors
+
             return {"ok": True, "monitors": get_monitors()}
         except Exception as e:
             logger.exception("getMonitors failed")
@@ -468,7 +507,11 @@ class ProfileController(QObject):
         try:
             info = {
                 "ok": True,
-                "app_version": self._state.app_version if hasattr(self._state, 'app_version') else "1.0.0",
+                "app_version": (
+                    self._state.app_version
+                    if hasattr(self._state, "app_version")
+                    else "1.0.0"
+                ),
                 "python_version": sys.version,
                 "platform": platform.platform(),
                 "processor": platform.processor(),
@@ -476,12 +519,24 @@ class ProfileController(QObject):
                     "ui_lang": self._state.ui_lang,
                     "terminal_palette": self._state.terminal_palette,
                     "is_pinned": self._state.is_pinned,
-                    "clicker_bg_method": getattr(self._state, 'clicker_background_method', 'sendinput'),
-                    "macro_bg_method": getattr(self._state, 'macro_background_method', 'sendinput'),
-                    "recorder_bg_method": getattr(self._state, 'recorder_background_method', 'sendinput'),
-                    "gamepad_bg_method": getattr(self._state, 'gamepad_background_method', 'sendinput'),
+                    "clicker_bg_method": getattr(
+                        self._state, "clicker_background_method", "sendinput"
+                    ),
+                    "macro_bg_method": getattr(
+                        self._state, "macro_background_method", "sendinput"
+                    ),
+                    "recorder_bg_method": getattr(
+                        self._state, "recorder_background_method", "sendinput"
+                    ),
+                    "gamepad_bg_method": getattr(
+                        self._state, "gamepad_background_method", "sendinput"
+                    ),
                 },
-                "profile_dir": str(self._profile_manager.get_profile_dir()) if hasattr(self._profile_manager, 'get_profile_dir') else "",
+                "profile_dir": (
+                    str(self._profile_manager.get_profile_dir())
+                    if hasattr(self._profile_manager, "get_profile_dir")
+                    else ""
+                ),
             }
             return info
         except Exception as e:
@@ -492,11 +547,12 @@ class ProfileController(QObject):
 
     def _schedule_save(self) -> None:
         """Debounced profile save."""
-        if getattr(self, '_suppress_save', False):
+        if getattr(self, "_suppress_save", False):
             return
-        if hasattr(self, '_save_timer') and self._save_timer:
+        if hasattr(self, "_save_timer") and self._save_timer:
             self._save_timer.cancel()
         import threading
+
         self._save_timer = threading.Timer(0.4, self._flush_save)
         self._save_timer.daemon = True
         self._save_timer.start()
@@ -505,22 +561,29 @@ class ProfileController(QObject):
         """Flush profile to disk — delegate to bridge if available, else save state only."""
         try:
             # Try to use bridge's save (which has all services: clicker, aim, macro, etc.)
-            if hasattr(self, '_bridge') and self._bridge:
+            if hasattr(self, "_bridge") and self._bridge:
                 self._bridge._flush_save()
             else:
                 # Fallback: save just the state (no service data)
                 import json
 
                 from app.backend.persistence import _state_to_dict
+
                 payload = {
                     "version": 5,
                     "state": _state_to_dict(self._state),
                 }
                 from app.backend.persistence import PROFILE_PATH
-                PROFILE_PATH.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+
+                PROFILE_PATH.write_text(
+                    json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8"
+                )
         except Exception:
             import logging
-            logging.getLogger(__name__).exception("Failed to save profile from ProfileController")
+
+            logging.getLogger(__name__).exception(
+                "Failed to save profile from ProfileController"
+            )
 
     # ─── Logging Bridge ──────────────────────────────────────────────────
 

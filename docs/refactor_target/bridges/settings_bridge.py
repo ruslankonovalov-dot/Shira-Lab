@@ -10,14 +10,15 @@
 - _regenerate_palette_icon (асинхронная регенерация иконки)
 - Profile manager: saveGameProfile, loadGameProfile, listGameProfiles, deleteGameProfile
 """
+
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
-from app.backend.bridges.bridge_base import BridgeBase
 from PySide6.QtCore import Slot
 
+from app.backend.bridges.bridge_base import BridgeBase
 from app.backend.models.runtime_state import TERMINAL_PALETTES
 from config import LANGUAGES, LOGO_SHIRA
 
@@ -38,23 +39,25 @@ class SettingsBridge(BridgeBase):
                     bg_uri = p.resolve().as_uri()
             except OSError:
                 pass
-        return json.dumps({
-            "terminal_palette": self.state.terminal_palette,
-            "global_transparency": self.state.global_transparency,
-            "interface_transparency": self.state.interface_transparency,
-            "global_blur_enabled": self.state.global_blur_enabled,
-            "interface_blur_enabled": self.state.interface_blur_enabled,
-            "is_pinned": self.state.is_pinned,
-            "ui_lang": self.state.ui_lang,
-            "bg_image_path": self.state.bg_image_path or "",
-            "bg_image_uri": bg_uri,
-            "bg_fit_mode": self.state.bg_fit_mode,
-            "target_hwnd": self.state.target_hwnd or 0,
-            "target_name": self.state.target_name,
-            "lang": lang,
-            "logo_shira": LOGO_SHIRA,
-            "palettes": TERMINAL_PALETTES,
-        })
+        return json.dumps(
+            {
+                "terminal_palette": self.state.terminal_palette,
+                "global_transparency": self.state.global_transparency,
+                "interface_transparency": self.state.interface_transparency,
+                "global_blur_enabled": self.state.global_blur_enabled,
+                "interface_blur_enabled": self.state.interface_blur_enabled,
+                "is_pinned": self.state.is_pinned,
+                "ui_lang": self.state.ui_lang,
+                "bg_image_path": self.state.bg_image_path or "",
+                "bg_image_uri": bg_uri,
+                "bg_fit_mode": self.state.bg_fit_mode,
+                "target_hwnd": self.state.target_hwnd or 0,
+                "target_name": self.state.target_name,
+                "lang": lang,
+                "logo_shira": LOGO_SHIRA,
+                "palettes": TERMINAL_PALETTES,
+            }
+        )
 
     # ─── Palette ──────────────────────────────────────────────────
     @Slot(str)
@@ -116,9 +119,12 @@ class SettingsBridge(BridgeBase):
     @Slot(result=str)
     def chooseBackgroundImage(self):
         from PySide6.QtWidgets import QFileDialog
+
         path, _ = QFileDialog.getOpenFileName(
-            None, "Choose background image", "",
-            "Images (*.png *.jpg *.jpeg *.bmp *.gif *.webp)"
+            None,
+            "Choose background image",
+            "",
+            "Images (*.png *.jpg *.jpeg *.bmp *.gif *.webp)",
         )
         if path:
             self.state.bg_image_path = path
@@ -137,23 +143,27 @@ class SettingsBridge(BridgeBase):
     def saveGameProfile(self, name):
         """Сохраняет текущую конфигурацию как game profile."""
         from app.backend.profile_manager import ProfileManager
+
         pm = ProfileManager()
         return json.dumps(pm.save(self, name))
 
     @Slot(str, result=str)
     def loadGameProfile(self, name):
         from app.backend.profile_manager import ProfileManager
+
         pm = ProfileManager()
         return json.dumps(pm.load(self, name))
 
     @Slot(result=str)
     def listGameProfiles(self):
         from app.backend.profile_manager import ProfileManager
+
         pm = ProfileManager()
         return json.dumps(pm.list_profiles())
 
     @Slot(str, result=str)
     def deleteGameProfile(self, name):
         from app.backend.profile_manager import ProfileManager
+
         pm = ProfileManager()
         return json.dumps(pm.delete(name))

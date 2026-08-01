@@ -8,14 +8,15 @@
 - windowClose, showAppWindow, isAppVisible
 - apply_acrylic_on_start, _apply_transparency (DWM acrylic)
 """
+
 from __future__ import annotations
 
 import ctypes
 import json
 
-from app.backend.bridges.bridge_base import BridgeBase
 from PySide6.QtCore import Slot
 
+from app.backend.bridges.bridge_base import BridgeBase
 from app.backend.models.runtime_state import TERMINAL_PALETTES
 
 
@@ -32,7 +33,9 @@ class WindowBridge(BridgeBase):
         """Перерисовывает acrylic tint на основе текущей палитры/прозрачности."""
         if not self._hwnd:
             return
-        palette = TERMINAL_PALETTES.get(self.state.terminal_palette, TERMINAL_PALETTES["matrix"])
+        palette = TERMINAL_PALETTES.get(
+            self.state.terminal_palette, TERMINAL_PALETTES["matrix"]
+        )
         tint_color = palette["bg"]
         tint_alpha = int(200 - self.state.global_transparency * 180)
         tint_alpha = max(20, min(255, tint_alpha))
@@ -42,12 +45,14 @@ class WindowBridge(BridgeBase):
                 disable_acrylic_blur,
                 enable_acrylic_blur,
             )
+
             if self.state.global_blur_enabled or self.state.global_transparency > 0:
                 enable_acrylic_blur(self._hwnd, tint_color, tint_alpha)
             else:
                 disable_acrylic_blur(self._hwnd)
         except Exception as e:
             import logging
+
             logging.getLogger(__name__).warning("DWM acrylic: %s", e)
 
     # ─── HWND ─────────────────────────────────────────────────────
@@ -59,12 +64,20 @@ class WindowBridge(BridgeBase):
     def getWorkArea(self):
         """Возвращает размер рабочей области экрана."""
         try:
+
             class RECT(ctypes.Structure):
-                _fields_ = [("left", ctypes.c_long), ("top", ctypes.c_long),
-                            ("right", ctypes.c_long), ("bottom", ctypes.c_long)]
+                _fields_ = [
+                    ("left", ctypes.c_long),
+                    ("top", ctypes.c_long),
+                    ("right", ctypes.c_long),
+                    ("bottom", ctypes.c_long),
+                ]
+
             r = RECT()
             ctypes.windll.user32.SystemParametersInfoW(0x0030, 0, ctypes.byref(r), 0)
-            return json.dumps({"x": r.left, "y": r.top, "w": r.right - r.left, "h": r.bottom - r.top})
+            return json.dumps(
+                {"x": r.left, "y": r.top, "w": r.right - r.left, "h": r.bottom - r.top}
+            )
         except Exception:
             return json.dumps({"x": 0, "y": 0, "w": 1920, "h": 1080})
 
@@ -85,6 +98,7 @@ class WindowBridge(BridgeBase):
         """Повторно применяет topmost к overlay окну (после потери фокуса)."""
         if self._overlay_hwnd:
             from window_utils import set_window_topmost
+
             set_window_topmost(self._overlay_hwnd, True)
 
     # ─── Window controls ──────────────────────────────────────────
@@ -100,6 +114,7 @@ class WindowBridge(BridgeBase):
         self.state.is_pinned = not self.state.is_pinned
         if self._hwnd:
             from window_utils import set_window_topmost
+
             set_window_topmost(self._hwnd, self.state.is_pinned)
         self._schedule_save()
         return self.state.is_pinned
@@ -121,6 +136,7 @@ class WindowBridge(BridgeBase):
     @Slot()
     def windowClose(self):
         from PySide6.QtWidgets import QApplication
+
         QApplication.quit()
 
     @Slot()
@@ -150,13 +166,14 @@ class WindowBridge(BridgeBase):
     def getWindows(self):
         """Возвращает список видимых окон для выбора target."""
         from window_utils import get_visible_windows
+
         windows = [{"hwnd": 0, "title": "GLOBAL_SCREEN"}]
         for hwnd, title in sorted(get_visible_windows(), key=lambda x: x[1].lower()):
             windows.append({"hwnd": int(hwnd), "title": title})
         return json.dumps({"ok": True, "windows": windows})
 
     @Slot(str, int, result=str)
-    def setModuleTargetWindow(self, module, hwnd):
+    def setModuleTargetWindow(self, _module, hwnd):
         """Устанавливает target окно для конкретного модуля."""
         # TODO: реализовать per-module target (clicker, macro, recorder, aim)
         if hwnd == 0:
@@ -164,6 +181,7 @@ class WindowBridge(BridgeBase):
             self.state.target_name = "GLOBAL_SCREEN"
         else:
             from window_utils import get_visible_windows
+
             for item_hwnd, title in get_visible_windows():
                 if int(item_hwnd) == hwnd:
                     self.state.target_hwnd = hwnd

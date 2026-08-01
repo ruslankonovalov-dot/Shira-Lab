@@ -2,6 +2,7 @@
 
 Reads registry key AppsUseLightTheme to auto-detect dark/light mode.
 """
+
 from __future__ import annotations
 
 import logging
@@ -23,9 +24,10 @@ def detect_windows_theme() -> Theme:
 
     try:
         import winreg
+
         key = winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
-            r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+            r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
         )
         try:
             value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
@@ -40,7 +42,7 @@ def detect_windows_theme() -> Theme:
         return "dark"
 
 
-def on_theme_change(callback: Callable[[], None]) -> None:
+def on_theme_change(_callback: Callable[[], None]) -> None:
     """Register callback to be called when theme changes.
 
     TODO: Implement via WMI subscription or polling timer.

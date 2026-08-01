@@ -2,6 +2,7 @@
 
 Allows user to save all settings to a file and load back.
 """
+
 from __future__ import annotations
 
 import json
@@ -64,7 +65,7 @@ def export_profile(bridge: Any, path: str | Path) -> dict[str, Any]:
         path = Path(path)
         path.write_text(
             json.dumps(data, indent=2, ensure_ascii=False, default=str),
-            encoding="utf-8"
+            encoding="utf-8",
         )
 
         logger.info("Profile exported to %s", path)
@@ -90,7 +91,8 @@ def import_profile(bridge: Any, path: str | Path) -> dict[str, Any]:
         if data.get("version") != PROFILE_FORMAT_VERSION:
             logger.warning(
                 "Profile version mismatch: expected %s, got %s",
-                PROFILE_FORMAT_VERSION, data.get("version")
+                PROFILE_FORMAT_VERSION,
+                data.get("version"),
             )
             # Continue but migration may be needed
 
@@ -174,10 +176,13 @@ def export_profile_dialog(state: Any) -> dict[str, Any]:
     """Open file dialog and export profile. Returns result dict."""
     try:
         from PySide6.QtWidgets import QApplication, QFileDialog
+
         app = QApplication.instance()
         if app is None:
             return {"ok": False, "error": "QApplication not available"}
-        path, _ = QFileDialog.getSaveFileName(None, "Export Profile", "", "JSON Files (*.json)")
+        path, _ = QFileDialog.getSaveFileName(
+            None, "Export Profile", "", "JSON Files (*.json)"
+        )
         if not path:
             return {"ok": False, "error": "Cancelled"}
         return export_profile(state, path)
@@ -190,10 +195,13 @@ def import_profile_dialog(state: Any) -> dict[str, Any]:
     """Open file dialog and import profile. Returns result dict."""
     try:
         from PySide6.QtWidgets import QApplication, QFileDialog
+
         app = QApplication.instance()
         if app is None:
             return {"ok": False, "error": "QApplication not available"}
-        path, _ = QFileDialog.getOpenFileName(None, "Import Profile", "", "JSON Files (*.json)")
+        path, _ = QFileDialog.getOpenFileName(
+            None, "Import Profile", "", "JSON Files (*.json)"
+        )
         if not path:
             return {"ok": False, "error": "Cancelled"}
         return import_profile(state, path)
@@ -206,7 +214,10 @@ def save_profile_to_file(state: Any, name: str) -> dict[str, Any]:
     """Save current state as named profile file."""
     try:
         from pathlib import Path
-        profile_dir = Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
+
+        profile_dir = (
+            Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
+        )
         profile_dir.mkdir(parents=True, exist_ok=True)
         path = profile_dir / f"{name}.json"
         return export_profile(state, path)
@@ -219,7 +230,10 @@ def load_profile_from_file(filename: str, state: Any) -> dict[str, Any]:
     """Load profile from file and apply to state."""
     try:
         from pathlib import Path
-        profile_dir = Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
+
+        profile_dir = (
+            Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
+        )
         path = profile_dir / filename
         return import_profile(state, path)
     except (OSError, ImportError, RuntimeError) as e:
@@ -231,7 +245,10 @@ def delete_profile_file(filename: str) -> dict[str, Any]:
     """Delete a profile file."""
     try:
         from pathlib import Path
-        profile_dir = Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
+
+        profile_dir = (
+            Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
+        )
         path = profile_dir / filename
         if path.exists():
             path.unlink()
@@ -245,7 +262,10 @@ def list_profile_files() -> dict[str, Any]:
     """List available profile files."""
     try:
         from pathlib import Path
-        profile_dir = Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
+
+        profile_dir = (
+            Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
+        )
         if not profile_dir.exists():
             return {"ok": True, "profiles": []}
         files = [f.name for f in profile_dir.glob("*.json")]
@@ -263,7 +283,7 @@ def save_profile(data: dict[str, Any], path: str | Path) -> dict[str, Any]:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
             json.dumps(data, indent=2, ensure_ascii=False, default=str),
-            encoding="utf-8"
+            encoding="utf-8",
         )
         logger.info("Profile saved to %s", path)
         return {"ok": True, "path": str(path), "size_bytes": path.stat().st_size}

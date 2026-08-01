@@ -5,6 +5,7 @@
 - _action_start_handler (строки 259–295)
 - _action_stop_handler (строки 297–335)
 """
+
 from __future__ import annotations
 
 import logging
@@ -26,34 +27,36 @@ class ActionHandlers:
     def get_handler(self, action: str) -> Callable[[], None]:
         """Возвращает toggle-обработчик для действия."""
         handlers = {
-            "clicker_toggle":   self._clicker_toggle,
-            "aim_toggle":       self._aim_toggle,
-            "macro_start":      self._macro_start_toggle,
-            "macro_stop":       self._macro_stop,
-            "recorder_start":   self._recorder_start_toggle,
-            "recorder_stop":    self._recorder_stop,
-            "app_show":         self._app_show,
-            "panic_stop":       self._panic_stop,
+            "clicker_toggle": self._clicker_toggle,
+            "aim_toggle": self._aim_toggle,
+            "macro_start": self._macro_start_toggle,
+            "macro_stop": self._macro_stop,
+            "recorder_start": self._recorder_start_toggle,
+            "recorder_stop": self._recorder_stop,
+            "app_show": self._app_show,
+            "panic_stop": self._panic_stop,
         }
-        return handlers.get(action, lambda: logger.warning("Unknown action: %s", action))
+        return handlers.get(
+            action, lambda: logger.warning("Unknown action: %s", action)
+        )
 
     def get_start_handler(self, action: str) -> Callable[[], None]:
         """Возвращает start-обработчик (для HOLD режима)."""
         handlers = {
-            "clicker_toggle":   self._clicker_start,
-            "aim_toggle":       self._aim_start,
-            "macro_start":      self._macro_start,
-            "recorder_start":   self._recorder_start,
+            "clicker_toggle": self._clicker_start,
+            "aim_toggle": self._aim_start,
+            "macro_start": self._macro_start,
+            "recorder_start": self._recorder_start,
         }
         return handlers.get(action, lambda: None)
 
     def get_stop_handler(self, action: str) -> Callable[[], None]:
         """Возвращает stop-обработчик (для HOLD режима)."""
         handlers = {
-            "clicker_toggle":   self._clicker_stop,
-            "aim_toggle":       self._aim_stop,
-            "macro_start":      self._macro_stop,
-            "recorder_start":   self._recorder_stop,
+            "clicker_toggle": self._clicker_stop,
+            "aim_toggle": self._aim_stop,
+            "macro_start": self._macro_stop,
+            "recorder_start": self._recorder_stop,
         }
         return handlers.get(action, lambda: None)
 

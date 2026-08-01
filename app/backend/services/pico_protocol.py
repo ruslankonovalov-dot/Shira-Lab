@@ -2,6 +2,7 @@
 pico_protocol.py — Протокол общения с Raspberry Pi Pico (Serial CDC / HID).
 Пакеты: [START=0xAA] [CMD=1B] [LEN=1B] [PAYLOAD...] [CRC8] [END=0x55]
 """
+
 from __future__ import annotations
 
 import struct
@@ -12,107 +13,107 @@ from enum import IntEnum
 # ─── Команды ───────────────────────────────────────────────────────────────
 class PicoCmd(IntEnum):
     # Info / Control
-    GET_INFO      = 0x10  # Запрос версии прошивки/возможностей
-    RESET         = 0xFF  # Сброс устройства
-    SET_MODE      = 0x11  # Смена режима (KB/MS/GP/Composite)
+    GET_INFO = 0x10  # Запрос версии прошивки/возможностей
+    RESET = 0xFF  # Сброс устройства
+    SET_MODE = 0x11  # Смена режима (KB/MS/GP/Composite)
 
     # Keyboard
-    KEY_PRESS     = 0x01  # Нажать клавишу (keycode, hold_ms)
-    KEY_RELEASE   = 0x02  # Отпустить клавишу (keycode)
-    KEY_TAP       = 0x03  # Тап (keycode, hold_ms)
+    KEY_PRESS = 0x01  # Нажать клавишу (keycode, hold_ms)
+    KEY_RELEASE = 0x02  # Отпустить клавишу (keycode)
+    KEY_TAP = 0x03  # Тап (keycode, hold_ms)
     KEY_MODIFIERS = 0x04  # Установить модификаторы (bitmask)
 
     # Mouse
-    MOUSE_MOVE    = 0x20  # Движение (dx, dy, absolute_flag)
-    MOUSE_CLICK   = 0x21  # Клик (btn_mask, hold_ms)
-    MOUSE_PRESS   = 0x22  # Нажать кнопку (btn_mask)
+    MOUSE_MOVE = 0x20  # Движение (dx, dy, absolute_flag)
+    MOUSE_CLICK = 0x21  # Клик (btn_mask, hold_ms)
+    MOUSE_PRESS = 0x22  # Нажать кнопку (btn_mask)
     MOUSE_RELEASE = 0x23  # Отпустить кнопку (btn_mask)
-    MOUSE_SCROLL  = 0x24  # Скролл (dy)
+    MOUSE_SCROLL = 0x24  # Скролл (dy)
 
     # Gamepad (XInput layout)
     GAMEPAD_STATE = 0x40  # Полное состояние (buttons, lt, rt, lx, ly, rx, ry)
-    GAMEPAD_BTNS  = 0x41  # Только кнопки (bitmask)
-    GAMEPAD_TRIG  = 0x42  # Только триггеры (lt, rt)
+    GAMEPAD_BTNS = 0x41  # Только кнопки (bitmask)
+    GAMEPAD_TRIG = 0x42  # Только триггеры (lt, rt)
     GAMEPAD_STICK = 0x43  # Стик (which, x, y)
 
     # System
-    PING          = 0xF0  # Пинг
-    GET_CAPS      = 0xF1  # Получить capabilities bitmask
+    PING = 0xF0  # Пинг
+    GET_CAPS = 0xF1  # Получить capabilities bitmask
 
 
 class PicoResp(IntEnum):
-    ACK           = 0x00
-    NACK          = 0x01
-    INFO          = 0x10
-    CAPS          = 0x11
-    PONG          = 0xF0
-    ERROR         = 0xFE
+    ACK = 0x00
+    NACK = 0x01
+    INFO = 0x10
+    CAPS = 0x11
+    PONG = 0xF0
+    ERROR = 0xFE
 
 
 # ─── Capabilities bitmask ──────────────────────────────────────────────────
 class PicoCap(IntEnum):
-    KEYBOARD  = 0x01
-    MOUSE     = 0x02
-    GAMEPAD   = 0x04
-    CONSUMER  = 0x08  # Media keys
-    ABSOLUTE  = 0x10  # Absolute mouse mode
+    KEYBOARD = 0x01
+    MOUSE = 0x02
+    GAMEPAD = 0x04
+    CONSUMER = 0x08  # Media keys
+    ABSOLUTE = 0x10  # Absolute mouse mode
 
 
 # ─── Backward-compatible command/response constants ──────────────────────────
-CMD_GET_INFO      = PicoCmd.GET_INFO
-CMD_RESET         = PicoCmd.RESET
-CMD_SET_MODE      = PicoCmd.SET_MODE
-CMD_KB_PRESS      = PicoCmd.KEY_PRESS
-CMD_KB_RELEASE    = PicoCmd.KEY_RELEASE
-CMD_KB_TAP        = PicoCmd.KEY_TAP
-CMD_KB_MODIFIERS  = PicoCmd.KEY_MODIFIERS
-CMD_MS_MOVE       = PicoCmd.MOUSE_MOVE
-CMD_MS_CLICK      = PicoCmd.MOUSE_CLICK
-CMD_MS_PRESS      = PicoCmd.MOUSE_PRESS
-CMD_MS_RELEASE    = PicoCmd.MOUSE_RELEASE
-CMD_MS_SCROLL     = PicoCmd.MOUSE_SCROLL
-CMD_GP_STATE      = PicoCmd.GAMEPAD_STATE
-CMD_GP_BUTTONS    = PicoCmd.GAMEPAD_BTNS
-CMD_GP_TRIGGERS   = PicoCmd.GAMEPAD_TRIG
-CMD_GP_STICK      = PicoCmd.GAMEPAD_STICK
-CMD_PING          = PicoCmd.PING
-CMD_GET_CAPS      = PicoCmd.GET_CAPS
+CMD_GET_INFO = PicoCmd.GET_INFO
+CMD_RESET = PicoCmd.RESET
+CMD_SET_MODE = PicoCmd.SET_MODE
+CMD_KB_PRESS = PicoCmd.KEY_PRESS
+CMD_KB_RELEASE = PicoCmd.KEY_RELEASE
+CMD_KB_TAP = PicoCmd.KEY_TAP
+CMD_KB_MODIFIERS = PicoCmd.KEY_MODIFIERS
+CMD_MS_MOVE = PicoCmd.MOUSE_MOVE
+CMD_MS_CLICK = PicoCmd.MOUSE_CLICK
+CMD_MS_PRESS = PicoCmd.MOUSE_PRESS
+CMD_MS_RELEASE = PicoCmd.MOUSE_RELEASE
+CMD_MS_SCROLL = PicoCmd.MOUSE_SCROLL
+CMD_GP_STATE = PicoCmd.GAMEPAD_STATE
+CMD_GP_BUTTONS = PicoCmd.GAMEPAD_BTNS
+CMD_GP_TRIGGERS = PicoCmd.GAMEPAD_TRIG
+CMD_GP_STICK = PicoCmd.GAMEPAD_STICK
+CMD_PING = PicoCmd.PING
+CMD_GET_CAPS = PicoCmd.GET_CAPS
 
-RESP_ACK          = PicoResp.ACK
-RESP_NACK         = PicoResp.NACK
-RESP_INFO         = PicoResp.INFO
-RESP_CAPS         = PicoResp.CAPS
-RESP_PONG         = PicoResp.PONG
-RESP_ERROR        = PicoResp.ERROR
-RESP_OK           = PicoResp.ACK
+RESP_ACK = PicoResp.ACK
+RESP_NACK = PicoResp.NACK
+RESP_INFO = PicoResp.INFO
+RESP_CAPS = PicoResp.CAPS
+RESP_PONG = PicoResp.PONG
+RESP_ERROR = PicoResp.ERROR
+RESP_OK = PicoResp.ACK
 
 
 # ─── Mouse buttons ─────────────────────────────────────────────────────────
 class MouseBtn(IntEnum):
-    LEFT   = 0x01
-    RIGHT  = 0x02
+    LEFT = 0x01
+    RIGHT = 0x02
     MIDDLE = 0x04
-    BACK   = 0x08
-    FORWARD= 0x10
+    BACK = 0x08
+    FORWARD = 0x10
 
 
 # ─── Gamepad buttons (XInput mapping) ──────────────────────────────────────
 class GPBtn(IntEnum):
-    A           = 0x1000
-    B           = 0x2000
-    X           = 0x4000
-    Y           = 0x8000
-    LB          = 0x0100
-    RB          = 0x0200
-    BACK        = 0x0020
-    START       = 0x0010
-    LS          = 0x0040
-    RS          = 0x0080
-    GUIDE       = 0x0400
-    DPAD_UP     = 0x0001
-    DPAD_DOWN   = 0x0002
-    DPAD_LEFT   = 0x0004
-    DPAD_RIGHT  = 0x0008
+    A = 0x1000
+    B = 0x2000
+    X = 0x4000
+    Y = 0x8000
+    LB = 0x0100
+    RB = 0x0200
+    BACK = 0x0020
+    START = 0x0010
+    LS = 0x0040
+    RS = 0x0080
+    GUIDE = 0x0400
+    DPAD_UP = 0x0001
+    DPAD_DOWN = 0x0002
+    DPAD_LEFT = 0x0004
+    DPAD_RIGHT = 0x0008
 
 
 # ─── CRC8 (Dallas/Maxim / 1-Wire) ────────────────────────────────────────────
@@ -153,8 +154,9 @@ def crc8(data: bytes, init: int = _CRC8_INIT) -> int:
 
 # ─── Пакет ─────────────────────────────────────────────────────────────────
 START_BYTE = 0xAA
-END_BYTE   = 0x55
+END_BYTE = 0x55
 MAX_PAYLOAD = 60
+
 
 @dataclass
 class PicoPacket:
@@ -211,38 +213,48 @@ class PicoPacket:
 
 # ─── Payload builders ──────────────────────────────────────────────────────
 
+
 def build_key_press(keycode: int, hold_ms: int = 0) -> bytes:
-    return struct.pack('<HH', keycode & 0xFFFF, hold_ms & 0xFFFF)
+    return struct.pack("<HH", keycode & 0xFFFF, hold_ms & 0xFFFF)
+
 
 def build_key_release(keycode: int) -> bytes:
-    return struct.pack('<H', keycode & 0xFFFF)
+    return struct.pack("<H", keycode & 0xFFFF)
+
 
 def build_key_tap(keycode: int, hold_ms: int = 50) -> bytes:
-    return struct.pack('<HH', keycode & 0xFFFF, hold_ms & 0xFFFF)
+    return struct.pack("<HH", keycode & 0xFFFF, hold_ms & 0xFFFF)
+
 
 def build_key_modifiers(mask: int) -> bytes:
-    return struct.pack('<H', mask & 0xFFFF)
+    return struct.pack("<H", mask & 0xFFFF)
+
 
 def build_mouse_move(dx: int, dy: int, absolute: bool = False) -> bytes:
     dx = max(-32768, min(32767, dx))
     dy = max(-32768, min(32767, dy))
     flags = 0x01 if absolute else 0x00
-    return struct.pack('<hhB', dx, dy, flags)
+    return struct.pack("<hhB", dx, dy, flags)
+
 
 def build_mouse_click(btn_mask: int, hold_ms: int = 0) -> bytes:
     btn_mask &= 0xFF
     hold_ms = max(0, min(65535, hold_ms))
-    return struct.pack('<HH', btn_mask, hold_ms)
+    return struct.pack("<HH", btn_mask, hold_ms)
+
 
 def build_mouse_press(btn_mask: int) -> bytes:
-    return struct.pack('<B', btn_mask & 0xFF)
+    return struct.pack("<B", btn_mask & 0xFF)
+
 
 def build_mouse_release(btn_mask: int) -> bytes:
-    return struct.pack('<B', btn_mask & 0xFF)
+    return struct.pack("<B", btn_mask & 0xFF)
+
 
 def build_mouse_scroll(dy: int) -> bytes:
     dy = max(-127, min(127, dy))
-    return struct.pack('<b', dy)
+    return struct.pack("<b", dy)
+
 
 def build_gamepad_state(
     buttons: int = 0,
@@ -251,7 +263,7 @@ def build_gamepad_state(
     lx: int = 0,
     ly: int = 0,
     rx: int = 0,
-    ry: int = 0
+    ry: int = 0,
 ) -> bytes:
     buttons &= 0xFFFF
     lt = max(0, min(255, lt))
@@ -260,28 +272,33 @@ def build_gamepad_state(
     ly = max(-32768, min(32767, ly))
     rx = max(-32768, min(32767, rx))
     ry = max(-32768, min(32767, ry))
-    return struct.pack('<HBBhhhh', buttons, lt, rt, lx, ly, rx, ry)
+    return struct.pack("<HBBhhhh", buttons, lt, rt, lx, ly, rx, ry)
+
 
 def build_gamepad_buttons(buttons: int) -> bytes:
-    return struct.pack('<H', buttons & 0xFFFF)
+    return struct.pack("<H", buttons & 0xFFFF)
+
 
 def build_gamepad_triggers(lt: int, rt: int) -> bytes:
     lt = max(0, min(255, lt))
     rt = max(0, min(255, rt))
-    return struct.pack('<BB', lt, rt)
+    return struct.pack("<BB", lt, rt)
+
 
 def build_gamepad_stick(which: int, x: int, y: int) -> bytes:
     # which: 0=L, 1=R
     x = max(-32768, min(32767, x))
     y = max(-32768, min(32767, y))
-    return struct.pack('<Bhh', which & 0xFF, x, y)
+    return struct.pack("<Bhh", which & 0xFF, x, y)
+
 
 def build_set_mode(mode: int) -> bytes:
     # 0=KB, 1=MS, 2=GP, 3=Composite
-    return struct.pack('<B', mode & 0xFF)
+    return struct.pack("<B", mode & 0xFF)
 
 
 # ─── Response parsers ──────────────────────────────────────────────────────
+
 
 @dataclass
 class PicoInfo:
@@ -290,17 +307,19 @@ class PicoInfo:
     vid: int
     pid: int
 
+
 def parse_info(payload: bytes) -> PicoInfo | None:
     if len(payload) < 6:
         return None
     # fmt: major, minor, patch, caps, vid, pid
-    major, minor, patch, caps, vid, pid = struct.unpack('<BBBHBB', payload[:7])
+    major, minor, patch, caps, vid, pid = struct.unpack("<BBBHBB", payload[:7])
     return PicoInfo(
         fw_version=f"{major}.{minor}.{patch}",
         capabilities=caps,
         vid=vid,
         pid=pid,
     )
+
 
 def parse_caps(payload: bytes) -> int:
     if len(payload) >= 1:

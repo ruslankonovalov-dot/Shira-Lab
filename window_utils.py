@@ -22,7 +22,15 @@ user32 = ctypes.windll.user32
 # WNDENUMPROC нужно определять вручную — нет в wintypes
 WNDENUMPROC = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
 
-user32.SetWindowPos.argtypes = [wintypes.HWND, wintypes.HWND, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, wintypes.UINT]
+user32.SetWindowPos.argtypes = [
+    wintypes.HWND,
+    wintypes.HWND,
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.c_int,
+    wintypes.UINT,
+]
 user32.SetWindowPos.restype = wintypes.BOOL
 user32.GetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int]
 user32.GetWindowLongW.restype = ctypes.c_long
@@ -40,7 +48,12 @@ user32.GetWindowTextW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
 user32.GetWindowTextW.restype = ctypes.c_int
 user32.EnumWindows.argtypes = [WNDENUMPROC, wintypes.LPARAM]
 user32.EnumWindows.restype = wintypes.BOOL
-user32.SystemParametersInfoW.argtypes = [wintypes.UINT, wintypes.UINT, ctypes.c_void_p, wintypes.UINT]
+user32.SystemParametersInfoW.argtypes = [
+    wintypes.UINT,
+    wintypes.UINT,
+    ctypes.c_void_p,
+    wintypes.UINT,
+]
 user32.SystemParametersInfoW.restype = wintypes.BOOL
 
 
@@ -121,6 +134,7 @@ def get_work_area() -> tuple[int, int, int, int]:
 # ─── Monitor-specific work area (for multi-monitor) ──────────────────
 MONITOR_DEFAULTTONEAREST = 0x00000002
 
+
 class MONITORINFO(ctypes.Structure):
     _fields_ = [
         ("cbSize", wintypes.DWORD),
@@ -128,6 +142,7 @@ class MONITORINFO(ctypes.Structure):
         ("rcWork", wintypes.RECT),
         ("dwFlags", wintypes.DWORD),
     ]
+
 
 try:
     user32.MonitorFromWindow.argtypes = [wintypes.HWND, wintypes.DWORD]
@@ -151,9 +166,12 @@ def get_work_area_for_window(hwnd: int) -> tuple[int, int, int, int]:
         mi = MONITORINFO()
         mi.cbSize = ctypes.sizeof(mi)
         if user32.GetMonitorInfoW(hmon, ctypes.byref(mi)):
-            return (mi.rcWork.left, mi.rcWork.top,
-                    mi.rcWork.right - mi.rcWork.left,
-                    mi.rcWork.bottom - mi.rcWork.top)
+            return (
+                mi.rcWork.left,
+                mi.rcWork.top,
+                mi.rcWork.right - mi.rcWork.left,
+                mi.rcWork.bottom - mi.rcWork.top,
+            )
     except (OSError, AttributeError, ValueError):
         pass
     return get_work_area()
@@ -218,31 +236,52 @@ def get_monitors() -> list[dict[str, int]]:
     """
     monitors: list[dict[str, int]] = []
 
-    def enum_monitor_proc(hmon: wintypes.HANDLE, _: wintypes.HANDLE, __: wintypes.LPRECT, ___: wintypes.LPARAM) -> int:
+    def enum_monitor_proc(
+        hmon: wintypes.HANDLE,
+        _: wintypes.HANDLE,
+        __: wintypes.LPRECT,
+        ___: wintypes.LPARAM,
+    ) -> int:
         mi = MONITORINFO()
         mi.cbSize = ctypes.sizeof(mi)
         if user32.GetMonitorInfoW(hmon, ctypes.byref(mi)):
-            monitors.append({
-                "x": mi.rcMonitor.left,
-                "y": mi.rcMonitor.top,
-                "width": mi.rcMonitor.right - mi.rcMonitor.left,
-                "height": mi.rcMonitor.bottom - mi.rcMonitor.top,
-                "work_x": mi.rcWork.left,
-                "work_y": mi.rcWork.top,
-                "work_width": mi.rcWork.right - mi.rcWork.left,
-                "work_height": mi.rcWork.bottom - mi.rcWork.top,
-            })
+            monitors.append(
+                {
+                    "x": mi.rcMonitor.left,
+                    "y": mi.rcMonitor.top,
+                    "width": mi.rcMonitor.right - mi.rcMonitor.left,
+                    "height": mi.rcMonitor.bottom - mi.rcMonitor.top,
+                    "work_x": mi.rcWork.left,
+                    "work_y": mi.rcWork.top,
+                    "work_width": mi.rcWork.right - mi.rcWork.left,
+                    "work_height": mi.rcWork.bottom - mi.rcWork.top,
+                }
+            )
         return True
 
-    MONITORENUMPROC = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HANDLE, wintypes.HANDLE, ctypes.POINTER(wintypes.RECT), wintypes.LPARAM)
+    MONITORENUMPROC = ctypes.WINFUNCTYPE(
+        wintypes.BOOL,
+        wintypes.HANDLE,
+        wintypes.HANDLE,
+        ctypes.POINTER(wintypes.RECT),
+        wintypes.LPARAM,
+    )
     try:
         user32.EnumDisplayMonitors(None, None, MONITORENUMPROC(enum_monitor_proc), 0)
     except (OSError, AttributeError, ValueError):
         # Fallback
         wa = get_work_area()
-        monitors.append({
-            "x": wa[0], "y": wa[1], "width": wa[2], "height": wa[3],
-            "work_x": wa[0], "work_y": wa[1], "work_width": wa[2], "work_height": wa[3],
-        })
+        monitors.append(
+            {
+                "x": wa[0],
+                "y": wa[1],
+                "width": wa[2],
+                "height": wa[3],
+                "work_x": wa[0],
+                "work_y": wa[1],
+                "work_width": wa[2],
+                "work_height": wa[3],
+            }
+        )
 
     return monitors

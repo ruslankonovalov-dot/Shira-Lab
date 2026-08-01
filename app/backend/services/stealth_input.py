@@ -23,6 +23,7 @@ stealth_input.py — Stealth-отправка ввода через Win32 SendIn
     s.send_key_scancode(0x1E)  # scancode 'A'
     s.send_mouse_click('L')
 """
+
 from __future__ import annotations
 
 import ctypes
@@ -124,7 +125,10 @@ _user32.GetCursorPos.restype = wintypes.BOOL
 # AttachThreadInput functions
 _user32.AttachThreadInput.argtypes = [wintypes.DWORD, wintypes.DWORD, wintypes.BOOL]
 _user32.AttachThreadInput.restype = wintypes.BOOL
-_user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+_user32.GetWindowThreadProcessId.argtypes = [
+    wintypes.HWND,
+    ctypes.POINTER(wintypes.DWORD),
+]
 _user32.GetWindowThreadProcessId.restype = wintypes.DWORD
 _kernel32 = ctypes.windll.kernel32
 _kernel32.GetCurrentThreadId.argtypes = []
@@ -153,8 +157,9 @@ class StealthInput:
     # SendInput для мыши использует MOUSEINPUT, не KEYBDINPUT
 
     @staticmethod
-    def _make_keyboard_input(scancode: int, key_up: bool = False,
-                              extended: bool = False) -> INPUT:
+    def _make_keyboard_input(
+        scancode: int, key_up: bool = False, extended: bool = False
+    ) -> INPUT:
         """Создаёт INPUT структуру для клавиши по scancode."""
         flags = KEYEVENTF_SCANCODE
         if extended:
@@ -184,8 +189,9 @@ class StealthInput:
         return inp
 
     @staticmethod
-    def send_key_scancode(scancode: int, hold_ms: int = 0,
-                           extended: bool = False) -> bool:
+    def send_key_scancode(
+        scancode: int, hold_ms: int = 0, extended: bool = False
+    ) -> bool:
         """
         Отправляет keydown + keyup для клавиши по scancode.
 
@@ -197,9 +203,14 @@ class StealthInput:
         Возвращает True при успехе.
         """
         import time
+
         try:
-            down = StealthInput._make_keyboard_input(scancode, key_up=False, extended=extended)
-            up = StealthInput._make_keyboard_input(scancode, key_up=True, extended=extended)
+            down = StealthInput._make_keyboard_input(
+                scancode, key_up=False, extended=extended
+            )
+            up = StealthInput._make_keyboard_input(
+                scancode, key_up=True, extended=extended
+            )
 
             inputs = (INPUT * 1)(down)
             sent: int = _user32.SendInput(1, inputs, ctypes.sizeof(INPUT))
@@ -260,6 +271,7 @@ class StealthInput:
         button: "L", "R", "M", "X1", "X2"
         """
         import time
+
         try:
             button = button.upper()
             if button == "L":
@@ -376,8 +388,9 @@ class StealthInput:
             return False
 
     @staticmethod
-    def send_key_scancode_attached(hwnd: int, scancode: int, hold_ms: int = 0,
-                                    extended: bool = False) -> bool:
+    def send_key_scancode_attached(
+        hwnd: int, scancode: int, hold_ms: int = 0, extended: bool = False
+    ) -> bool:
         """
         Send keystroke to specific window using AttachThreadInput + SendInput.
         This works for background/inactive windows in many games without anticheat.
@@ -389,14 +402,19 @@ class StealthInput:
             extended: True for extended keys (Right Alt, Right Ctrl, arrows, etc.)
         """
         import time
+
         if not hwnd:
             return False
         # Attach
         if not StealthInput._attach_thread_input(hwnd, True):
             return False
         try:
-            down = StealthInput._make_keyboard_input(scancode, key_up=False, extended=extended)
-            up = StealthInput._make_keyboard_input(scancode, key_up=True, extended=extended)
+            down = StealthInput._make_keyboard_input(
+                scancode, key_up=False, extended=extended
+            )
+            up = StealthInput._make_keyboard_input(
+                scancode, key_up=True, extended=extended
+            )
 
             inputs = (INPUT * 1)(down)
             sent: int = _user32.SendInput(1, inputs, ctypes.sizeof(INPUT))
@@ -423,13 +441,17 @@ class StealthInput:
             if not scancode:
                 return False
             extended = vk in (0xA3, 0xA5)  # RCONTROL, RMENU
-            return StealthInput.send_key_scancode_attached(hwnd, scancode, hold_ms, extended)
+            return StealthInput.send_key_scancode_attached(
+                hwnd, scancode, hold_ms, extended
+            )
         except (OSError, RuntimeError, ValueError, AttributeError):
             logger.debug("Failed to send key VK attached")
             return False
 
     @staticmethod
-    def send_mouse_click_attached(hwnd: int, button: str = "L", hold_ms: int = 0) -> bool:
+    def send_mouse_click_attached(
+        hwnd: int, button: str = "L", hold_ms: int = 0
+    ) -> bool:
         """
         Send mouse click to specific window using AttachThreadInput + SendInput.
         Works for background/inactive windows in many games without anticheat.
@@ -437,6 +459,7 @@ class StealthInput:
         button: "L", "R", "M", "X1", "X2"
         """
         import time
+
         try:
             button = button.upper()
             if button == "L":
@@ -490,31 +513,65 @@ class StealthInput:
 # ─── VK-таблица для удобства (используется макросами) ───────────────────
 VK_MAP = {
     # Letters (VK codes = ASCII uppercase)
-    **{chr(c): c for c in range(ord('A'), ord('Z') + 1)},
-    **{str(c): c + ord('0') for c in range(10)},  # 0-9
+    **{chr(c): c for c in range(ord("A"), ord("Z") + 1)},
+    **{str(c): c + ord("0") for c in range(10)},  # 0-9
     # Function keys
-    "f1": 0x70, "f2": 0x71, "f3": 0x72, "f4": 0x73, "f5": 0x74,
-    "f6": 0x75, "f7": 0x76, "f8": 0x77, "f9": 0x78, "f10": 0x79,
-    "f11": 0x7A, "f12": 0x7B,
+    "f1": 0x70,
+    "f2": 0x71,
+    "f3": 0x72,
+    "f4": 0x73,
+    "f5": 0x74,
+    "f6": 0x75,
+    "f7": 0x76,
+    "f8": 0x77,
+    "f9": 0x78,
+    "f10": 0x79,
+    "f11": 0x7A,
+    "f12": 0x7B,
     # Modifiers
-    "shift": 0x10, "ctrl": 0x11, "alt": 0x12, "menu": 0x12,
-    "left shift": 0xA0, "right shift": 0xA1,
-    "left ctrl": 0xA2, "right ctrl": 0xA3,
-    "left alt": 0xA4, "left menu": 0xA4,
-    "right alt": 0xA5, "right menu": 0xA5,
-    "left windows": 0x5B, "right windows": 0x5C,
+    "shift": 0x10,
+    "ctrl": 0x11,
+    "alt": 0x12,
+    "menu": 0x12,
+    "left shift": 0xA0,
+    "right shift": 0xA1,
+    "left ctrl": 0xA2,
+    "right ctrl": 0xA3,
+    "left alt": 0xA4,
+    "left menu": 0xA4,
+    "right alt": 0xA5,
+    "right menu": 0xA5,
+    "left windows": 0x5B,
+    "right windows": 0x5C,
     "windows": 0x5B,
     # Navigation
-    "space": 0x20, "enter": 0x0D, "return": 0x0D, "tab": 0x09,
-    "esc": 0x1B, "escape": 0x1B, "backspace": 0x08,
-    "delete": 0x2E, "del": 0x2E, "insert": 0x2D,
-    "home": 0x24, "end": 0x23, "pageup": 0x21, "page up": 0x21,
-    "pagedown": 0x22, "page down": 0x22,
+    "space": 0x20,
+    "enter": 0x0D,
+    "return": 0x0D,
+    "tab": 0x09,
+    "esc": 0x1B,
+    "escape": 0x1B,
+    "backspace": 0x08,
+    "delete": 0x2E,
+    "del": 0x2E,
+    "insert": 0x2D,
+    "home": 0x24,
+    "end": 0x23,
+    "pageup": 0x21,
+    "page up": 0x21,
+    "pagedown": 0x22,
+    "page down": 0x22,
     # Arrows
-    "up": 0x26, "down": 0x28, "left": 0x25, "right": 0x27,
+    "up": 0x26,
+    "down": 0x28,
+    "left": 0x25,
+    "right": 0x27,
     # Special
-    "caps lock": 0x14, "num lock": 0x90, "scroll lock": 0x91,
-    "print screen": 0x2C, "pause": 0x13,
+    "caps lock": 0x14,
+    "num lock": 0x90,
+    "scroll lock": 0x91,
+    "print screen": 0x2C,
+    "pause": 0x13,
 }
 
 

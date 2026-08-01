@@ -9,7 +9,7 @@ pytest-cov>=4.1,<6.0
 pytest-qt>=4.3,<5.0
 pytest-mock>=3.12,<4.0
 pytest-xdist>=3.5,<4.0          # параллельный запуск (pytest -n auto)
-pytest-timeout>=2.2<3.0
+pytest-timeout>=2.2,<3.0
 pytest-asyncio>=0.23,<1.0       # если будут async тесты
 pytest-benchmark>=4.0,<5.0      # для perf тестов
 
