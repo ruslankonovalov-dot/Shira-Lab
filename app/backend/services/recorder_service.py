@@ -211,8 +211,7 @@ class RecorderService:
         try:
             import ctypes
 
-            from app.backend.services.vigem_service import (XUSB_BUTTON_MAP,
-                                                            get_vigem_service)
+            from app.backend.services.vigem_service import XUSB_BUTTON_MAP, get_vigem_service
 
             vigem = get_vigem_service()
             if not vigem.connect():

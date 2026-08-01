@@ -39,8 +39,7 @@ class WindowBridge(BridgeBase):
         tint_alpha = max(20, min(255, tint_alpha))
         try:
             # Lazy import: dwm_acrylic может быть не на всех платформах
-            from app.backend.services.dwm_acrylic import (disable_acrylic_blur,
-                                                          enable_acrylic_blur)
+            from app.backend.services.dwm_acrylic import disable_acrylic_blur, enable_acrylic_blur
 
             if self.state.global_blur_enabled or self.state.global_transparency > 0:
                 enable_acrylic_blur(self._hwnd, tint_color, tint_alpha)

@@ -5,8 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.backend.profile_io import (PROFILE_FORMAT_VERSION, _safe_get,
-                                    export_profile, import_profile)
+from app.backend.profile_io import PROFILE_FORMAT_VERSION, _safe_get, export_profile, import_profile
 
 pytestmark = pytest.mark.unit
 

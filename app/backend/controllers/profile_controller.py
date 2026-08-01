@@ -13,14 +13,18 @@ from PySide6.QtCore import Property, QObject, Signal, Slot
 
 from app.backend.models.runtime_state import TERMINAL_PALETTES, RuntimeState
 from app.backend.profile_manager import ProfileManager
-from app.backend.services.input_validation import (VALID_BACKGROUND_METHODS,
-                                                   VALID_PALETTES, _qvar,
-                                                   _qvar_map,
-                                                   make_error_response,
-                                                   make_ok_response,
-                                                   validate_bool,
-                                                   validate_enum,
-                                                   validate_hwnd, validate_str)
+from app.backend.services.input_validation import (
+    VALID_BACKGROUND_METHODS,
+    VALID_PALETTES,
+    _qvar,
+    _qvar_map,
+    make_error_response,
+    make_ok_response,
+    validate_bool,
+    validate_enum,
+    validate_hwnd,
+    validate_str,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -392,8 +396,7 @@ class ProfileController(QObject):
     def detectSystemTheme(self) -> dict[str, Any]:
         """Detect system theme (dark/light)."""
         try:
-            from app.backend.services.theme_detector import \
-                detect_windows_theme
+            from app.backend.services.theme_detector import detect_windows_theme
 
             theme = detect_windows_theme()
             return {"ok": True, "theme": theme}
@@ -428,8 +431,7 @@ class ProfileController(QObject):
     def listCrashReports(self) -> dict[str, Any]:
         """List all crash reports."""
         try:
-            from app.backend.services.crash_reporter import \
-                list_local_crashes as list_reports
+            from app.backend.services.crash_reporter import list_local_crashes as list_reports
 
             return _qvar_map({"ok": True, "crashes": list_reports()})
         except (OSError, ImportError, RuntimeError) as e:
@@ -440,8 +442,7 @@ class ProfileController(QObject):
     def clearAllCrashReports(self) -> dict[str, Any]:
         """Clear all crash reports."""
         try:
-            from app.backend.services.crash_reporter import \
-                clear_all_crashes as clear_reports
+            from app.backend.services.crash_reporter import clear_all_crashes as clear_reports
 
             count = clear_reports()
             return _qvar_map({"ok": True, "cleared": count})

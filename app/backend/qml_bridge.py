@@ -18,55 +18,59 @@ from app.backend.persistence import load_profile, save_profile
 from app.backend.services.aim_service import AimService
 from app.backend.services.clicker_service import ClickerService
 from app.backend.services.hotkey_service import HotkeyService
-from app.backend.services.input_validation import (AIM_ASPECT_MAX,
-                                                   AIM_ASPECT_MIN,
-                                                   AIM_BRIGHTNESS_MAX,
-                                                   AIM_BRIGHTNESS_MIN,
-                                                   AIM_CONFIDENCE_MAX,
-                                                   AIM_CONFIDENCE_MIN,
-                                                   AIM_FOV_MAX, AIM_FOV_MIN,
-                                                   AIM_MAX_AREA_MAX,
-                                                   AIM_MAX_AREA_MIN,
-                                                   AIM_MIN_AREA_MAX,
-                                                   AIM_MIN_AREA_MIN,
-                                                   AIM_RESET_DELAY_MAX,
-                                                   AIM_RESET_DELAY_MIN,
-                                                   AIM_SATURATION_MAX,
-                                                   AIM_SATURATION_MIN,
-                                                   AIM_SMOOTH_MAX,
-                                                   AIM_SMOOTH_MIN,
-                                                   AIM_SPEED_MAX,
-                                                   AIM_SPEED_MIN,
-                                                   CLICKER_HOLD_MAX,
-                                                   CLICKER_HOLD_MIN,
-                                                   CLICKER_INTERVAL_MAX,
-                                                   CLICKER_INTERVAL_MIN,
-                                                   CLICKER_LIMIT_MAX,
-                                                   CLICKER_LIMIT_MIN,
-                                                   GAMEPAD_BUTTONS_MASK_MAX,
-                                                   GAMEPAD_STICK_MAX,
-                                                   GAMEPAD_STICK_MIN,
-                                                   GAMEPAD_TARGET_INDEX_MAX,
-                                                   GAMEPAD_TARGET_INDEX_MIN,
-                                                   GAMEPAD_TRIGGER_MAX,
-                                                   GAMEPAD_TRIGGER_MIN,
-                                                   MACRO_DELAY_MAX,
-                                                   MACRO_DELAY_MIN,
-                                                   MACRO_HOLD_MAX,
-                                                   MACRO_HOLD_MIN,
-                                                   RECORDER_REPEATS_MAX,
-                                                   RECORDER_REPEATS_MIN,
-                                                   VALID_AIM_DETECTION_MODES,
-                                                   VALID_AIM_TARGET_COLORS,
-                                                   VALID_BACKGROUND_METHODS,
-                                                   VALID_CLICKER_BUTTONS,
-                                                   QVariantMap, _qvar_map,
-                                                   make_error_response,
-                                                   validate_enum,
-                                                   validate_float,
-                                                   validate_int,
-                                                   validate_json_array,
-                                                   validate_str)
+from app.backend.services.input_validation import (
+    AIM_ASPECT_MAX,
+    AIM_ASPECT_MIN,
+    AIM_BRIGHTNESS_MAX,
+    AIM_BRIGHTNESS_MIN,
+    AIM_CONFIDENCE_MAX,
+    AIM_CONFIDENCE_MIN,
+    AIM_FOV_MAX,
+    AIM_FOV_MIN,
+    AIM_MAX_AREA_MAX,
+    AIM_MAX_AREA_MIN,
+    AIM_MIN_AREA_MAX,
+    AIM_MIN_AREA_MIN,
+    AIM_RESET_DELAY_MAX,
+    AIM_RESET_DELAY_MIN,
+    AIM_SATURATION_MAX,
+    AIM_SATURATION_MIN,
+    AIM_SMOOTH_MAX,
+    AIM_SMOOTH_MIN,
+    AIM_SPEED_MAX,
+    AIM_SPEED_MIN,
+    CLICKER_HOLD_MAX,
+    CLICKER_HOLD_MIN,
+    CLICKER_INTERVAL_MAX,
+    CLICKER_INTERVAL_MIN,
+    CLICKER_LIMIT_MAX,
+    CLICKER_LIMIT_MIN,
+    GAMEPAD_BUTTONS_MASK_MAX,
+    GAMEPAD_STICK_MAX,
+    GAMEPAD_STICK_MIN,
+    GAMEPAD_TARGET_INDEX_MAX,
+    GAMEPAD_TARGET_INDEX_MIN,
+    GAMEPAD_TRIGGER_MAX,
+    GAMEPAD_TRIGGER_MIN,
+    MACRO_DELAY_MAX,
+    MACRO_DELAY_MIN,
+    MACRO_HOLD_MAX,
+    MACRO_HOLD_MIN,
+    RECORDER_REPEATS_MAX,
+    RECORDER_REPEATS_MIN,
+    VALID_AIM_DETECTION_MODES,
+    VALID_AIM_TARGET_COLORS,
+    VALID_BACKGROUND_METHODS,
+    VALID_CLICKER_BUTTONS,
+    QVariantMap,
+    _qvar_map,
+    make_error_response,
+    validate_enum,
+    validate_float,
+    validate_int,
+    validate_json_array,
+    validate_str,
+)
 from app.backend.services.macro_service import MacroService
 from app.backend.services.pico_service import get_pico_service
 from app.backend.services.recorder_service import RecorderService
@@ -144,11 +148,9 @@ class QmlBridge(QObject):
         self.sounds: SoundManager = SoundManager(self)
 
         # Init controllers (Phase 2.1) - runtime imports needed since TYPE_CHECKING doesn't import at runtime
-        from app.backend.controllers.gamepad_controller import \
-            GamepadController
+        from app.backend.controllers.gamepad_controller import GamepadController
         from app.backend.controllers.hotkey_controller import HotkeyController
-        from app.backend.controllers.profile_controller import \
-            ProfileController
+        from app.backend.controllers.profile_controller import ProfileController
         from app.backend.controllers.window_controller import WindowController
 
         # Overlay state - BEFORE controllers/tray so timer sees it
@@ -397,8 +399,7 @@ class QmlBridge(QObject):
     def getI18nCoverage(self) -> QVariantMap:
         """Returns translation coverage stats per language."""
         try:
-            from app.backend.i18n import (get_available_languages,
-                                          get_translation_coverage)
+            from app.backend.i18n import get_available_languages, get_translation_coverage
 
             return _qvar_map(
                 {
@@ -1518,7 +1519,9 @@ class QmlBridge(QObject):
     def applyAutoTheme(self) -> QVariantMap:
         try:
             from app.backend.services.theme_detector import (
-                detect_windows_theme, get_palette_for_theme)
+                detect_windows_theme,
+                get_palette_for_theme,
+            )
 
             theme = detect_windows_theme()
             palette = get_palette_for_theme(theme, self.state.terminal_palette)
@@ -1542,8 +1545,7 @@ class QmlBridge(QObject):
     @Slot(str, result="QVariantMap")
     def checkForUpdatesAsync(self, current_version: str = "0.17.0") -> QVariantMap:
         try:
-            from app.backend.services.update_checker import \
-                check_for_updates_async
+            from app.backend.services.update_checker import check_for_updates_async
 
             def callback(result: str) -> None:
                 try:

@@ -160,8 +160,7 @@ class MouseHotkeyManager:
             return
 
         # Проверяем modifiers
-        from app.backend.services.hotkeys.keyboard_hotkeys import \
-            KeyboardHotkeyManager
+        from app.backend.services.hotkeys.keyboard_hotkeys import KeyboardHotkeyManager
 
         if not KeyboardHotkeyManager.check_modifiers_pressed(binding.get("modifiers", [])):
             return
@@ -197,8 +196,7 @@ class MouseHotkeyManager:
         self._wheel_cooldown[wheel_name] = now
 
         # Modifiers check
-        from app.backend.services.hotkeys.keyboard_hotkeys import \
-            KeyboardHotkeyManager
+        from app.backend.services.hotkeys.keyboard_hotkeys import KeyboardHotkeyManager
 
         if not KeyboardHotkeyManager.check_modifiers_pressed(binding.get("modifiers", [])):
             return
